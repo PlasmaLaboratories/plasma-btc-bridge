@@ -1,4 +1,4 @@
-package xyz.stratalab.bridge
+package org.plasmalabs.bridge
 
 trait PublicApiConfModule extends CommonSetupModule {
 

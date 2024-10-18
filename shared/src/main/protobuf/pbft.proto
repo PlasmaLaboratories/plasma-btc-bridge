@@ -2,7 +2,7 @@ syntax = "proto3";
 
 import "shared.proto";
 
-package xyz.stratalab.bridge.consensus.pbft;
+package org.plasmalabs.bridge.consensus.pbft;
 
 
 message PrePrepareRequest {
@@ -10,7 +10,7 @@ message PrePrepareRequest {
   uint64 sequenceNumber = 2;
   bytes  digest         = 4;
   bytes  signature      = 5;
-  xyz.stratalab.bridge.shared.StateMachineRequest payload = 6;
+  org.plasmalabs.bridge.shared.StateMachineRequest payload = 6;
 }
 
 message PrepareRequest {
@@ -60,10 +60,10 @@ message NewViewRequest {
 }
 
 service PBFTInternalService {
-  rpc PrePrepare(PrePrepareRequest)    returns (xyz.stratalab.bridge.shared.Empty);
-  rpc Prepare(PrepareRequest)          returns (xyz.stratalab.bridge.shared.Empty);
-  rpc Commit(CommitRequest)            returns (xyz.stratalab.bridge.shared.Empty);
-  rpc Checkpoint(CheckpointRequest)    returns (xyz.stratalab.bridge.shared.Empty);
-  rpc ViewChange(ViewChangeRequest)    returns (xyz.stratalab.bridge.shared.Empty);
-  rpc NewView(NewViewRequest)          returns (xyz.stratalab.bridge.shared.Empty);
+  rpc PrePrepare(PrePrepareRequest)    returns (org.plasmalabs.bridge.shared.Empty);
+  rpc Prepare(PrepareRequest)          returns (org.plasmalabs.bridge.shared.Empty);
+  rpc Commit(CommitRequest)            returns (org.plasmalabs.bridge.shared.Empty);
+  rpc Checkpoint(CheckpointRequest)    returns (org.plasmalabs.bridge.shared.Empty);
+  rpc ViewChange(ViewChangeRequest)    returns (org.plasmalabs.bridge.shared.Empty);
+  rpc NewView(NewViewRequest)          returns (org.plasmalabs.bridge.shared.Empty);
 }

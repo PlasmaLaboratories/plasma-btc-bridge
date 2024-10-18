@@ -33,7 +33,7 @@ This is needed to know the range of blocks to wait for the redemption.
 ### Changed
 
 - Default port is now 4000.
-- `brambl-cli` version (for IT) is now 2.0.0-beta3.
+- `plasma-cli` version (for IT) is now 2.0.0-beta3.
 - Updated BramblSc to 2.0.0-beta4.
 - Integration tests to use our own Bitcoin regtest node Docker image.
 - Front-end to use the new minting status.

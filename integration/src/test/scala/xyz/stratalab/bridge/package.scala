@@ -1,13 +1,13 @@
-package xyz.stratalab
+package org.plasmalabs
 
 import cats.effect.IO
 import cats.effect.kernel.Resource
-import xyz.stratalab.bridge.shared.BridgeContants
-import xyz.stratalab.bridge.shared.MintingStatusRequest
-import xyz.stratalab.bridge.shared.MintingStatusResponse
-import xyz.stratalab.bridge.shared.StartPeginSessionRequest
-import xyz.stratalab.bridge.shared.StartPeginSessionResponse
-import xyz.stratalab.bridge.shared.SyncWalletRequest
+import org.plasmalabs.bridge.shared.BridgeContants
+import org.plasmalabs.bridge.shared.MintingStatusRequest
+import org.plasmalabs.bridge.shared.MintingStatusResponse
+import org.plasmalabs.bridge.shared.StartPeginSessionRequest
+import org.plasmalabs.bridge.shared.StartPeginSessionResponse
+import org.plasmalabs.bridge.shared.SyncWalletRequest
 import fs2.io.process
 import io.circe.generic.auto._
 import io.circe.parser._
@@ -26,24 +26,24 @@ import fs2.io.file.Files
 
 package object bridge extends ProcessOps {
 
-  import xyz.stratalab.bridge.implicits._
+  import org.plasmalabs.bridge.implicits._
 
   val DOCKER_CMD = "docker"
 
   case class InputData(
-      LockAddress: String,
-      Type: String,
-      Id: Option[String],
-      Fungibility: Option[String],
-      TokenSupply: Option[String],
-      QuantDescr: Option[String],
-      Value: Int,
-      TxoAddress: Option[String],
-      FixedSeries: Option[String]
+    LockAddress: String,
+    Type:        String,
+    Id:          Option[String],
+    Fungibility: Option[String],
+    TokenSupply: Option[String],
+    QuantDescr:  Option[String],
+    Value:       Int,
+    TxoAddress:  Option[String],
+    FixedSeries: Option[String]
   )
 
   def withLogging(
-      res: Resource[IO, process.Process[IO]]
+    res: Resource[IO, process.Process[IO]]
   )(implicit l: Logger[IO]) =
     for {
       pair <- res.use(x => getText(x).product(getError(x)))
@@ -57,7 +57,7 @@ package object bridge extends ProcessOps {
     } yield pair
 
   def withTrace(
-      res: Resource[IO, process.Process[IO]]
+    res: Resource[IO, process.Process[IO]]
   )(implicit l: Logger[IO]) =
     for {
       pair <- res.use(x => getText(x).product(getError(x)))
@@ -71,7 +71,7 @@ package object bridge extends ProcessOps {
     } yield pair
 
   def withLoggingReturn(
-      res: Resource[IO, process.Process[IO]]
+    res: Resource[IO, process.Process[IO]]
   )(implicit l: Logger[IO]) =
     for {
       pair <- res.use(x => getText(x).product(getError(x)))
@@ -85,7 +85,7 @@ package object bridge extends ProcessOps {
     } yield output
 
   def withTracingReturn(
-      res: Resource[IO, process.Process[IO]]
+    res: Resource[IO, process.Process[IO]]
   )(implicit l: Logger[IO]) =
     for {
       pair <- res.use(x => getText(x).product(getError(x)))
@@ -114,7 +114,7 @@ package object bridge extends ProcessOps {
     withLogging(addSecretP(id))
 
   def createTx(txId: String, address: String, amount: BigDecimal)(implicit
-      l: Logger[IO]
+    l: Logger[IO]
   ) =
     withLoggingReturn(createTxP(txId, address, amount))
 
@@ -125,12 +125,12 @@ package object bridge extends ProcessOps {
     withLoggingReturn(getNewaddressP)
 
   def generateToAddress(id: Int, amount: Int, address: String)(implicit
-      l: Logger[IO]
+    l: Logger[IO]
   ) =
     withTrace(generateToAddressP(id, amount, address))
 
   def addTemplate(id: Int, sha256: String, min: Long, max: Long)(implicit
-      l: Logger[IO]
+    l: Logger[IO]
   ) =
     withLogging(addTemplateP(id, sha256, min, max))
 
@@ -138,16 +138,16 @@ package object bridge extends ProcessOps {
     withLogging(importVksP(id))
 
   def fundRedeemAddressTx(id: Int, redeemAddress: String)(implicit
-      l: Logger[IO]
+    l: Logger[IO]
   ) =
     withLogging(fundRedeemAddressTxP(id, redeemAddress))
 
   def proveFundRedeemAddressTx(
-      id: Int,
-      fileToProve: String,
-      provedFile: String
+    id:          Int,
+    fileToProve: String,
+    provedFile:  String
   )(implicit
-      l: Logger[IO]
+    l: Logger[IO]
   ) =
     withLogging(proveFundRedeemAddressTxP(id, fileToProve, provedFile))
 
@@ -161,23 +161,23 @@ package object bridge extends ProcessOps {
     withLoggingReturn(currentAddressP(file))
 
   def getCurrentUtxosFromAddress(id: Int, address: String)(implicit
-      l: Logger[IO]
+    l: Logger[IO]
   ) = for {
     utxo <- withLoggingReturn(getCurrentUtxosFromAddressP(id, address))
   } yield utxo
 
   def getCurrentUtxosFromAddress(file: String, address: String)(implicit
-      l: Logger[IO]
+    l: Logger[IO]
   ) = for {
     utxo <- withTracingReturn(getCurrentUtxosFromAddressP(file, address))
   } yield utxo
 
   def redeemAddressTx(
-      id: Int,
-      redeemAddress: String,
-      amount: Long,
-      groupId: String,
-      seriesId: String
+    id:            Int,
+    redeemAddress: String,
+    amount:        Long,
+    groupId:       String,
+    seriesId:      String
   )(implicit l: Logger[IO]) =
     withLogging(redeemAddressTxP(id, redeemAddress, amount, groupId, seriesId))
 
@@ -203,23 +203,18 @@ package object bridge extends ProcessOps {
     parse(bridgeNetwork)
       .map(x =>
         (((x.asArray.get.head \\ "Containers").head.asObject.map { x =>
-          x.filter(x =>
-            (x._2 \\ "Name").head.asString.get == "bitcoin" + f"${id}%02d"
-          ).values
-            .head
+          x.filter(x => (x._2 \\ "Name").head.asString.get == "bitcoin" + f"${id}%02d").values.head
         }).get \\ "IPv4Address").head.asString.get
           .split("/")
           .head
       )
   )
+
   def extractIpBifrost(id: Int, bridgeNetwork: String) = IO.fromEither(
     parse(bridgeNetwork)
       .map(x =>
         (((x.asArray.get.head \\ "Containers").head.asObject.map { x =>
-          x.filter(x =>
-            (x._2 \\ "Name").head.asString.get == "bifrost" + f"${id}%02d"
-          ).values
-            .head
+          x.filter(x => (x._2 \\ "Name").head.asString.get == "bifrost" + f"${id}%02d").values.head
         }).get \\ "IPv4Address").head.asString.get
           .split("/")
           .head
@@ -243,8 +238,7 @@ package object bridge extends ProcessOps {
           `Content-Type`.apply(MediaType.application.json)
         ).withEntity(
           StartPeginSessionRequest(
-            pkey =
-              "0295bb5a3b80eeccb1e38ab2cbac2545e9af6c7012cdc8d53bd276754c54fc2e4a",
+            pkey = "0295bb5a3b80eeccb1e38ab2cbac2545e9af6c7012cdc8d53bd276754c54fc2e4a",
             sha256 = shaSecretMap(id)
           )
         )
@@ -272,13 +266,13 @@ package object bridge extends ProcessOps {
               MintingStatusRequest(sessionId)
             )
           )
-          .handleErrorWith(e => {
+          .handleErrorWith { e =>
             error"Error getting status response" >> IO(
               e.printStackTrace()
             ) >> IO.raiseError(
               e
             )
-          })
+          }
       })
 
   def checkStatus(sessionId: String)(implicit l: Logger[IO]) = EmberClientBuilder
@@ -301,13 +295,13 @@ package object bridge extends ProcessOps {
             MintingStatusRequest(sessionId)
           )
         )
-          .handleErrorWith(e => {
-            error"Error getting status code" >> IO(
-              e.printStackTrace()
-            ) >> IO.raiseError(
-              e
-            )
-          })
+        .handleErrorWith { e =>
+          error"Error getting status code" >> IO(
+            e.printStackTrace()
+          ) >> IO.raiseError(
+            e
+          )
+        }
     })
 
   def extractGetTxIdAndAmount(implicit l: Logger[IO]) = for {
@@ -372,20 +366,19 @@ package object bridge extends ProcessOps {
 
   object implicits {
 
-    implicit val startSessionRequestDecoder
-        : EntityEncoder[IO, StartPeginSessionRequest] =
+    implicit val startSessionRequestDecoder: EntityEncoder[IO, StartPeginSessionRequest] =
       jsonEncoderOf[IO, StartPeginSessionRequest]
-    implicit val syncWalletRequestDecoder
-        : EntityEncoder[IO, SyncWalletRequest] =
+
+    implicit val syncWalletRequestDecoder: EntityEncoder[IO, SyncWalletRequest] =
       jsonEncoderOf[IO, SyncWalletRequest]
-    implicit val mintingStatusRequesEncoder
-        : EntityEncoder[IO, MintingStatusRequest] =
+
+    implicit val mintingStatusRequesEncoder: EntityEncoder[IO, MintingStatusRequest] =
       jsonEncoderOf[IO, MintingStatusRequest]
-    implicit val startSessionResponse
-        : EntityDecoder[IO, StartPeginSessionResponse] =
+
+    implicit val startSessionResponse: EntityDecoder[IO, StartPeginSessionResponse] =
       jsonOf[IO, StartPeginSessionResponse]
-    implicit val MintingStatusResponseDecoder
-        : EntityDecoder[IO, MintingStatusResponse] =
+
+    implicit val MintingStatusResponseDecoder: EntityDecoder[IO, MintingStatusResponse] =
       jsonOf[IO, MintingStatusResponse]
 
   }
@@ -458,10 +451,10 @@ package object bridge extends ProcessOps {
   val secretMap = Map(1 -> "strata-secret", 2 -> "strata-secret01")
 
   val bifrostHostMap =
-      Map(1 -> "localhost", 2 -> "localhost")
+    Map(1 -> "localhost", 2 -> "localhost")
 
   val bifrostPortMap =
-      Map(1 -> 9084, 2 -> 9086)
+    Map(1 -> 9084, 2 -> 9086)
 
   val shaSecretMap = Map(
     1 -> "60cd434b2fd6d22cec4cf3c9b16d3f57de4bf4d0bd0da1b16659a76ec7736610",
@@ -580,11 +573,11 @@ package object bridge extends ProcessOps {
 
   // brambl-cli simple-transaction create --from-fellowship bridge --from-template redeemBridge -t ptetP7jshHTzLLp81RbPkeHKWFJWeE3ijH94TAmiBRPTUTj2htC31NyEWU8p -w password -o redeemTx.pbuf -n private -a 10 -h  localhost --port 9084  --keyfile user-keyfile.json --walletdb user-wallet.db --fee 10 --transfer-token asset
   def redeemAddressTxP(
-      id: Int,
-      redeemAddress: String,
-      amount: Long,
-      groupId: String,
-      seriesId: String
+    id:            Int,
+    redeemAddress: String,
+    amount:        Long,
+    groupId:       String,
+    seriesId:      String
   ) = process
     .ProcessBuilder(
       CS_CMD,
@@ -627,9 +620,9 @@ package object bridge extends ProcessOps {
 
   // brambl-cli tx prove -i fundRedeemTx.pbuf --walletdb user-wallet.db --keyfile user-keyfile.json -w password -o fundRedeemTxProved.pbuf
   def proveFundRedeemAddressTxP(
-      id: Int,
-      fileToProve: String,
-      provedFile: String
+    id:          Int,
+    fileToProve: String,
+    provedFile:  String
   ) =
     process
       .ProcessBuilder(
@@ -718,12 +711,12 @@ package object bridge extends ProcessOps {
       .spawn[IO]
 
   def disconnectBridge(networkName: String, containerName: String)(implicit
-      l: Logger[IO]
+    l: Logger[IO]
   ) =
     withLogging(disconnectBridgeP(networkName, containerName))
 
   def connectBridge(networkName: String, containerName: String)(implicit
-      l: Logger[IO]
+    l: Logger[IO]
   ) =
     withLogging(connectBridgeP(networkName, containerName))
 
@@ -754,6 +747,7 @@ package object bridge extends ProcessOps {
       .compile
       .foldMonoid
       .map(_.trim)
+
   def getError(p: fs2.io.process.Process[IO]) =
     p.stderr
       .through(fs2.text.utf8.decode)

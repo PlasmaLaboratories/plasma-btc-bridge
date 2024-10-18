@@ -1,22 +1,21 @@
-package xyz.stratalab.bridge
+package org.plasmalabs.bridge
 
 import cats.effect.IO
 import org.typelevel.log4cats.syntax._
 
 import scala.concurrent.duration._
-import xyz.stratalab.bridge.checkMintingStatus
+import org.plasmalabs.bridge.checkMintingStatus
 
 trait FailedPeginNoDepositModule {
 
   self: BridgeIntegrationSpec =>
 
-  def failedPeginNoDeposit(): IO[Unit] = {
-
+  def failedPeginNoDeposit(): IO[Unit] =
     assertIO(
       for {
-        newAddress <- getNewAddress
+        newAddress           <- getNewAddress
         startSessionResponse <- startSession(1)
-        _ <- generateToAddress(1, 102, newAddress)
+        _                    <- generateToAddress(1, 102, newAddress)
         _ <- checkMintingStatus(startSessionResponse.sessionID)
           .flatMap(x =>
             generateToAddress(1, 1, newAddress) >> IO
@@ -30,5 +29,4 @@ trait FailedPeginNoDepositModule {
       } yield (),
       ()
     )
-  }
 }

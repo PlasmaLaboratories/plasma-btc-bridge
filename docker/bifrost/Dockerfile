@@ -5,11 +5,11 @@ RUN chmod +x cs
 RUN mv cs /usr/local/bin
 RUN cs setup --yes
 ## create alias in profile
-RUN echo "#!/bin/bash" >> /usr/local/bin/brambl-cli
+RUN echo "#!/bin/bash" >> /usr/local/bin/plasma-cli
 ## run forwarding the parameters
-RUN echo 'cs launch -r https://s01.oss.sonatype.org/content/repositories/releases co.topl:brambl-cli_2.13:2.0.0-beta6 -- $@' >> /usr/local/bin/brambl-cli
-RUN chmod +x /usr/local/bin/brambl-cli
+RUN echo 'cs launch -r https://s01.oss.sonatype.org/content/repositories/releases org.plasmalabs:plasma-cli_2.13:2.0.0-beta6 -- $@' >> /usr/local/bin/plasma-cli
+RUN chmod +x /usr/local/bin/plasma-cli
 USER 1001:0
-RUN brambl-cli wallet init --network private --password password --newwalletdb /tmp/wallet.db --mnemonicfile /tmp/mnemonic.txt  -o /tmp/keyfile.json
+RUN plasma-cli wallet init --network private --password password --newwalletdb /tmp/wallet.db --mnemonicfile /tmp/mnemonic.txt  -o /tmp/keyfile.json
 # ENTRYPOINT ["/opt/docker/bin/bifrost-node"]
 # EXPOSE 9085 9084 9091

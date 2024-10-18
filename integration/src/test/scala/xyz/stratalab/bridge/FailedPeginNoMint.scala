@@ -1,4 +1,4 @@
-package xyz.stratalab.bridge
+package org.plasmalabs.bridge
 
 import cats.effect.IO
 import org.typelevel.log4cats.syntax._
@@ -9,13 +9,12 @@ trait FailedPeginNoMintModule {
 
   self: BridgeIntegrationSpec =>
 
-  def failedPeginNoMint(): IO[Unit] = {
-
+  def failedPeginNoMint(): IO[Unit] =
     assertIO(
       for {
-        _ <- mintStrataBlock(1, 1)
-        _ <- IO.sleep(1.second)
-        newAddress <- getNewAddress
+        _                <- mintStrataBlock(1, 1)
+        _                <- IO.sleep(1.second)
+        newAddress       <- getNewAddress
         txIdAndBTCAmount <- extractGetTxIdAndAmount
         (txId, btcAmount, btcAmountLong) = txIdAndBTCAmount
         startSessionResponse <- startSession(1)
@@ -25,8 +24,8 @@ trait FailedPeginNoMintModule {
           btcAmount
         )
         signedTxHex <- signTransaction(bitcoinTx)
-        _ <- sendTransaction(signedTxHex)
-        _ <- generateToAddress(1, 52, newAddress)
+        _           <- sendTransaction(signedTxHex)
+        _           <- generateToAddress(1, 52, newAddress)
         _ <- checkMintingStatus(startSessionResponse.sessionID)
           .flatMap(x =>
             for {
@@ -34,7 +33,6 @@ trait FailedPeginNoMintModule {
               _ <- IO.sleep(1.second)
             } yield x
           )
-
           .iterateUntil(
             _.mintingStatus == "PeginSessionStateTimeout"
           )
@@ -43,5 +41,4 @@ trait FailedPeginNoMintModule {
       } yield (),
       ()
     )
-  }
 }

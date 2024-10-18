@@ -1,4 +1,4 @@
-package xyz.stratalab.bridge
+package org.plasmalabs.bridge
 
 import cats.effect.IO
 import fs2.io.process
@@ -58,6 +58,7 @@ trait ProcessOps {
     "-s",
     "false"
   )
+
   def mintBlockDockerSeq(node: Int, nbBlocks: Int) = Seq(
     "exec",
     "bifrost" + f"${node}%02d",

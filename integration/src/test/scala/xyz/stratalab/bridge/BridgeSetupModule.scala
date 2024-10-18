@@ -1,4 +1,4 @@
-package xyz.stratalab.bridge
+package org.plasmalabs.bridge
 
 import cats.effect.kernel.{Async, Fiber}
 import cats.effect.{ExitCode, IO}

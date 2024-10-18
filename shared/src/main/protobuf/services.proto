@@ -3,11 +3,11 @@ syntax = "proto3";
 
 import "shared.proto";
 
-package xyz.stratalab.bridge.consensus.service;
+package org.plasmalabs.bridge.consensus.service;
 
 service StateMachineService {
-  rpc ExecuteRequest(xyz.stratalab.bridge.shared.StateMachineRequest) returns (xyz.stratalab.bridge.shared.Empty);
-  rpc MintingStatus(xyz.stratalab.bridge.shared.MintingStatusOperation) returns (MintingStatusReply);
+  rpc ExecuteRequest(org.plasmalabs.bridge.shared.StateMachineRequest) returns (org.plasmalabs.bridge.shared.Empty);
+  rpc MintingStatus(org.plasmalabs.bridge.shared.MintingStatusOperation) returns (MintingStatusReply);
 }
 
 
@@ -19,7 +19,7 @@ message MintingStatusReply {
 }
 
 service ResponseService {
-  rpc DeliverResponse(StateMachineReply) returns (xyz.stratalab.bridge.shared.Empty);
+  rpc DeliverResponse(StateMachineReply) returns (org.plasmalabs.bridge.shared.Empty);
 }
 
 
