@@ -35,6 +35,9 @@ import java.net.InetSocketAddress
 import java.security.{PublicKey, Security}
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.LongAdder
+import scala.concurrent.duration.FiniteDuration
+import xyz.stratalab.bridge.shared.RetryPolicy
+
 
 sealed trait PeginSessionState
 
@@ -206,11 +209,15 @@ object Main extends IOApp with PublicApiParamsDescriptor {
             .getLoggerFromName[IO]("public-api-" + f"${client.id}%02d")
 
         implicit val stateMachineConf = StateMachineServiceGrpcClientRetryConfigImpl(
-          conf.getInt("bridge.client.stateMachine.intialSleep"),
-          conf.getInt("bridge.client.stateMachine.finalSleep"),
-          conf.getInt("bridge.client.stateMachine.initialDelay"),
-          conf.getInt("bridge.client.stateMachine.maxRetries")
+          primaryResponseWait = FiniteDuration.apply(conf.getInt("bridge.client.primaryResponseWait"), "second"),
+          otherReplicasResponseWait = FiniteDuration.apply(conf.getInt("bridge.client.otherReplicasResponseWait"), "second"),
+          retryPolicy = RetryPolicy(
+            initialDelay = FiniteDuration.apply(conf.getInt("bridge.client.retryPolicy.initialDelay"), "second"),
+            maxRetries = conf.getInt("bridge.client.retryPolicy.maxRetries"),
+            delayMultiplier = conf.getInt("bridge.client.retryPolicy.delayMultiplier")
+          )
         )
+
 
         for {
           _ <- info"Configuration parameters"

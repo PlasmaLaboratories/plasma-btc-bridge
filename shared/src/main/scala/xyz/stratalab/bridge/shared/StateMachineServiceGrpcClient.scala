@@ -330,18 +330,18 @@ object StateMachineServiceGrpcClientImpl {
           _ <- retryWithBackoff(
             replicaMap(currentPrimary),
             request,
-            stateMachineConf.getInitialDelay, 
-            stateMachineConf.getMaxRetries
+            stateMachineConf.retryPolicy.initialDelay, 
+            stateMachineConf.retryPolicy.maxRetries
           )
           _ <- trace"Waiting for response from backend"
           replicasWithoutPrimary = replicaMap.filter(_._1 != currentPrimary).values.toList
           someResponse <- Async[F].race(
-            Async[F].sleep(stateMachineConf.getInitialSleep) >> // wait for response
+            Async[F].sleep(stateMachineConf.primaryResponseWait) >> // wait for response
             error"The request ${request.timestamp} timed out, contacting other replicas" >> // timeout
             replicasWithoutPrimary.parTraverse{
-            replica => retryWithBackoff(replica, request, stateMachineConf.getInitialDelay, stateMachineConf.getMaxRetries)
+            replica => retryWithBackoff(replica, request, stateMachineConf.retryPolicy.initialDelay, stateMachineConf.retryPolicy.maxRetries)
           } >>
-            Async[F].sleep(stateMachineConf.getFinalSleep) >> // wait for response
+            Async[F].sleep(stateMachineConf.otherReplicasResponseWait) >> // wait for response
             (TimeoutError("Timeout waiting for response"): BridgeError)
               .pure[F],
             checkVoteResult(request.timestamp)

@@ -54,6 +54,8 @@ import java.security.{KeyPair => JKeyPair, PublicKey, Security}
 import java.util.concurrent.atomic.LongAdder
 import java.util.concurrent.{ConcurrentHashMap, Executors}
 import scala.concurrent.ExecutionContext
+import xyz.stratalab.bridge.shared.RetryPolicy
+import scala.concurrent.duration.FiniteDuration
 
 case class SystemGlobalState(
   currentStatus: Option[String],
@@ -496,15 +498,21 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         .getLoggerFromName[IO]("consensus-" + f"${replicaId.id}%02d")
 
     implicit val pbftInternalConfig = PBFTInternalGrpcServiceClientRetryConfigImpl(
-      conf.getInt("bridge.replica.clients.pbftInternal.initialDelay"),
-      conf.getInt("bridge.replica.clients.pbftInternal.maxRetries")
+      retryPolicy = RetryPolicy(
+        initialDelay = FiniteDuration.apply(conf.getInt("bridge.replica.clients.pbftInternal.retryPolicy.initialDelay"), "second"),
+        maxRetries = conf.getInt("bridge.replica.clients.pbftInternal.retryPolicy.maxRetries"),
+        delayMultiplier = conf.getInt("bridge.replica.clients.pbftInternal.retryPolicy.delayMultiplier")
+      )
     )
 
     implicit val stateMachineConf = StateMachineServiceGrpcClientRetryConfigImpl(
-      conf.getInt("bridge.replica.clients.stateMachine.intialSleep"),
-      conf.getInt("bridge.replica.clients.stateMachine.finalSleep"),
-      conf.getInt("bridge.replica.clients.stateMachine.initialDelay"),
-      conf.getInt("bridge.replica.clients.stateMachine.maxRetries")
+      primaryResponseWait = FiniteDuration.apply(conf.getInt("bridge.replica.clients.monitor.client.primaryResponseWait"), "second"),
+      otherReplicasResponseWait = FiniteDuration.apply(conf.getInt("bridge.replica.clients.monitor.client.otherReplicasResponseWait"), "second"),
+      retryPolicy = RetryPolicy(
+        initialDelay = FiniteDuration.apply(conf.getInt("bridge.replica.clients.monitor.client.retryPolicy.initialDelay"), "second"),
+        maxRetries = conf.getInt("bridge.replica.clients.monitor.client.retryPolicy.maxRetries"),
+        delayMultiplier = conf.getInt("bridge.replica.clients.monitor.client.retryPolicy.delayMultiplier")
+      )
     )
 
     (for {

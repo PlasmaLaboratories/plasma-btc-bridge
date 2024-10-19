@@ -63,19 +63,30 @@ ${replicasConfString(replicaCount)}
 |      clients = {
 ${clientsConfString(replicaCount)}
 |      }
-|    stateMachine {
-|       intialSleep = 10
-|       # in seconds
-|       finalSleep = 10
-|       # in seconds
-|       initialDelay = 1
-|       maxRetries = 3
-|      }
-|      pbftInternal = {
-|       # in seconds
-|       initialDelay = 1
-|       # in seconds
-|       maxRetries = 1
+|     monitor = { 
+|       client = {
+|         # in seconds
+|         primaryResponseWait = 10 
+|         # in seconds
+|         otherReplicasResponseWait = 10 
+|         # in seconds
+|
+|         retryPolicy =  {
+|           # in seconds
+|           initialDelay = 1
+|           maxRetries = 3
+|           delayMultiplier = 2
+|         }
+|       }
+|     }
+|     pbftInternal = {
+|       retryPolicy = {
+|         # in seconds
+|         initialDelay = 1 
+|         # in seconds
+|         maxRetries = 1
+|         delayMultiplier = 2
+|       }
 |     }
 |    }
 |  }

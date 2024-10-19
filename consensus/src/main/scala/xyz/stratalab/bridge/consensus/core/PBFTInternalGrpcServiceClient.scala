@@ -113,8 +113,8 @@ object PBFTInternalGrpcServiceClientImpl {
                 ),
                 new Metadata()
               ),
-              pbftInternalConfig.getInitialDelay,
-              pbftInternalConfig.getMaxRetries,
+              pbftInternalConfig.retryPolicy.initialDelay,
+              pbftInternalConfig.retryPolicy.maxRetries,
               "View Change",
               Empty()
             )
@@ -136,8 +136,8 @@ object PBFTInternalGrpcServiceClientImpl {
                 ),
                 new Metadata()
               ),
-              pbftInternalConfig.getInitialDelay,
-              pbftInternalConfig.getMaxRetries,
+              pbftInternalConfig.retryPolicy.initialDelay,
+              pbftInternalConfig.retryPolicy.maxRetries,
               "Commit",
               Empty()
             ).handleErrorWith { _ =>
@@ -155,8 +155,8 @@ object PBFTInternalGrpcServiceClientImpl {
                 request,
                 new Metadata()
               ),
-              pbftInternalConfig.getInitialDelay,
-              pbftInternalConfig.getMaxRetries,
+              pbftInternalConfig.retryPolicy.initialDelay,
+              pbftInternalConfig.retryPolicy.maxRetries,
               "Pre Prepare",
               Empty()
             )
@@ -180,8 +180,8 @@ object PBFTInternalGrpcServiceClientImpl {
                 ),
                 new Metadata()
               ),
-              pbftInternalConfig.getInitialDelay,
-              pbftInternalConfig.getMaxRetries,
+              pbftInternalConfig.retryPolicy.initialDelay,
+              pbftInternalConfig.retryPolicy.maxRetries,
               "Prepare",
               Empty()
             )
@@ -199,8 +199,8 @@ object PBFTInternalGrpcServiceClientImpl {
                 request,
                 new Metadata()
               ),
-              pbftInternalConfig.getInitialDelay,
-              pbftInternalConfig.getMaxRetries,
+              pbftInternalConfig.retryPolicy.initialDelay,
+              pbftInternalConfig.retryPolicy.maxRetries,
               "Checkpoint",
               Empty()
             )
@@ -224,8 +224,8 @@ object PBFTInternalGrpcServiceClientImpl {
                 ),
                 new Metadata()
               ),
-              pbftInternalConfig.getInitialDelay,
-              pbftInternalConfig.getMaxRetries,
+              pbftInternalConfig.retryPolicy.initialDelay,
+              pbftInternalConfig.retryPolicy.maxRetries,
               "new View",
               Empty()
             )

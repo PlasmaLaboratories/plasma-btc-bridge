@@ -1,40 +1,65 @@
 package xyz.stratalab.bridge.shared
 
-import scala.concurrent.duration.FiniteDuration
+import scala.concurrent.duration._
 
-sealed abstract class StateMachineServiceGrpcClientRetryConfig (
-  val initialSleep: Int, 
-  val finalSleep: Int, 
-  val initialDelay: Int, 
-  val maxRetries: Int
-) {
-  def getInitialSleep: FiniteDuration = FiniteDuration.apply(initialSleep, "second")
-
-  def getFinalSleep: FiniteDuration = FiniteDuration.apply(finalSleep, "second")
-
-  def getInitialDelay: FiniteDuration = FiniteDuration.apply(initialDelay, "second")
-
-  def getMaxRetries: Int = maxRetries
-
-  override def toString: String = s"Initial Sleep: ${initialSleep}, Final Sleep: ${finalSleep}, initialDelay: ${initialDelay}, maxRetries: ${maxRetries}"
+trait StateMachineServiceGrpcClientRetryConfig {
+  def primaryResponseWait: FiniteDuration
+  def otherReplicasResponseWait: FiniteDuration
+  def retryPolicy: RetryPolicy
 }
-case class StateMachineServiceGrpcClientRetryConfigImpl(
-  override val initialSleep: Int,
-  override val finalSleep: Int,
-  override val initialDelay: Int,
-  override val maxRetries: Int
-) extends StateMachineServiceGrpcClientRetryConfig(initialSleep, finalSleep, initialDelay, maxRetries)
 
-sealed abstract class PBFTInternalGrpcServiceClientRetryConfig (
-  val initialDelay: Int, 
-  val maxRetries: Int
-) {
-  def getInitialDelay: FiniteDuration = FiniteDuration.apply(initialDelay, "second")
-  def getMaxRetries: Int = maxRetries
-  override def toString: String = s"initialDelay: ${initialDelay}, maxRetries: ${maxRetries}"
+case class StateMachineServiceGrpcClientRetryConfigImpl(
+  primaryResponseWait: FiniteDuration,
+  otherReplicasResponseWait: FiniteDuration,
+  retryPolicy: RetryPolicy
+) extends StateMachineServiceGrpcClientRetryConfig
+
+case class RetryPolicy(
+  initialDelay: FiniteDuration,
+  maxRetries: Int,
+  delayMultiplier: Int
+)
+
+object StateMachineServiceGrpcClientRetryConfig {
+  def apply(
+    primaryResponseWait: Int,
+    otherReplicasResponseWait: Int,
+    initialDelay : Int,
+    maxRetries: Int, 
+    delayMultiplier: Int
+  ): StateMachineServiceGrpcClientRetryConfig = {
+    StateMachineServiceGrpcClientRetryConfigImpl(
+      primaryResponseWait = primaryResponseWait.seconds,
+      otherReplicasResponseWait = otherReplicasResponseWait.seconds,
+      retryPolicy = RetryPolicy(
+        initialDelay = initialDelay.seconds,
+        maxRetries = maxRetries, 
+        delayMultiplier = delayMultiplier
+      )
+    )
+  }
+}
+
+trait PBFTInternalGrpcServiceClientRetryConfig {
+  def retryPolicy: RetryPolicy
 }
 
 case class PBFTInternalGrpcServiceClientRetryConfigImpl(
-  override val initialDelay: Int,
-  override val maxRetries: Int
-) extends PBFTInternalGrpcServiceClientRetryConfig(initialDelay, maxRetries)
+  retryPolicy: RetryPolicy
+) extends PBFTInternalGrpcServiceClientRetryConfig
+
+object PBFTInternalGrpcServiceClientRetryConfig {
+  def apply(
+    initialDelay: Int,
+    maxRetries: Int, 
+    delayMultiplier: Int
+  ): PBFTInternalGrpcServiceClientRetryConfig = {
+    PBFTInternalGrpcServiceClientRetryConfigImpl(
+      retryPolicy = RetryPolicy(
+        initialDelay = initialDelay.seconds,
+        maxRetries = maxRetries, 
+        delayMultiplier = delayMultiplier
+      )
+    )
+  }
+}
