@@ -167,6 +167,7 @@ trait AppModule extends WalletStateResource {
       Ref.unsafe[IO, (Long, Long)]((0, 0))
     )
     implicit val kWatermark = new KWatermark(params.kWatermark)
+
     import scala.concurrent.duration._
     for {
       queue             <- Queue.unbounded[IO, PBFTInternalEvent]
@@ -207,6 +208,7 @@ trait AppModule extends WalletStateResource {
       implicit val iRequestTimerManager = requestTimerManager
       implicit val iViewManager = viewManager
       implicit val iCheckpointManager = checkpointManager
+
       implicit val pbftReqProcessor = PBFTRequestPreProcessorImpl.make[IO](
         queue,
         viewManager,

@@ -43,7 +43,9 @@ import xyz.stratalab.bridge.shared.{
   ReplicaNode,
   ResponseGrpcServiceServer,
   StateMachineServiceGrpcClient,
-  StateMachineServiceGrpcClientImpl
+  StateMachineServiceGrpcClientImpl,
+  PBFTInternalGrpcServiceClientRetryConfigImpl,
+  StateMachineServiceGrpcClientRetryConfigImpl
 }
 import xyz.stratalab.consensus.core.{PBFTInternalGrpcServiceClient, PBFTInternalGrpcServiceClientImpl}
 
@@ -52,6 +54,8 @@ import java.security.{KeyPair => JKeyPair, PublicKey, Security}
 import java.util.concurrent.atomic.LongAdder
 import java.util.concurrent.{ConcurrentHashMap, Executors}
 import scala.concurrent.ExecutionContext
+import xyz.stratalab.bridge.shared.RetryPolicy
+import scala.concurrent.duration.FiniteDuration
 
 case class SystemGlobalState(
   currentStatus: Option[String],
@@ -246,7 +250,9 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
     clientId:           ClientId,
     replicaId:          ReplicaId,
     clientCount:        ClientCount,
-    replicaCount:       ReplicaCount
+    replicaCount:       ReplicaCount,
+    pbftInternalConfig: PBFTInternalGrpcServiceClientRetryConfigImpl,
+    stateMachineConf:   StateMachineServiceGrpcClientRetryConfigImpl
   ) = {
     import fs2.grpc.syntax.all._
     import scala.jdk.CollectionConverters._
@@ -260,6 +266,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         ConsensusClientMessageId,
         ConcurrentHashMap[Int, Int]
       ]()
+
     for {
       replicaKeyPair <- BridgeCryptoUtils
         .getKeyPair[IO](privateKeyFile)
@@ -489,6 +496,29 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
     implicit val logger =
       org.typelevel.log4cats.slf4j.Slf4jLogger
         .getLoggerFromName[IO]("consensus-" + f"${replicaId.id}%02d")
+
+    implicit val pbftInternalConfig = PBFTInternalGrpcServiceClientRetryConfigImpl(
+      retryPolicy = RetryPolicy(
+        initialDelay =
+          FiniteDuration.apply(conf.getInt("bridge.replica.clients.pbftInternal.retryPolicy.initialDelay"), "second"),
+        maxRetries = conf.getInt("bridge.replica.clients.pbftInternal.retryPolicy.maxRetries"),
+        delayMultiplier = conf.getInt("bridge.replica.clients.pbftInternal.retryPolicy.delayMultiplier")
+      )
+    )
+
+    implicit val stateMachineConf = StateMachineServiceGrpcClientRetryConfigImpl(
+      primaryResponseWait =
+        FiniteDuration.apply(conf.getInt("bridge.replica.clients.monitor.client.primaryResponseWait"), "second"),
+      otherReplicasResponseWait =
+        FiniteDuration.apply(conf.getInt("bridge.replica.clients.monitor.client.otherReplicasResponseWait"), "second"),
+      retryPolicy = RetryPolicy(
+        initialDelay =
+          FiniteDuration.apply(conf.getInt("bridge.replica.clients.monitor.client.retryPolicy.initialDelay"), "second"),
+        maxRetries = conf.getInt("bridge.replica.clients.monitor.client.retryPolicy.maxRetries"),
+        delayMultiplier = conf.getInt("bridge.replica.clients.monitor.client.retryPolicy.delayMultiplier")
+      )
+    )
+
     (for {
       _                  <- IO(Security.addProvider(new BouncyCastleProvider()))
       pegInKm            <- loadKeyPegin(params)

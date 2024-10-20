@@ -117,6 +117,7 @@ object PublicApiHttpServiceServer {
                 case _ =>
                   BadRequest(e)
               }
+
               BadRequest(e)
             case Left(_) =>
               InternalServerError()

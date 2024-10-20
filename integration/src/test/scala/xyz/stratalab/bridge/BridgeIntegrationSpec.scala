@@ -5,6 +5,7 @@ import munit.CatsEffectSuite
 class BridgeIntegrationSpec
     extends CatsEffectSuite
     with SuccessfulPeginModule
+    with SuccessfulPeginWithNonPrimaryFailureModule
     with FailedPeginNoDepositModule
     with FailedPeginNoMintModule
     with FailedRedemptionModule
@@ -12,6 +13,7 @@ class BridgeIntegrationSpec
     with SuccessfulPeginWithClaimReorgModule
     with SuccessfulPeginWithClaimReorgRetryModule
     with FailedMintingReorgModule
+    with FailedPeginNonPrimaryFailureModule
     with BridgeSetupModule {
 
   import org.typelevel.log4cats.syntax._
@@ -21,6 +23,7 @@ class BridgeIntegrationSpec
   cleanupDir.test("Bridge should correctly peg-in BTC") { _ =>
     info"Bridge should correctly peg-in BTC" >> successfulPegin()
   }
+  
   cleanupDir.test("Bridge should fail correctly when user does not send BTC") {
     _ =>
       info"Bridge should fail correctly when user does not send BTC" >> failedPeginNoDeposit()
@@ -56,5 +59,13 @@ class BridgeIntegrationSpec
   ) { _ =>
     info"Bridge should correctly go back to minting if there is a reorg" >> failedMintingReorgModule()
   }
+
+  cleanupDir.test("Bridge should correctly peg-in BTC if non-primaries replica fails") { _ =>
+    info"Bridge should correctly peg-in BTC if non-primaries replica fails" >> successfulPeginWithNonPrimaryFailure() 
+  }
+
+  // cleanupDir.test("Bridge should fail correctly peg-in BTC if more than f non-primaries replicas fail") { _ =>
+  //   info"Bridge should fail correctly peg-in BTC if more than f non-primaries replicas fail" >> failedPeginNonPrimaryFailure() 
+  // }
 
 }

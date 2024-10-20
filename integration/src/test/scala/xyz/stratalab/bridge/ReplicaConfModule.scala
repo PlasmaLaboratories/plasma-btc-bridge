@@ -19,7 +19,10 @@ trait ReplicaConfModule extends CommonSetupModule {
 |          secure = "false"
 |        }""").mkString("\n")
 
-  def consensusConfString(replicaId: Int, replicaCount: Int) = s"""
+  def consensusConfString(
+    replicaId: Int, 
+    replicaCount: Int, 
+    ) = s"""
 |bridge {
 |  replica {
 |    # the unique number that identifies this replica
@@ -60,6 +63,31 @@ ${replicasConfString(replicaCount)}
 |      clients = {
 ${clientsConfString(replicaCount)}
 |      }
+|     monitor = { 
+|       client = {
+|         # in seconds
+|         primaryResponseWait = 10 
+|         # in seconds
+|         otherReplicasResponseWait = 10 
+|         # in seconds
+|
+|         retryPolicy =  {
+|           # in seconds
+|           initialDelay = 1
+|           maxRetries = 3
+|           delayMultiplier = 2
+|         }
+|       }
+|     }
+|     pbftInternal = {
+|       retryPolicy = {
+|         # in seconds
+|         initialDelay = 1 
+|         # in seconds
+|         maxRetries = 1
+|         delayMultiplier = 2
+|       }
+|     }
 |    }
 |  }
 |}
