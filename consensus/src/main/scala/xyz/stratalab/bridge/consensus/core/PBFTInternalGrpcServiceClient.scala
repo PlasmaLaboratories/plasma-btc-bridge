@@ -89,8 +89,14 @@ object PBFTInternalGrpcServiceClientImpl {
         operation.handleErrorWith { error =>
           if (maxRetries > 0) {
             F.sleep(initialDelay) >> {
-              trace"Retrying $operationName. Retries left: $maxRetries, Next delay: ${initialDelay * 2}" >>
-              retryWithBackoff(operation, initialDelay * 2, maxRetries - 1, operationName, defaultValue)
+              trace"Retrying $operationName. Retries left: $maxRetries, Next delay: ${initialDelay * pbftInternalConfig.retryPolicy.delayMultiplier}" >>
+              retryWithBackoff(
+                operation,
+                initialDelay * pbftInternalConfig.retryPolicy.delayMultiplier,
+                maxRetries - 1,
+                operationName,
+                defaultValue
+              )
             }
           } else {
             trace"Max retries reached for $operationName. Error: ${error.getMessage}" >>

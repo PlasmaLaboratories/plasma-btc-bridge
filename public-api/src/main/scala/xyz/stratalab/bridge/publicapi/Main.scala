@@ -38,7 +38,6 @@ import java.util.concurrent.atomic.LongAdder
 import scala.concurrent.duration.FiniteDuration
 import xyz.stratalab.bridge.shared.RetryPolicy
 
-
 sealed trait PeginSessionState
 
 case object PeginSessionState {
@@ -210,14 +209,14 @@ object Main extends IOApp with PublicApiParamsDescriptor {
 
         implicit val stateMachineConf = StateMachineServiceGrpcClientRetryConfigImpl(
           primaryResponseWait = FiniteDuration.apply(conf.getInt("bridge.client.primaryResponseWait"), "second"),
-          otherReplicasResponseWait = FiniteDuration.apply(conf.getInt("bridge.client.otherReplicasResponseWait"), "second"),
+          otherReplicasResponseWait =
+            FiniteDuration.apply(conf.getInt("bridge.client.otherReplicasResponseWait"), "second"),
           retryPolicy = RetryPolicy(
             initialDelay = FiniteDuration.apply(conf.getInt("bridge.client.retryPolicy.initialDelay"), "second"),
             maxRetries = conf.getInt("bridge.client.retryPolicy.maxRetries"),
             delayMultiplier = conf.getInt("bridge.client.retryPolicy.delayMultiplier")
           )
         )
-
 
         for {
           _ <- info"Configuration parameters"

@@ -499,17 +499,21 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
 
     implicit val pbftInternalConfig = PBFTInternalGrpcServiceClientRetryConfigImpl(
       retryPolicy = RetryPolicy(
-        initialDelay = FiniteDuration.apply(conf.getInt("bridge.replica.clients.pbftInternal.retryPolicy.initialDelay"), "second"),
+        initialDelay =
+          FiniteDuration.apply(conf.getInt("bridge.replica.clients.pbftInternal.retryPolicy.initialDelay"), "second"),
         maxRetries = conf.getInt("bridge.replica.clients.pbftInternal.retryPolicy.maxRetries"),
         delayMultiplier = conf.getInt("bridge.replica.clients.pbftInternal.retryPolicy.delayMultiplier")
       )
     )
 
     implicit val stateMachineConf = StateMachineServiceGrpcClientRetryConfigImpl(
-      primaryResponseWait = FiniteDuration.apply(conf.getInt("bridge.replica.clients.monitor.client.primaryResponseWait"), "second"),
-      otherReplicasResponseWait = FiniteDuration.apply(conf.getInt("bridge.replica.clients.monitor.client.otherReplicasResponseWait"), "second"),
+      primaryResponseWait =
+        FiniteDuration.apply(conf.getInt("bridge.replica.clients.monitor.client.primaryResponseWait"), "second"),
+      otherReplicasResponseWait =
+        FiniteDuration.apply(conf.getInt("bridge.replica.clients.monitor.client.otherReplicasResponseWait"), "second"),
       retryPolicy = RetryPolicy(
-        initialDelay = FiniteDuration.apply(conf.getInt("bridge.replica.clients.monitor.client.retryPolicy.initialDelay"), "second"),
+        initialDelay =
+          FiniteDuration.apply(conf.getInt("bridge.replica.clients.monitor.client.retryPolicy.initialDelay"), "second"),
         maxRetries = conf.getInt("bridge.replica.clients.monitor.client.retryPolicy.maxRetries"),
         delayMultiplier = conf.getInt("bridge.replica.clients.monitor.client.retryPolicy.delayMultiplier")
       )

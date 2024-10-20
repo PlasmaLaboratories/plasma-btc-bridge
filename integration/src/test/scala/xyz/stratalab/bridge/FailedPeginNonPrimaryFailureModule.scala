@@ -19,6 +19,8 @@ trait FailedPeginNonPrimaryFailureModule {
         _ <- killFiber(3)
         newAddress <- getNewAddress
         startSessionResponse <- startSession(1)
+        _ <- IO.println("sessionResponse")
+        _ <- IO.println(startSessionResponse)
         _ <- generateToAddress(1, 102, newAddress)
         _ <- checkMintingStatus(startSessionResponse.sessionID)
           .flatMap(x =>

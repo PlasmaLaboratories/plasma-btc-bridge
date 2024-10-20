@@ -293,7 +293,7 @@ object StateMachineServiceGrpcClientImpl {
         info"trying to execute request on replica ${replica.toString()}"
         replica.executeRequest(request, new Metadata()).handleErrorWith { _ =>
           if (maxRetries > 0)
-            F.sleep(initialDelay) >> retryWithBackoff(replica, request, initialDelay * 2, maxRetries - 1)
+            F.sleep(initialDelay) >> retryWithBackoff(replica, request, initialDelay * stateMachineConf.retryPolicy.delayMultiplier, maxRetries - 1)
           else
             error"Max retries reached for request ${request.timestamp}" >> F.pure(Empty())
         }
