@@ -1,13 +1,13 @@
 package xyz.stratalab.bridge.consensus.core.pbft.activities
 
 import cats.effect.kernel.Async
-import co.topl.brambl.utils.Encoding
 import org.typelevel.log4cats.Logger
 import xyz.stratalab.bridge.consensus.core.pbft.{PBFTInternalEvent, Prepared, RequestIdentifier, ViewManager}
 import xyz.stratalab.bridge.consensus.pbft.PrepareRequest
 import xyz.stratalab.bridge.consensus.shared.persistence.StorageApi
 import xyz.stratalab.bridge.shared.implicits._
 import xyz.stratalab.bridge.shared.{ClientId, ReplicaCount}
+import xyz.stratalab.sdk.utils.Encoding
 
 import java.security.PublicKey
 

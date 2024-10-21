@@ -147,7 +147,7 @@ trait TransitionToEffect {
             cs: MConfirmingRedemption,
             ev: NewStrataBlock
           ) =>
-        import co.topl.brambl.syntax._
+        import xyz.stratalab.sdk.syntax._
         if (isAboveConfirmationThresholdStrata(ev.height, cs.currentTolpBlockHeight))
           Async[F]
             .start(

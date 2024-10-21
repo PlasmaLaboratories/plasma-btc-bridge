@@ -21,7 +21,7 @@ object Dependencies {
   )
 
   val log4cats: Seq[ModuleID] = Seq(
-    "org.typelevel" %% "log4cats-core" % "2.4.0",
+    "org.typelevel" %% "log4cats-core"  % "2.4.0",
     "org.typelevel" %% "log4cats-slf4j" % "2.4.0"
   )
 
@@ -30,11 +30,11 @@ object Dependencies {
     "org.bouncycastle" % "bcpkix-jdk15on" % "1.68"
   )
 
-  lazy val strataOrg = "co.topl"
+  lazy val strataOrg = "xyz.stratalab"
 
-  lazy val strataVersion = "2.0.0-beta8"
+  lazy val strataVersion = "0.0.0+253-9a3a528c-SNAPSHOT"
 
-  val strataSdk = strataOrg %% "brambl-sdk" % strataVersion
+  val strataSdk = strataOrg %% "strata-sdk" % strataVersion
 
   val strataCrypto = strataOrg %% "crypto" % strataVersion
 
@@ -65,7 +65,7 @@ object Dependencies {
   )
 
   val cats: Seq[ModuleID] = Seq(
-    "org.typelevel" %% "cats-core" % catsCoreVersion,
+    "org.typelevel" %% "cats-core"   % catsCoreVersion,
     "org.typelevel" %% "cats-effect" % "3.5.1"
   )
 
@@ -81,24 +81,24 @@ object Dependencies {
 
   lazy val http4s: Seq[ModuleID] = Seq(
     "org.http4s" %% "http4s-ember-client" % http4sVersion,
-    "org.http4s" %% "http4s-dsl" % http4sVersion,
-    "org.http4s" %% "http4s-circe" % http4sVersion,
+    "org.http4s" %% "http4s-dsl"          % http4sVersion,
+    "org.http4s" %% "http4s-circe"        % http4sVersion,
     "org.http4s" %% "http4s-ember-server" % http4sVersion
   )
 
   lazy val bitcoinS: Seq[ModuleID] = Seq(
     "org.bitcoin-s" %% "bitcoin-s-bitcoind-rpc" % bitcoinsVersion,
-    "org.bitcoin-s" %% "bitcoin-s-core" % bitcoinsVersion,
-    "org.bitcoin-s" %% "bitcoin-s-chain" % bitcoinsVersion,
-    "org.bitcoin-s" %% "bitcoin-s-dlc-oracle" % bitcoinsVersion,
-    "org.bitcoin-s" %% "bitcoin-s-eclair-rpc" % bitcoinsVersion,
+    "org.bitcoin-s" %% "bitcoin-s-core"         % bitcoinsVersion,
+    "org.bitcoin-s" %% "bitcoin-s-chain"        % bitcoinsVersion,
+    "org.bitcoin-s" %% "bitcoin-s-dlc-oracle"   % bitcoinsVersion,
+    "org.bitcoin-s" %% "bitcoin-s-eclair-rpc"   % bitcoinsVersion,
     "org.bitcoin-s" %% "bitcoin-s-fee-provider" % bitcoinsVersion,
-    "org.bitcoin-s" %% "bitcoin-s-key-manager" % bitcoinsVersion,
-    "org.bitcoin-s" %% "bitcoin-s-lnd-rpc" % bitcoinsVersion,
-    "org.bitcoin-s" %% "bitcoin-s-node" % bitcoinsVersion,
-    "org.bitcoin-s" % "bitcoin-s-secp256k1jni" % bitcoinsVersion,
-    "org.bitcoin-s" %% "bitcoin-s-wallet" % btcVersionZmq,
-    "org.bitcoin-s" %% "bitcoin-s-zmq" % btcVersionZmq
+    "org.bitcoin-s" %% "bitcoin-s-key-manager"  % bitcoinsVersion,
+    "org.bitcoin-s" %% "bitcoin-s-lnd-rpc"      % bitcoinsVersion,
+    "org.bitcoin-s" %% "bitcoin-s-node"         % bitcoinsVersion,
+    "org.bitcoin-s"  % "bitcoin-s-secp256k1jni" % bitcoinsVersion,
+    "org.bitcoin-s" %% "bitcoin-s-wallet"       % btcVersionZmq,
+    "org.bitcoin-s" %% "bitcoin-s-zmq"          % btcVersionZmq
   )
 
   lazy val genericCirce: Seq[ModuleID] = Seq(
@@ -106,7 +106,7 @@ object Dependencies {
   )
 
   lazy val optics: Seq[ModuleID] = Seq(
-    "dev.optics" %% "monocle-core" % monocleVersion,
+    "dev.optics" %% "monocle-core"  % monocleVersion,
     "dev.optics" %% "monocle-macro" % monocleVersion
   )
 
@@ -118,38 +118,38 @@ object Dependencies {
 
     lazy val consensus: Seq[ModuleID] =
       strata ++
-        scopt ++
-        cats ++
-        log4cats ++
-        http4s ++
-        optics ++
-        bitcoinS ++
-        grpcNetty ++
-        grpcRuntime ++
-        sqlite ++
-        akkaSlf4j ++
-        slf4j
+      scopt ++
+      cats ++
+      log4cats ++
+      http4s ++
+      optics ++
+      bitcoinS ++
+      grpcNetty ++
+      grpcRuntime ++
+      sqlite ++
+      akkaSlf4j ++
+      slf4j
 
     lazy val publicApi: Seq[ModuleID] =
       scopt ++
-        ip4score ++
-        cats ++
-        log4cats ++
-        http4s ++
-        optics ++
-        grpcNetty ++
-        grpcRuntime ++
-        slf4j ++
-        config ++
-        logback ++
-        genericCirce
+      ip4score ++
+      cats ++
+      log4cats ++
+      http4s ++
+      optics ++
+      grpcNetty ++
+      grpcRuntime ++
+      slf4j ++
+      config ++
+      logback ++
+      genericCirce
 
     lazy val shared: Seq[ModuleID] =
       grpcNetty ++
-        log4cats ++
-        cats ++
-        grpcRuntime ++
-        bouncycastle
+      log4cats ++
+      cats ++
+      grpcRuntime ++
+      bouncycastle
 
     lazy val test: Seq[ModuleID] =
       (
@@ -162,12 +162,12 @@ object Dependencies {
 
     lazy val main: Seq[ModuleID] =
       strata ++
-        scopt ++
-        cats ++
-        log4cats ++
-        logback ++
-        http4s ++
-        bitcoinS
+      scopt ++
+      cats ++
+      log4cats ++
+      logback ++
+      http4s ++
+      bitcoinS
 
     lazy val test: Seq[ModuleID] =
       (

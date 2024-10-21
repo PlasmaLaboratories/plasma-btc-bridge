@@ -3,43 +3,43 @@ package xyz.stratalab.bridge.consensus.shared.persistence
 import org.bitcoins.core.currency.Satoshis
 import quivr.models.Int128
 import scodec.bits.ByteVector
-import xyz.stratalab.bridge.consensus.protobuf.BifrostCurrencyUnit.Currency.{
-  AssetToken => AssetTokenCurrency,
-  GroupToken => GroupTokenCurrency,
-  Lvl => LvlCurrency,
-  SeriesToken => SeriesTokenCurrency
-}
 import xyz.stratalab.bridge.consensus.protobuf.BlockchainEvent.Event.{
-  BifrostFundsDeposited => BifrostFundsDepositedEvent,
-  BifrostFundsWithdrawn => BifrostFundsWithdrawnEvent,
   BtcFundsDeposited => BtcFundsDepositedEvent,
   BtcFundsWithdrawn,
   Empty,
   NewBTCBlock => NewBTCBlockEvent,
   NewStrataBlock => NewStrataBlockEvent,
+  NodeFundsDeposited => NodeFundsDepositedEvent,
+  NodeFundsWithdrawn => NodeFundsWithdrawnEvent,
   SkippedBTCBlock => SkippedBTCBlockEvent,
   SkippedStrataBlock => SkippedStrataBlockEvent
 }
+import xyz.stratalab.bridge.consensus.protobuf.NodeCurrencyUnit.Currency.{
+  AssetToken => AssetTokenCurrency,
+  GroupToken => GroupTokenCurrency,
+  Lvl => LvlCurrency,
+  SeriesToken => SeriesTokenCurrency
+}
 import xyz.stratalab.bridge.consensus.protobuf.{
-  BifrostCurrencyUnit => BifrostCurrencyUnitPb,
-  BlockchainEvent => BlockchainEventPb
+  BlockchainEvent => BlockchainEventPb,
+  NodeCurrencyUnit => NodeCurrencyUnitPb
 }
 import xyz.stratalab.bridge.consensus.shared.{AssetToken, GroupToken, Lvl, SeriesToken}
 import xyz.stratalab.bridge.consensus.subsystems.monitor.{
   BTCFundsDeposited,
   BTCFundsWithdrawn,
-  BifrostFundsDeposited,
-  BifrostFundsWithdrawn,
   BlockchainEvent,
   NewBTCBlock,
   NewStrataBlock,
+  NodeFundsDeposited,
+  NodeFundsWithdrawn,
   SkippedBTCBlock,
   SkippedStrataBlock
 }
 
 trait DeserializationOps {
 
-  def fromProtobuf(someAmount: Option[BifrostCurrencyUnitPb]) =
+  def fromProtobuf(someAmount: Option[NodeCurrencyUnitPb]) =
     someAmount match {
       case Some(amount) =>
         amount.currency match {
@@ -78,8 +78,8 @@ trait DeserializationOps {
         )
       case SkippedBTCBlockEvent(value) =>
         SkippedBTCBlock(value.height)
-      case BifrostFundsDepositedEvent(value) =>
-        BifrostFundsDeposited(
+      case NodeFundsDepositedEvent(value) =>
+        NodeFundsDeposited(
           value.currentStrataBlockHeight,
           value.address,
           value.utxoTxId,
@@ -90,8 +90,8 @@ trait DeserializationOps {
         NewStrataBlock(value.height)
       case SkippedStrataBlockEvent(value) =>
         SkippedStrataBlock(value.height)
-      case BifrostFundsWithdrawnEvent(value) =>
-        BifrostFundsWithdrawn(
+      case NodeFundsWithdrawnEvent(value) =>
+        NodeFundsWithdrawn(
           value.currentStrataBlockHeight,
           value.txId,
           value.txIndex,

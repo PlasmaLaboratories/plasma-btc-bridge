@@ -1,7 +1,5 @@
 package xyz.stratalab.bridge.consensus.subsystems.monitor
 
-import co.topl.brambl.models.{GroupId, SeriesId}
-import co.topl.brambl.utils.Encoding
 import xyz.stratalab.bridge.consensus.shared.{
   AssetToken,
   BTCWaitExpirationTime,
@@ -18,6 +16,8 @@ import xyz.stratalab.bridge.consensus.subsystems.monitor.{
   MWaitingForRedemption,
   PeginStateMachineState
 }
+import xyz.stratalab.sdk.models.{GroupId, SeriesId}
+import xyz.stratalab.sdk.utils.Encoding
 
 trait MonitorMintingStateTransitionRelation extends TransitionToEffect {
 
@@ -48,9 +48,9 @@ trait MonitorMintingStateTransitionRelation extends TransitionToEffect {
           None
       case (
             cs: MMintingTBTC,
-            be: BifrostFundsDeposited
+            be: NodeFundsDeposited
           ) =>
-        import co.topl.brambl.syntax._
+        import xyz.stratalab.sdk.syntax._
 
         if (
           cs.redeemAddress == be.address &&
@@ -96,7 +96,7 @@ trait MonitorMintingStateTransitionRelation extends TransitionToEffect {
             be: NewStrataBlock
           ) =>
         if (isAboveConfirmationThresholdStrata(be.height, cs.depositTBTCBlockHeight)) {
-          import co.topl.brambl.syntax._
+          import xyz.stratalab.sdk.syntax._
           Some(
             FSMTransitionTo(
               currentState,
@@ -155,7 +155,7 @@ trait MonitorMintingStateTransitionRelation extends TransitionToEffect {
           None
       case (
             cs: MWaitingForRedemption,
-            be: BifrostFundsWithdrawn
+            be: NodeFundsWithdrawn
           ) =>
         if (cs.utxoTxId == be.txId && cs.utxoIndex == be.txIndex) {
           Some(
@@ -203,7 +203,7 @@ trait MonitorMintingStateTransitionRelation extends TransitionToEffect {
           )
         else if (ev.height <= cs.currentTolpBlockHeight) {
           import cats.implicits._
-          import co.topl.brambl.syntax._
+          import xyz.stratalab.sdk.syntax._
           import org.bitcoins.core.currency.Satoshis
           // we are seeing the block where the transaction was found again
           // this can only mean that block is being unapplied
@@ -251,7 +251,7 @@ trait MonitorMintingStateTransitionRelation extends TransitionToEffect {
           None
       case (
             cs: MConfirmingTBTCMint,
-            be: BifrostFundsWithdrawn
+            be: NodeFundsWithdrawn
           ) =>
         if (cs.utxoTxId == be.txId && cs.utxoIndex == be.txIndex) {
           Some(

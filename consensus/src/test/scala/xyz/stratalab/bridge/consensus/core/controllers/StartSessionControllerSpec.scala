@@ -2,17 +2,6 @@ package xyz.stratalab.bridge.consensus.core.controllers
 
 import cats.effect.IO
 import cats.effect.kernel.Ref
-import co.topl.brambl.builders.TransactionBuilderApi
-import co.topl.brambl.constants.NetworkConstants
-import co.topl.brambl.dataApi.RpcChannelResource
-import co.topl.brambl.servicekit.{
-  FellowshipStorageApi,
-  TemplateStorageApi,
-  WalletKeyApi,
-  WalletStateApi,
-  WalletStateResource
-}
-import co.topl.brambl.wallet.WalletApi
 import munit.CatsEffectSuite
 import xyz.stratalab.bridge.consensus.core.controllers.StartSessionController
 import xyz.stratalab.bridge.consensus.core.managers.{BTCWalletAlgebraImpl, WalletManagementUtils}
@@ -26,6 +15,17 @@ import xyz.stratalab.bridge.consensus.core.{
   StrataPrivatenet
 }
 import xyz.stratalab.bridge.shared.{InvalidHash, InvalidKey, StartSessionOperation}
+import xyz.stratalab.sdk.builders.TransactionBuilderApi
+import xyz.stratalab.sdk.constants.NetworkConstants
+import xyz.stratalab.sdk.dataApi.RpcChannelResource
+import xyz.stratalab.sdk.servicekit.{
+  FellowshipStorageApi,
+  TemplateStorageApi,
+  WalletKeyApi,
+  WalletStateApi,
+  WalletStateResource
+}
+import xyz.stratalab.sdk.wallet.WalletApi
 
 import java.nio.file.{Files, Path, Paths}
 

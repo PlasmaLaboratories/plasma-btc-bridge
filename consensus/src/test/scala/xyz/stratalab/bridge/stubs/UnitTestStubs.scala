@@ -2,22 +2,22 @@ package xyz.stratalab.bridge.stubs
 
 import cats.Monad
 import cats.effect.IO
-import co.topl.brambl.codecs.AddressCodecs
-import co.topl.brambl.dataApi.GenusQueryAlgebra
-import co.topl.brambl.models.box.{Attestation, Challenge, FungibilityType, Lock, QuantityDescriptorType, Value}
-import co.topl.brambl.models.transaction.{SpentTransactionOutput, UnspentTransactionOutput}
-import co.topl.brambl.models.{Datum, GroupId, LockAddress, SeriesId, TransactionId, TransactionOutputAddress}
-import co.topl.brambl.servicekit.WalletKeyApi
-import co.topl.brambl.utils.Encoding
-import co.topl.brambl.wallet.WalletApi
-import co.topl.genus.services.{Txo, TxoState}
 import com.google.protobuf.ByteString
 import quivr.models.{Int128, Proposition}
 import xyz.stratalab.bridge.consensus.core.managers.WalletManagementUtils
+import xyz.stratalab.indexer.services.{Txo, TxoState}
+import xyz.stratalab.sdk.codecs.AddressCodecs
+import xyz.stratalab.sdk.dataApi.IndexerQueryAlgebra
+import xyz.stratalab.sdk.models.box.{Attestation, Challenge, FungibilityType, Lock, QuantityDescriptorType, Value}
+import xyz.stratalab.sdk.models.transaction.{SpentTransactionOutput, UnspentTransactionOutput}
+import xyz.stratalab.sdk.models.{Datum, GroupId, LockAddress, SeriesId, TransactionId, TransactionOutputAddress}
+import xyz.stratalab.sdk.servicekit.WalletKeyApi
+import xyz.stratalab.sdk.utils.Encoding
+import xyz.stratalab.sdk.wallet.WalletApi
 
 object UnitTestStubs {
 
-  import co.topl.brambl.syntax._
+  import xyz.stratalab.sdk.syntax._
 
   lazy val transactionId01 = TransactionId(
     ByteString.copyFrom(
@@ -83,7 +83,7 @@ object UnitTestStubs {
       lockAddress01,
       lvlValue01
     ),
-    co.topl.genus.services.TxoState.UNSPENT,
+    xyz.stratalab.indexer.services.TxoState.UNSPENT,
     transactionOutputAddress01
   )
 
@@ -162,7 +162,7 @@ object UnitTestStubs {
       lockAddress01,
       groupValue01
     ),
-    co.topl.genus.services.TxoState.UNSPENT,
+    xyz.stratalab.indexer.services.TxoState.UNSPENT,
     transactionOutputAddress02
   )
 
@@ -171,7 +171,7 @@ object UnitTestStubs {
       lockAddress01,
       seriesValue01
     ),
-    co.topl.genus.services.TxoState.UNSPENT,
+    xyz.stratalab.indexer.services.TxoState.UNSPENT,
     transactionOutputAddress03
   )
 
@@ -180,12 +180,12 @@ object UnitTestStubs {
       lockAddress01,
       assetValue01
     ),
-    co.topl.genus.services.TxoState.UNSPENT,
+    xyz.stratalab.indexer.services.TxoState.UNSPENT,
     transactionOutputAddress03
   )
 
-  def makeGenusQueryAlgebraMockWithAddress[F[_]: Monad] =
-    new GenusQueryAlgebra[F] {
+  def makeIndexerQueryAlgebraMockWithAddress[F[_]: Monad] =
+    new IndexerQueryAlgebra[F] {
 
       override def queryUtxo(
         fromAddress: LockAddress,
@@ -216,7 +216,7 @@ object UnitTestStubs {
     lvlValue01
   )
 
-  lazy val iotransaction01 = co.topl.brambl.models.transaction
+  lazy val iotransaction01 = xyz.stratalab.sdk.models.transaction
     .IoTransaction(
       Some(transactionId01),
       Seq(stxo01),

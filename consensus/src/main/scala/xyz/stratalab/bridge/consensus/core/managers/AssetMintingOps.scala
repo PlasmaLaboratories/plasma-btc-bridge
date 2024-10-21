@@ -1,19 +1,19 @@
 package xyz.stratalab.bridge.consensus.core.managers
 
 import cats.effect.kernel.Sync
-import co.topl.brambl.builders.TransactionBuilderApi
-import co.topl.brambl.dataApi.WalletStateAlgebra
-import co.topl.brambl.models.box.{AssetMintingStatement, Lock}
-import co.topl.brambl.models.transaction.IoTransaction
-import co.topl.brambl.models.{Indices, LockAddress}
-import co.topl.brambl.utils.Encoding
-import co.topl.brambl.wallet.WalletApi
-import co.topl.genus.services.Txo
 import com.google.protobuf.ByteString
 import com.google.protobuf.struct.Struct
 import io.circe.Json
 import quivr.models.KeyPair
 import xyz.stratalab.bridge.consensus.shared.Lvl
+import xyz.stratalab.indexer.services.Txo
+import xyz.stratalab.sdk.builders.TransactionBuilderApi
+import xyz.stratalab.sdk.dataApi.WalletStateAlgebra
+import xyz.stratalab.sdk.models.box.{AssetMintingStatement, Lock}
+import xyz.stratalab.sdk.models.transaction.IoTransaction
+import xyz.stratalab.sdk.models.{Indices, LockAddress}
+import xyz.stratalab.sdk.utils.Encoding
+import xyz.stratalab.sdk.wallet.WalletApi
 
 import TransactionBuilderApi.implicits._
 
@@ -84,7 +84,7 @@ object AssetMintingOps {
     wsa: WalletStateAlgebra[G],
     wa:  WalletApi[G]
   ): G[IoTransaction] = {
-    import co.topl.brambl.syntax._
+    import xyz.stratalab.sdk.syntax._
     for {
       changeAddress <- tba.lockAddress(
         lockForChange

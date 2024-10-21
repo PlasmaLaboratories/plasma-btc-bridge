@@ -22,7 +22,7 @@ message AssetToken {
   bytes amount = 3;
 }
 
-message BifrostCurrencyUnit {
+message NodeCurrencyUnit {
   oneof currency {
     Lvl lvl = 1;
     SeriesToken seriesToken = 2;
@@ -61,20 +61,20 @@ message BTCFundsWithdrawn {
   uint64 vout = 2;
 }
 
-message BifrostFundsDeposited {
+message NodeFundsDeposited {
   uint64 currentStrataBlockHeight = 1;
   string address = 2;
   string utxoTxId = 3;
   uint32 utxoIndex = 4;
-  BifrostCurrencyUnit amount = 5;
+  NodeCurrencyUnit amount = 5;
 }
 
-message BifrostFundsWithdrawn {
+message NodeFundsWithdrawn {
   uint64 currentStrataBlockHeight = 1;
   string txId = 2;
   uint32 txIndex = 3;
   string secret = 4;
-  BifrostCurrencyUnit amount = 5;
+  NodeCurrencyUnit amount = 5;
 }
 
 message BlockchainEvent {
@@ -85,7 +85,7 @@ message BlockchainEvent {
     NewStrataBlock newStrataBlock = 4;
     BTCFundsDeposited btcFundsDeposited = 5;
     BTCFundsWithdrawn btcFundsWithdrawn = 6;
-    BifrostFundsDeposited bifrostFundsDeposited = 7;
-    BifrostFundsWithdrawn bifrostFundsWithdrawn = 8;
+    NodeFundsDeposited nodeFundsDeposited = 7;
+    NodeFundsWithdrawn nodeFundsWithdrawn = 8;
   }
 }

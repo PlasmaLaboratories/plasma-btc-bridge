@@ -1,7 +1,7 @@
 package xyz.stratalab.bridge.consensus.subsystems.monitor
 
 import org.bitcoins.core.currency.CurrencyUnit
-import xyz.stratalab.bridge.consensus.shared.BifrostCurrencyUnit
+import xyz.stratalab.bridge.consensus.shared.NodeCurrencyUnit
 
 sealed trait PeginStateMachineState
 
@@ -66,7 +66,7 @@ case class MWaitingForRedemption(
   btcVout:                Int,
   utxoTxId:               String,
   utxoIndex:              Int,
-  amount:                 BifrostCurrencyUnit
+  amount:                 NodeCurrencyUnit
 ) extends MintingState
 
 case class MConfirmingRedemption(
@@ -82,7 +82,7 @@ case class MConfirmingRedemption(
   btcVout:                Int,
   utxoTxId:               String,
   utxoIndex:              Int,
-  amount:                 BifrostCurrencyUnit
+  amount:                 NodeCurrencyUnit
 ) extends MintingState
 
 case class MWaitingForClaim(
@@ -92,7 +92,7 @@ case class MWaitingForClaim(
   btcTxId:                 String,
   btcVout:                 Int,
   scriptAsm:               String,
-  amount:                  BifrostCurrencyUnit,
+  amount:                  NodeCurrencyUnit,
   claimAddress:            String
 ) extends ClaimState
 
@@ -103,7 +103,7 @@ case class MConfirmingBTCClaim(
   btcTxId:             String,
   btcVout:             Int,
   scriptAsm:           String,
-  amount:              BifrostCurrencyUnit,
+  amount:              NodeCurrencyUnit,
   claimAddress:        String
 ) extends ClaimState
 

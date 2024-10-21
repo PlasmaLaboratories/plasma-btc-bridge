@@ -1,6 +1,6 @@
 package xyz.stratalab.bridge.consensus.core
 
-import co.topl.brambl.constants.NetworkConstants
+import xyz.stratalab.sdk.constants.NetworkConstants
 
 sealed abstract class BitcoinNetworkIdentifiers(
   val name: String

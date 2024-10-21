@@ -1,11 +1,11 @@
 package xyz.stratalab.bridge.stubs
 
 import cats.effect.IO
-import co.topl.brambl.dataApi.GenusQueryAlgebra
-import co.topl.brambl.models.LockAddress
-import co.topl.genus.services.{Txo, TxoState}
+import xyz.stratalab.indexer.services.{Txo, TxoState}
+import xyz.stratalab.sdk.dataApi.IndexerQueryAlgebra
+import xyz.stratalab.sdk.models.LockAddress
 
-class BaseGenusQueryAlgebra extends GenusQueryAlgebra[IO] {
+class BaseIndexerQueryAlgebra extends IndexerQueryAlgebra[IO] {
 
   override def queryUtxo(
     fromAddress: LockAddress,

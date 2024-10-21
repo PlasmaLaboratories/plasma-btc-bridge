@@ -2,13 +2,13 @@ package xyz.stratalab.bridge.consensus.shared.persistence
 
 import cats.effect.kernel.{Resource, Sync}
 import cats.implicits._
-import co.topl.brambl.utils.Encoding
 import com.google.common.io.BaseEncoding
 import com.google.protobuf.ByteString
 import xyz.stratalab.bridge.consensus.pbft.{CheckpointRequest, CommitRequest, PrePrepareRequest, PrepareRequest}
 import xyz.stratalab.bridge.consensus.shared.{MiscUtils, PeginSessionInfo, PeginSessionState, SessionInfo}
 import xyz.stratalab.bridge.consensus.subsystems.monitor.BlockchainEvent
 import xyz.stratalab.bridge.shared.StateMachineRequest
+import xyz.stratalab.sdk.utils.Encoding
 
 import java.sql.DriverManager
 

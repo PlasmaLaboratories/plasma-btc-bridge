@@ -1,7 +1,6 @@
 package xyz.stratalab.bridge.consensus.subsystems.monitor
 
 import cats.effect.kernel.Async
-import co.topl.brambl.models.{GroupId, SeriesId}
 import org.typelevel.log4cats.Logger
 import xyz.stratalab.bridge.consensus.shared.{
   BTCConfirmationThreshold,
@@ -11,6 +10,7 @@ import xyz.stratalab.bridge.consensus.shared.{
   StrataWaitExpirationTime
 }
 import xyz.stratalab.bridge.consensus.subsystems.monitor.{FSMTransition, PeginStateMachineState}
+import xyz.stratalab.sdk.models.{GroupId, SeriesId}
 
 object MonitorTransitionRelation
     extends TransitionToEffect

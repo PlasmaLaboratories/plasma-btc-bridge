@@ -34,7 +34,7 @@ object Main extends IOApp with TBCLIParamsDescriptor {
   //     startSessionRequest: StartPeginSessionRequest
   // ): F[Unit] = {
   //   import cats.implicits._
-  //   import co.topl.tbcli.view.OutputView._
+  //   import xyz.stratalab.tbcli.view.OutputView._
   //   std.Console[F].println(startSessionRequest.show)
   // }
 

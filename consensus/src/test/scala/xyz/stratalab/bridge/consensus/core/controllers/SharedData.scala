@@ -1,8 +1,6 @@
 package xyz.stratalab.bridge.consensus.core.controllers
 
 import cats.effect.IO
-import co.topl.brambl.models.{GroupId, SeriesId}
-import co.topl.brambl.utils.Encoding
 import com.google.protobuf.ByteString
 import org.typelevel.log4cats.SelfAwareStructuredLogger
 import xyz.stratalab.bridge.consensus.core.StrataPrivatenet
@@ -13,6 +11,8 @@ import xyz.stratalab.bridge.consensus.shared.{
   StrataConfirmationThreshold,
   StrataWaitExpirationTime
 }
+import xyz.stratalab.sdk.models.{GroupId, SeriesId}
+import xyz.stratalab.sdk.utils.Encoding
 
 trait SharedData {
 
