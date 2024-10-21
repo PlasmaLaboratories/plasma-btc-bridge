@@ -20,7 +20,8 @@ import xyz.stratalab.bridge.shared.{
   StartPeginSessionRequest,
   StartPeginSessionResponse,
   StartSessionOperation,
-  StateMachineServiceGrpcClient
+  StateMachineServiceGrpcClient,
+  TimeoutError
 }
 
 object PublicApiHttpServiceServer {
@@ -114,10 +115,11 @@ object PublicApiHttpServiceServer {
               e match {
                 case _: SessionNotFoundError =>
                   NotFound(e)
+                case _: TimeoutError =>
+                  RequestTimeout(e)
                 case _ =>
                   BadRequest(e)
               }
-              BadRequest(e)
             case Left(_) =>
               InternalServerError()
             case Right(response) =>

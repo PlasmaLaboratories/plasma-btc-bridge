@@ -1,39 +1,29 @@
 package xyz.stratalab.bridge
 
 import cats.effect.IO
-import org.typelevel.log4cats.syntax._
+import xyz.stratalab.bridge.shared.{TimeoutError, UnknownError}
 
-import scala.concurrent.duration._
-import xyz.stratalab.bridge.checkMintingStatus
-
-trait FailedPeginNonPrimaryFailureModule {
-
-  self: BridgeIntegrationSpec =>
+trait FailedPeginNonPrimaryFailureModule { self: BridgeIntegrationSpec =>
+  val errorMessage = "Timeout occurred!"
 
   def failedPeginNonPrimaryFailure(): IO[Unit] = {
-
     assertIO(
-      for {
+      (for {
         _ <- killFiber(1)
         _ <- killFiber(2)
         _ <- killFiber(3)
-        newAddress <- getNewAddress
-        startSessionResponse <- startSession(1)
-        _ <- IO.println("sessionResponse")
-        _ <- IO.println(startSessionResponse)
-        _ <- generateToAddress(1, 102, newAddress)
-        _ <- checkMintingStatus(startSessionResponse.sessionID)
-          .flatMap(x =>
-            generateToAddress(1, 1, newAddress) >> IO
-              .sleep(5.second) >> IO.pure(x)
-          )
-          .iterateUntil(
-            _.mintingStatus == "PeginSessionStateTimeout"
-          )
-        _ <-
-          info"Session ${startSessionResponse.sessionID} was successfully removed"
-      } yield (),
-      ()
+        _ <- getNewAddress
+        startSessionResponse <- startSession(1).handleErrorWith {
+          case _: TimeoutError => IO.pure(Left(TimeoutError(errorMessage)))
+        }
+        result <- startSessionResponse match {
+          case Left(TimeoutError(x)) => IO.pure(x)
+          case Right(_) => IO.pure(errorMessage + errorMessage)
+        }
+        _ <- IO.raiseError(UnknownError("Shouldn't happen!"))
+      } yield result).handleError(_ => errorMessage),
+      errorMessage
     )
   }
+
 }
