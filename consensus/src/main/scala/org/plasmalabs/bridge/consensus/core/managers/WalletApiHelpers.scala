@@ -1,10 +1,10 @@
 package org.plasmalabs.bridge.consensus.core.managers
 
 import cats.Monad
-import co.topl.brambl.builders.TransactionBuilderApi
-import co.topl.brambl.dataApi.WalletStateAlgebra
-import co.topl.brambl.models.box.Lock
-import co.topl.brambl.models.{Indices, LockAddress}
+import org.plasmalabs.sdk.builders.TransactionBuilderApi
+import org.plasmalabs.sdk.dataApi.WalletStateAlgebra
+import org.plasmalabs.sdk.models.box.Lock
+import org.plasmalabs.sdk.models.{Indices, LockAddress}
 import org.plasmalabs.bridge.consensus.core.{Fellowship, Template}
 
 object WalletApiHelpers {

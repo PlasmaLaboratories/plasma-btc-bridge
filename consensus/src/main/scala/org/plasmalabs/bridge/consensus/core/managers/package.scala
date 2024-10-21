@@ -1,6 +1,6 @@
 package org.plasmalabs.bridge.consensus.core
 
-import co.topl.brambl.utils.Encoding
+import org.plasmalabs.sdk.utils.Encoding
 import com.google.protobuf.struct.{ListValue, NullValue, Struct, Value}
 import io.circe.Json
 

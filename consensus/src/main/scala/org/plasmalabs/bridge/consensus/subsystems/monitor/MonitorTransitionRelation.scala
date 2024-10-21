@@ -1,7 +1,7 @@
 package org.plasmalabs.bridge.consensus.subsystems.monitor
 
 import cats.effect.kernel.Async
-import co.topl.brambl.models.{GroupId, SeriesId}
+import org.plasmalabs.sdk.models.{GroupId, SeriesId}
 import org.typelevel.log4cats.Logger
 import org.plasmalabs.bridge.consensus.shared.{
   BTCConfirmationThreshold,

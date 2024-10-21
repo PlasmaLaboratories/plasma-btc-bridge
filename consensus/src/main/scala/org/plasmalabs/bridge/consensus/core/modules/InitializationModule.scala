@@ -1,12 +1,12 @@
 package org.plasmalabs.bridge.consensus.core.modules
 
 import cats.effect.kernel.{Async, Ref}
-import co.topl.brambl.builders.TransactionBuilderApi
-import co.topl.brambl.dataApi.{GenusQueryAlgebra, WalletStateAlgebra}
-import co.topl.brambl.models.{GroupId, SeriesId}
-import co.topl.brambl.syntax._
-import co.topl.brambl.utils.Encoding
-import co.topl.genus.services.Txo
+import org.plasmalabs.sdk.builders.TransactionBuilderApi
+import org.plasmalabs.sdk.dataApi.{IndexerQueryAlgebra, WalletStateAlgebra}
+import org.plasmalabs.sdk.models.{GroupId, SeriesId}
+import org.plasmalabs.sdk.syntax._
+import org.plasmalabs.sdk.utils.Encoding
+import org.plasmalabs.indexer.services.Txo
 import org.bitcoins.rpc.client.common.BitcoindRpcClient
 import org.typelevel.log4cats.Logger
 import quivr.models.Int128
@@ -32,10 +32,10 @@ object InitializationModule {
     currentBitcoinNetworkHeight: Ref[F, Int],
     currentState:                Ref[F, SystemGlobalState]
   )(implicit
-    bitcoind:          BitcoindRpcClient,
-    tba:               TransactionBuilderApi[F],
-    wsa:               WalletStateAlgebra[F],
-    genusQueryAlgebra: GenusQueryAlgebra[F]
+    bitcoind:            BitcoindRpcClient,
+    tba:                 TransactionBuilderApi[F],
+    wsa:                 WalletStateAlgebra[F],
+    indexerQueryAlgebra: IndexerQueryAlgebra[F]
   ) = new InitializationModuleAlgebra[F] {
 
     import WalletApiHelpers._
@@ -53,7 +53,7 @@ object InitializationModule {
         fromTemplate,
         None
       )
-      txos <- genusQueryAlgebra.queryUtxo(
+      txos <- indexerQueryAlgebra.queryUtxo(
         currentAddress
       )
     } yield txos

@@ -1,8 +1,8 @@
 package org.plasmalabs.bridge.consensus.core.pbft
 
-import co.topl.brambl.models.{GroupId, SeriesId}
-import co.topl.brambl.syntax._
-import co.topl.brambl.utils.Encoding
+import org.plasmalabs.sdk.models.{GroupId, SeriesId}
+import org.plasmalabs.sdk.syntax._
+import org.plasmalabs.sdk.utils.Encoding
 import com.google.protobuf.ByteString
 import com.typesafe.config.ConfigFactory
 import org.bitcoins.core.config.RegTest

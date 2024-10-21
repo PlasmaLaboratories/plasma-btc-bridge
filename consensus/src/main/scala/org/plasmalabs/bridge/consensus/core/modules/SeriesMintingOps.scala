@@ -1,14 +1,14 @@
 package org.plasmalabs.bridge.consensus.core.modules
 
 import cats.effect.kernel.Sync
-import co.topl.brambl.builders.TransactionBuilderApi
-import co.topl.brambl.dataApi.WalletStateAlgebra
-import co.topl.brambl.models.box.Lock
-import co.topl.brambl.models.transaction.IoTransaction
-import co.topl.brambl.models.{Event, Indices, LockAddress}
-import co.topl.brambl.utils.Encoding
-import co.topl.brambl.wallet.WalletApi
-import co.topl.genus.services.Txo
+import org.plasmalabs.sdk.builders.TransactionBuilderApi
+import org.plasmalabs.sdk.dataApi.WalletStateAlgebra
+import org.plasmalabs.sdk.models.box.Lock
+import org.plasmalabs.sdk.models.transaction.IoTransaction
+import org.plasmalabs.sdk.models.{Event, Indices, LockAddress}
+import org.plasmalabs.sdk.utils.Encoding
+import org.plasmalabs.sdk.wallet.WalletApi
+import org.plasmalabs.indexer.services.Txo
 import quivr.models.KeyPair
 import org.plasmalabs.bridge.consensus.core.managers.CreateTxError
 

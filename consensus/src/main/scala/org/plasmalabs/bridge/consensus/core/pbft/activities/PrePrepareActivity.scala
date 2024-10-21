@@ -2,7 +2,7 @@ package org.plasmalabs.bridge.consensus.core.pbft.activities
 
 import cats.effect.kernel.Async
 import cats.implicits._
-import co.topl.brambl.utils.Encoding
+import org.plasmalabs.sdk.utils.Encoding
 import org.typelevel.log4cats.Logger
 import org.plasmalabs.bridge.consensus.core.PublicApiClientGrpcMap
 import org.plasmalabs.bridge.consensus.core.pbft.{

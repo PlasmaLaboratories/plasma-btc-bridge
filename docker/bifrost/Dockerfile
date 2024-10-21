@@ -11,5 +11,5 @@ RUN echo 'cs launch -r https://s01.oss.sonatype.org/content/repositories/release
 RUN chmod +x /usr/local/bin/plasma-cli
 USER 1001:0
 RUN plasma-cli wallet init --network private --password password --newwalletdb /tmp/wallet.db --mnemonicfile /tmp/mnemonic.txt  -o /tmp/keyfile.json
-# ENTRYPOINT ["/opt/docker/bin/bifrost-node"]
+# ENTRYPOINT ["/opt/docker/bin/node-node"]
 # EXPOSE 9085 9084 9091

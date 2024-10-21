@@ -1,7 +1,7 @@
 package org.plasmalabs.bridge.stubs
 
 import cats.effect.IO
-import co.topl.brambl.dataApi.{TemplateStorageAlgebra, WalletTemplate}
+import org.plasmalabs.sdk.dataApi.{TemplateStorageAlgebra, WalletTemplate}
 
 class BaseTemplateStorageAlgebra extends TemplateStorageAlgebra[IO] {
 

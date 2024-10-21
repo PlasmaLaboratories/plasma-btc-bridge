@@ -1,10 +1,10 @@
-package co.topl.brambl.cli.mockbase
+package org.plasmalabs.sdk.cli.mockbase
 
 import cats.data.ValidatedNel
-import co.topl.brambl.builders.locks.LockTemplate
-import co.topl.brambl.dataApi.WalletStateAlgebra
-import co.topl.brambl.models.Indices
-import co.topl.brambl.models.box.Lock
+import org.plasmalabs.sdk.builders.locks.LockTemplate
+import org.plasmalabs.sdk.dataApi.WalletStateAlgebra
+import org.plasmalabs.sdk.models.Indices
+import org.plasmalabs.sdk.models.box.Lock
 import quivr.models.{KeyPair, Preimage, Proposition}
 
 class BaseWalletStateAlgebra[F[_]] extends WalletStateAlgebra[F] {

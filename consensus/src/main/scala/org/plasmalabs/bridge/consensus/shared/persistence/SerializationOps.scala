@@ -1,15 +1,15 @@
 package org.plasmalabs.bridge.consensus.shared.persistence
 
 import com.google.protobuf.ByteString
-import org.plasmalabs.bridge.consensus.protobuf.BifrostCurrencyUnit.Currency.{
+import org.plasmalabs.bridge.consensus.protobuf.NodeCurrencyUnit.Currency.{
   AssetToken => AssetTokenCurrency,
   GroupToken => GroupTokenCurrency,
   Lvl => LvlCurrency,
   SeriesToken => SeriesTokenCurrency
 }
 import org.plasmalabs.bridge.consensus.protobuf.BlockchainEvent.Event.{
-  BifrostFundsDeposited => BifrostFundsDepositedEvent,
-  BifrostFundsWithdrawn => BifrostFundsWithdrawnEvent,
+  NodeFundsDeposited => NodeFundsDepositedEvent,
+  NodeFundsWithdrawn => NodeFundsWithdrawnEvent,
   BtcFundsDeposited => BtcFundsDepositedEvent,
   BtcFundsWithdrawn => BtcFundsWithdrawnEvent,
   NewBTCBlock => NewBTCBlockEvent,
@@ -21,9 +21,9 @@ import org.plasmalabs.bridge.consensus.protobuf.{
   AssetToken => AssetTokenPb,
   BTCFundsDeposited => BTCFundsDepositedPb,
   BTCFundsWithdrawn => BTCFundsWithdrawnPb,
-  BifrostCurrencyUnit => BifrostCurrencyUnitPb,
-  BifrostFundsDeposited => BifrostFundsDepositedPb,
-  BifrostFundsWithdrawn => BifrostFundsWithdrawnPb,
+  NodeCurrencyUnit => NodeCurrencyUnitPb,
+  NodeFundsDeposited => NodeFundsDepositedPb,
+  NodeFundsWithdrawn => NodeFundsWithdrawnPb,
   BlockchainEvent => BlockchainEventPb,
   GroupToken => GroupTokenPb,
   Lvl => LvlPb,
@@ -33,12 +33,12 @@ import org.plasmalabs.bridge.consensus.protobuf.{
   SkippedBTCBlock => SkippedBTCBlockPb,
   SkippedStrataBlock => SkippedStrataBlockPb
 }
-import org.plasmalabs.bridge.consensus.shared.{AssetToken, BifrostCurrencyUnit, GroupToken, Lvl, SeriesToken}
+import org.plasmalabs.bridge.consensus.shared.{AssetToken, NodeCurrencyUnit, GroupToken, Lvl, SeriesToken}
 import org.plasmalabs.bridge.consensus.subsystems.monitor.{
   BTCFundsDeposited,
   BTCFundsWithdrawn,
-  BifrostFundsDeposited,
-  BifrostFundsWithdrawn,
+  NodeFundsDeposited,
+  NodeFundsWithdrawn,
   BlockchainEvent,
   NewBTCBlock,
   NewStrataBlock,
@@ -48,10 +48,10 @@ import org.plasmalabs.bridge.consensus.subsystems.monitor.{
 
 trait SerializationOps {
 
-  def toProtobuf(amount: BifrostCurrencyUnit) = amount match {
+  def toProtobuf(amount: NodeCurrencyUnit) = amount match {
     case Lvl(amount) =>
       Some(
-        BifrostCurrencyUnitPb(
+        NodeCurrencyUnitPb(
           LvlCurrency(
             LvlPb(amount.value)
           )
@@ -59,7 +59,7 @@ trait SerializationOps {
       )
     case SeriesToken(id, amount) =>
       Some(
-        BifrostCurrencyUnitPb(
+        NodeCurrencyUnitPb(
           SeriesTokenCurrency(
             SeriesTokenPb(id, amount.value)
           )
@@ -67,7 +67,7 @@ trait SerializationOps {
       )
     case GroupToken(id, amount) =>
       Some(
-        BifrostCurrencyUnitPb(
+        NodeCurrencyUnitPb(
           GroupTokenCurrency(
             GroupTokenPb(id, amount.value)
           )
@@ -75,7 +75,7 @@ trait SerializationOps {
       )
     case AssetToken(groupId, seriesId, amount) =>
       Some(
-        BifrostCurrencyUnitPb(
+        NodeCurrencyUnitPb(
           AssetTokenCurrency(
             AssetTokenPb(groupId, seriesId, amount.value)
           )
@@ -123,7 +123,7 @@ trait SerializationOps {
             )
           )
         )
-      case BifrostFundsDeposited(
+      case NodeFundsDeposited(
             currentStrataBlockHeight,
             address,
             utxoTxId,
@@ -131,8 +131,8 @@ trait SerializationOps {
             amount
           ) =>
         BlockchainEventPb(
-          BifrostFundsDepositedEvent(
-            BifrostFundsDepositedPb(
+          NodeFundsDepositedEvent(
+            NodeFundsDepositedPb(
               currentStrataBlockHeight,
               address,
               utxoTxId,
@@ -141,10 +141,10 @@ trait SerializationOps {
             )
           )
         )
-      case BifrostFundsWithdrawn(height, txId, txIndex, secret, amount) =>
+      case NodeFundsWithdrawn(height, txId, txIndex, secret, amount) =>
         BlockchainEventPb(
-          BifrostFundsWithdrawnEvent(
-            BifrostFundsWithdrawnPb(
+          NodeFundsWithdrawnEvent(
+            NodeFundsWithdrawnPb(
               height,
               txId,
               txIndex,

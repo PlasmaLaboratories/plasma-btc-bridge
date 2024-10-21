@@ -2,23 +2,23 @@ package org.plasmalabs.bridge.consensus.core.managers
 
 import cats.data.OptionT
 import cats.effect.kernel.Sync
-import co.topl.brambl.builders.TransactionBuilderApi
-import co.topl.brambl.codecs.AddressCodecs
-import co.topl.brambl.constants.NetworkConstants
-import co.topl.brambl.dataApi.{
+import org.plasmalabs.sdk.builders.TransactionBuilderApi
+import org.plasmalabs.sdk.codecs.AddressCodecs
+import org.plasmalabs.sdk.constants.NetworkConstants
+import org.plasmalabs.sdk.dataApi.{
   FellowshipStorageAlgebra,
-  GenusQueryAlgebra,
+  IndexerQueryAlgebra,
   TemplateStorageAlgebra,
   WalletFellowship,
   WalletStateAlgebra,
   WalletTemplate
 }
-import co.topl.brambl.models.box.AssetMintingStatement
-import co.topl.brambl.models.transaction.IoTransaction
-import co.topl.brambl.models.{LockAddress, LockId}
-import co.topl.brambl.utils.Encoding
-import co.topl.brambl.wallet.WalletApi
-import co.topl.genus.services.Txo
+import org.plasmalabs.sdk.models.box.AssetMintingStatement
+import org.plasmalabs.sdk.models.transaction.IoTransaction
+import org.plasmalabs.sdk.models.{LockAddress, LockId}
+import org.plasmalabs.sdk.utils.Encoding
+import org.plasmalabs.sdk.wallet.WalletApi
+import org.plasmalabs.indexer.services.Txo
 import com.google.protobuf.ByteString
 import io.circe.Json
 import quivr.models.{KeyPair, VerificationKey}
@@ -238,8 +238,8 @@ object StrataWalletAlgebra {
   ): F[Option[String]] = {
 
     import cats.implicits._
-    import co.topl.brambl.common.ContainsEvidence.Ops
-    import co.topl.brambl.common.ContainsImmutable.instances._
+    import org.plasmalabs.sdk.common.ContainsEvidence.Ops
+    import org.plasmalabs.sdk.common.ContainsImmutable.instances._
     import TransactionBuilderApi.implicits._
     implicit class ImplicitConversion[A](x: F[A]) {
       def optionT = OptionT(x.map(_.some))
@@ -384,7 +384,7 @@ object StrataWalletAlgebra {
     tba:         TransactionBuilderApi[F],
     walletApi:   WalletApi[F],
     wsa:         WalletStateAlgebra[F],
-    utxoAlgebra: GenusQueryAlgebra[F]
+    utxoAlgebra: IndexerQueryAlgebra[F]
   ): F[IoTransaction] = {
     import cats.implicits._
     for {

@@ -45,25 +45,25 @@ trait ProcessOps {
     )
     .spawn[IO]
 
-  // bifrost-query mint-block --nb-blocks -1 -h localhost --port 9084 -s false
+  // node-query mint-block --nb-blocks -1 -h localhost --port 9084 -s false
   def mintBlockSeq(node: Int, nbBlocks: Int) = Seq(
-    "bifrost-query",
+    "node-query",
     "mint-block",
     "--nb-blocks",
     nbBlocks.toString(),
     "-h",
-    bifrostHostMap(node),
+    nodeHostMap(node),
     "--port",
-    bifrostPortMap(node).toString(),
+    nodePortMap(node).toString(),
     "-s",
     "false"
   )
 
   def mintBlockDockerSeq(node: Int, nbBlocks: Int) = Seq(
     "exec",
-    "bifrost" + f"${node}%02d",
-    "brambl-cli",
-    "bifrost-query",
+    "node" + f"${node}%02d",
+    "sdk-cli",
+    "node-query",
     "mint-block",
     "--nb-blocks",
     nbBlocks.toString(),
@@ -205,7 +205,7 @@ trait ProcessOps {
     )
     .spawn[IO]
 
-  // brambl-cli fellowships add --walletdb user-wallet.db --fellowship-name bridge
+  // sdk-cli fellowships add --walletdb user-wallet.db --fellowship-name bridge
   def addFellowshipP(id: Int) = process
     .ProcessBuilder(
       CS_CMD,
@@ -213,7 +213,7 @@ trait ProcessOps {
         "launch",
         "-r",
         "https://s01.oss.sonatype.org/content/repositories/releases",
-        "co.topl:brambl-cli_2.13:2.0.0-beta6",
+        "org.plasmalabs:sdk-cli_2.13:2.0.0-beta6",
         "--",
         "fellowships",
         "add",

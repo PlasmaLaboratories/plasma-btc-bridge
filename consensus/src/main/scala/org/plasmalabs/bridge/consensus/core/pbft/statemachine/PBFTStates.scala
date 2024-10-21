@@ -1,7 +1,7 @@
 package org.plasmalabs.bridge.consensus.core.pbft.statemachine
 
 import org.bitcoins.core.currency.CurrencyUnit
-import org.plasmalabs.bridge.consensus.shared.{AssetToken, BifrostCurrencyUnit, GroupToken, Lvl, SeriesToken}
+import org.plasmalabs.bridge.consensus.shared.{AssetToken, NodeCurrencyUnit, GroupToken, Lvl, SeriesToken}
 
 sealed trait PBFTState {
   def toBytes: Array[Byte]
@@ -117,7 +117,7 @@ case class PSClaimingBTC(
   btcTxId:                 String,
   btcVout:                 Long,
   scriptAsm:               String,
-  amount:                  BifrostCurrencyUnit,
+  amount:                  NodeCurrencyUnit,
   claimAddress:            String
 ) extends PBFTState {
 

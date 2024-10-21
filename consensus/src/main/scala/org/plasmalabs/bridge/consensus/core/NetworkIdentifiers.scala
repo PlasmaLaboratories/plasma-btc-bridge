@@ -1,6 +1,6 @@
 package org.plasmalabs.bridge.consensus.core
 
-import co.topl.brambl.constants.NetworkConstants
+import org.plasmalabs.sdk.constants.NetworkConstants
 
 sealed abstract class BitcoinNetworkIdentifiers(
   val name: String

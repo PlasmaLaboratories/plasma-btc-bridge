@@ -1,7 +1,7 @@
 package org.plasmalabs.bridge.consensus.core.pbft
 
 import cats.effect.kernel.{Async, Ref}
-import co.topl.brambl.utils.Encoding
+import org.plasmalabs.sdk.utils.Encoding
 import org.plasmalabs.bridge.consensus.pbft.CheckpointRequest
 
 private[pbft] case class CheckpointIdentifier(

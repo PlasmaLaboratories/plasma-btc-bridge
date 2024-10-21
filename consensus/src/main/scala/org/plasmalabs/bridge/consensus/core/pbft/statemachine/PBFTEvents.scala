@@ -1,7 +1,7 @@
 package org.plasmalabs.bridge.consensus.core.pbft.statemachine
 
 import org.bitcoins.core.currency.CurrencyUnit
-import org.plasmalabs.bridge.consensus.shared.BifrostCurrencyUnit
+import org.plasmalabs.bridge.consensus.shared.NodeCurrencyUnit
 
 trait PBFTEvent {
   val sessionId: String
@@ -49,7 +49,7 @@ case class PostRedemptionTxEvt(
   height:    Long,
   utxoTxId:  String,
   utxoIdx:   Int,
-  amount:    BifrostCurrencyUnit
+  amount:    NodeCurrencyUnit
 ) extends PBFTEvent
 
 /**

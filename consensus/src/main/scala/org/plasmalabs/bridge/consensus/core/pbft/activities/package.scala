@@ -2,7 +2,7 @@ package org.plasmalabs.bridge.consensus.core.pbft
 
 import cats.effect.kernel.{Async, Sync}
 import cats.implicits._
-import co.topl.brambl.utils.Encoding
+import org.plasmalabs.sdk.utils.Encoding
 import org.plasmalabs.bridge.consensus.core.PublicApiClientGrpcMap
 import org.plasmalabs.bridge.consensus.pbft.PrePrepareRequest
 import org.plasmalabs.bridge.consensus.shared.persistence.StorageApi

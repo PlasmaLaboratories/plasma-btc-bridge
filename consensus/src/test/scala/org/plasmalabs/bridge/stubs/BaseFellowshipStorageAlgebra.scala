@@ -1,7 +1,7 @@
 package org.plasmalabs.bridge.stubs
 
 import cats.effect.IO
-import co.topl.brambl.dataApi.{FellowshipStorageAlgebra, WalletFellowship}
+import org.plasmalabs.sdk.dataApi.{FellowshipStorageAlgebra, WalletFellowship}
 
 class BaseFellowshipStorageAlgebra extends FellowshipStorageAlgebra[IO] {
 

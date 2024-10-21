@@ -1,8 +1,8 @@
 package org.plasmalabs.bridge.consensus.core.controllers
 
 import cats.effect.IO
-import co.topl.brambl.models.{GroupId, SeriesId}
-import co.topl.brambl.utils.Encoding
+import org.plasmalabs.sdk.models.{GroupId, SeriesId}
+import org.plasmalabs.sdk.utils.Encoding
 import com.google.protobuf.ByteString
 import org.typelevel.log4cats.SelfAwareStructuredLogger
 import org.plasmalabs.bridge.consensus.core.StrataPrivatenet

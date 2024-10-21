@@ -3,18 +3,6 @@ package org.plasmalabs.bridge.consensus.core.modules
 import cats.effect.IO
 import cats.effect.kernel.Ref
 import cats.effect.std.Queue
-import co.topl.brambl.builders.TransactionBuilderApi
-import co.topl.brambl.constants.NetworkConstants
-import co.topl.brambl.dataApi.GenusQueryAlgebra
-import co.topl.brambl.models.{GroupId, SeriesId}
-import co.topl.brambl.servicekit.{
-  FellowshipStorageApi,
-  TemplateStorageApi,
-  WalletKeyApi,
-  WalletStateApi,
-  WalletStateResource
-}
-import co.topl.brambl.wallet.WalletApi
 import io.grpc.Metadata
 import org.bitcoins.rpc.client.common.BitcoindRpcClient
 import org.http4s.dsl.io._
@@ -61,6 +49,18 @@ import org.plasmalabs.bridge.consensus.shared.{
 import org.plasmalabs.bridge.consensus.subsystems.monitor.{MonitorStateMachine, SessionEvent, SessionManagerImpl}
 import org.plasmalabs.bridge.shared.{ClientId, ReplicaCount, ReplicaId, StateMachineServiceGrpcClient}
 import org.plasmalabs.consensus.core.PBFTInternalGrpcServiceClient
+import org.plasmalabs.sdk.builders.TransactionBuilderApi
+import org.plasmalabs.sdk.constants.NetworkConstants
+import org.plasmalabs.sdk.dataApi.IndexerQueryAlgebra
+import org.plasmalabs.sdk.models.{GroupId, SeriesId}
+import org.plasmalabs.sdk.servicekit.{
+  FellowshipStorageApi,
+  TemplateStorageApi,
+  WalletKeyApi,
+  WalletStateApi,
+  WalletStateResource
+}
+import org.plasmalabs.sdk.wallet.WalletApi
 
 import java.security.{KeyPair => JKeyPair, PublicKey}
 import java.util.concurrent.ConcurrentHashMap
@@ -110,7 +110,7 @@ trait AppModule extends WalletStateResource {
       params.toplNetwork.networkId,
       NetworkConstants.MAIN_LEDGER_ID
     )
-    implicit val genusQueryAlgebra = GenusQueryAlgebra.make[IO](
+    implicit val indexerQueryAlgebra = IndexerQueryAlgebra.make[IO](
       channelResource(
         params.toplHost,
         params.toplPort,
@@ -125,7 +125,7 @@ trait AppModule extends WalletStateResource {
       walletApi,
       walletKeyApi
     )
-    import co.topl.brambl.syntax._
+    import org.plasmalabs.sdk.syntax._
     implicit val defaultMintingFee = Lvl(params.mintingFee)
     implicit val asyncForIO = IO.asyncForIO
     implicit val l = logger

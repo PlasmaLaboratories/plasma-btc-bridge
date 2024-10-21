@@ -1,6 +1,6 @@
 package org.plasmalabs.tbcli
-// import co.topl.bridge.BitcoinNetworkIdentifiers
-// import co.topl.bridge.RegTest
+// import org.plasmalabs.bridge.BitcoinNetworkIdentifiers
+// import org.plasmalabs.bridge.RegTest
 
 sealed abstract class StrataBTCCLICommand
 

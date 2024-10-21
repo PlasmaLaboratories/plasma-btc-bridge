@@ -1,7 +1,7 @@
 package org.plasmalabs.bridge.consensus.core.pbft.activities
 
 import cats.effect.kernel.Async
-import co.topl.brambl.utils.Encoding
+import org.plasmalabs.sdk.utils.Encoding
 import org.typelevel.log4cats.Logger
 import org.plasmalabs.bridge.consensus.core.pbft.{PBFTInternalEvent, Prepared, RequestIdentifier, ViewManager}
 import org.plasmalabs.bridge.consensus.pbft.PrepareRequest

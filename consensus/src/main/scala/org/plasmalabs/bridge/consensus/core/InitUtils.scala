@@ -1,7 +1,7 @@
 package org.plasmalabs.bridge.consensus.core
 
 import cats.effect.kernel.Sync
-import co.topl.brambl.utils.Encoding
+import org.plasmalabs.sdk.utils.Encoding
 import com.typesafe.config.Config
 import org.typelevel.log4cats.Logger
 import org.plasmalabs.bridge.shared.ReplicaId

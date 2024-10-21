@@ -1,17 +1,21 @@
 package org.plasmalabs.bridge.consensus.core.managers
 
 import cats.effect.kernel.{Resource, Sync}
-import co.topl.brambl.Context
-import co.topl.brambl.dataApi.{BifrostQueryAlgebra, WalletStateAlgebra}
-import co.topl.brambl.models.transaction.IoTransaction
-import co.topl.brambl.models.{Datum, Event}
-import co.topl.brambl.syntax.cryptoToPbKeyPair
-import co.topl.brambl.utils.Encoding
-import co.topl.brambl.validation.TransactionSyntaxError.{EmptyInputs, InvalidDataLength}
-import co.topl.brambl.validation.{TransactionAuthorizationError, TransactionSyntaxError, TransactionSyntaxInterpreter}
-import co.topl.brambl.wallet.{CredentiallerInterpreter, WalletApi}
-import co.topl.crypto.signing.ExtendedEd25519
-import co.topl.quivr.runtime.{QuivrRuntimeError, QuivrRuntimeErrors}
+import org.plasmalabs.sdk.Context
+import org.plasmalabs.sdk.dataApi.{NodeQueryAlgebra, WalletStateAlgebra}
+import org.plasmalabs.sdk.models.transaction.IoTransaction
+import org.plasmalabs.sdk.models.{Datum, Event}
+import org.plasmalabs.sdk.syntax.cryptoToPbKeyPair
+import org.plasmalabs.sdk.utils.Encoding
+import org.plasmalabs.sdk.validation.TransactionSyntaxError.{EmptyInputs, InvalidDataLength}
+import org.plasmalabs.sdk.validation.{
+  TransactionAuthorizationError,
+  TransactionSyntaxError,
+  TransactionSyntaxInterpreter
+}
+import org.plasmalabs.sdk.wallet.{CredentiallerInterpreter, WalletApi}
+import org.plasmalabs.crypto.signing.ExtendedEd25519
+import org.plasmalabs.quivr.runtime.{QuivrRuntimeError, QuivrRuntimeErrors}
 import io.grpc.ManagedChannel
 import quivr.models.KeyPair
 
@@ -59,7 +63,7 @@ object TransactionAlgebra {
           )
         )
         .whenA(validations.nonEmpty)
-      response <- BifrostQueryAlgebra
+      response <- NodeQueryAlgebra
         .make[F](channelResource)
         .broadcastTransaction(provedTransaction)
         .map(_ => provedTransaction)
@@ -70,7 +74,7 @@ object TransactionAlgebra {
     } yield response).attempt.map(e =>
       e match {
         case Right(tx) =>
-          import co.topl.brambl.syntax._
+          import org.plasmalabs.sdk.syntax._
           Encoding.encodeToBase58(tx.id.value.toByteArray()).asRight
         case Left(e: SimpleTransactionAlgebraError) => e.asLeft
         case Left(e)                                => UnexpectedError(e.getMessage()).asLeft
@@ -96,7 +100,7 @@ object TransactionAlgebra {
             mockKeyPair
           )
       )
-      tipBlockHeader <- BifrostQueryAlgebra
+      tipBlockHeader <- NodeQueryAlgebra
         .make[F](channelResource)
         .blockByDepth(1L)
         .map(_.get._2)

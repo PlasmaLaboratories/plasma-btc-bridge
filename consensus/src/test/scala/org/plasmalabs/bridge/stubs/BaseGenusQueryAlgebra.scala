@@ -1,11 +1,11 @@
 package org.plasmalabs.bridge.stubs
 
 import cats.effect.IO
-import co.topl.brambl.dataApi.GenusQueryAlgebra
-import co.topl.brambl.models.LockAddress
-import co.topl.genus.services.{Txo, TxoState}
+import org.plasmalabs.sdk.dataApi.IndexerQueryAlgebra
+import org.plasmalabs.sdk.models.LockAddress
+import org.plasmalabs.indexer.services.{Txo, TxoState}
 
-class BaseGenusQueryAlgebra extends GenusQueryAlgebra[IO] {
+class BaseIndexerQueryAlgebra extends IndexerQueryAlgebra[IO] {
 
   override def queryUtxo(
     fromAddress: LockAddress,

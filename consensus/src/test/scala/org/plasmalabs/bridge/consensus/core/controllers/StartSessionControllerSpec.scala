@@ -2,17 +2,17 @@ package org.plasmalabs.bridge.consensus.core.controllers
 
 import cats.effect.IO
 import cats.effect.kernel.Ref
-import co.topl.brambl.builders.TransactionBuilderApi
-import co.topl.brambl.constants.NetworkConstants
-import co.topl.brambl.dataApi.RpcChannelResource
-import co.topl.brambl.servicekit.{
+import org.plasmalabs.sdk.builders.TransactionBuilderApi
+import org.plasmalabs.sdk.constants.NetworkConstants
+import org.plasmalabs.sdk.dataApi.RpcChannelResource
+import org.plasmalabs.sdk.servicekit.{
   FellowshipStorageApi,
   TemplateStorageApi,
   WalletKeyApi,
   WalletStateApi,
   WalletStateResource
 }
-import co.topl.brambl.wallet.WalletApi
+import org.plasmalabs.sdk.wallet.WalletApi
 import munit.CatsEffectSuite
 import org.plasmalabs.bridge.consensus.core.controllers.StartSessionController
 import org.plasmalabs.bridge.consensus.core.managers.{BTCWalletAlgebraImpl, WalletManagementUtils}

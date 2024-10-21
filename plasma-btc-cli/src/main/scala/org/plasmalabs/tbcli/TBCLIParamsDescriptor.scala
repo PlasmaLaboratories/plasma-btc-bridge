@@ -1,10 +1,10 @@
 package org.plasmalabs.tbcli
 
-// import co.topl.shared.BitcoinNetworkIdentifiers
+// import org.plasmalabs.shared.BitcoinNetworkIdentifiers
 // import scopt.OParser
 
 trait TBCLIParamsDescriptor {
-  // import co.topl.bridge.ParamParser._
+  // import org.plasmalabs.bridge.ParamParser._
 
   // val builder = OParser.builder[StrataBTCCLIParamConfig]
 

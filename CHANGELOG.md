@@ -34,7 +34,7 @@ This is needed to know the range of blocks to wait for the redemption.
 
 - Default port is now 4000.
 - `plasma-cli` version (for IT) is now 2.0.0-beta3.
-- Updated BramblSc to 2.0.0-beta4.
+- Updated sdkSc to 2.0.0-beta4.
 - Integration tests to use our own Bitcoin regtest node Docker image.
 - Front-end to use the new minting status.
 - No longer hardcodes the user's public key. User can provide it during session creation

@@ -1,9 +1,9 @@
 package org.plasmalabs.bridge.consensus.core.controllers
 
 import cats.effect.kernel.{Async, Sync}
-import co.topl.brambl.builders.TransactionBuilderApi
-import co.topl.brambl.dataApi.{FellowshipStorageAlgebra, TemplateStorageAlgebra, WalletStateAlgebra}
-import co.topl.brambl.wallet.WalletApi
+import org.plasmalabs.sdk.builders.TransactionBuilderApi
+import org.plasmalabs.sdk.dataApi.{FellowshipStorageAlgebra, TemplateStorageAlgebra, WalletStateAlgebra}
+import org.plasmalabs.sdk.wallet.WalletApi
 import org.bitcoins.core.protocol.Bech32Address
 import org.bitcoins.core.protocol.script.{P2WPKHWitnessSPKV0, WitnessScriptPubKey}
 import org.bitcoins.core.script.constant.{OP_0, ScriptConstant}
@@ -160,7 +160,7 @@ object StartSessionController {
         someRedeemAdress.isDefined,
         "Redeem address was not generated correctly"
       )
-      bridgeBifrostKey = someRedeemAdressAndKey.map(_._2).get
+      bridgeNodeKey = someRedeemAdressAndKey.map(_._2).get
       addressAndsessionInfo <- createPeginSessionInfo(
         btcPeginCurrentWalletIdx,
         btcBridgeCurrentWalletIdx,

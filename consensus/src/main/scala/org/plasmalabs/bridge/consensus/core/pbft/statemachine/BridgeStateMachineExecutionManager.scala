@@ -2,11 +2,16 @@ package org.plasmalabs.bridge.consensus.core.pbft.statemachine
 
 import cats.effect.kernel.{Async, Ref, Resource, Sync}
 import cats.effect.std.Queue
-import co.topl.brambl.builders.TransactionBuilderApi
-import co.topl.brambl.dataApi.{FellowshipStorageAlgebra, GenusQueryAlgebra, TemplateStorageAlgebra, WalletStateAlgebra}
-import co.topl.brambl.models.{GroupId, SeriesId}
-import co.topl.brambl.utils.Encoding
-import co.topl.brambl.wallet.WalletApi
+import org.plasmalabs.sdk.builders.TransactionBuilderApi
+import org.plasmalabs.sdk.dataApi.{
+  FellowshipStorageAlgebra,
+  IndexerQueryAlgebra,
+  TemplateStorageAlgebra,
+  WalletStateAlgebra
+}
+import org.plasmalabs.sdk.models.{GroupId, SeriesId}
+import org.plasmalabs.sdk.utils.Encoding
+import org.plasmalabs.sdk.wallet.WalletApi
 import com.google.protobuf.ByteString
 import io.grpc.ManagedChannel
 import org.bitcoins.core.currency.{CurrencyUnit, Satoshis}
@@ -115,7 +120,7 @@ object BridgeStateMachineExecutionManagerImpl {
     wsa:                      WalletStateAlgebra[F],
     groupIdIdentifier:        GroupId,
     seriesIdIdentifier:       SeriesId,
-    utxoAlgebra:              GenusQueryAlgebra[F],
+    utxoAlgebra:              IndexerQueryAlgebra[F],
     channelResource:          Resource[F, ManagedChannel],
     defaultMintingFee:        Lvl,
     lastReplyMap:             LastReplyMap,
@@ -233,7 +238,7 @@ object BridgeStateMachineExecutionManagerImpl {
                 amount = Satoshis.fromBytes(ByteVector(value.amount.toByteArray))
               )
             case PostRedemptionTx(value) =>
-              import co.topl.brambl.syntax._
+              import org.plasmalabs.sdk.syntax._
               PostRedemptionTxEvt(
                 sessionId = value.sessionId,
                 secret = value.secret,
@@ -327,7 +332,7 @@ object BridgeStateMachineExecutionManagerImpl {
                   value
                 ) =>
               import WaitingBTCOps._
-              import co.topl.brambl.syntax._
+              import org.plasmalabs.sdk.syntax._
               for {
                 _ <- debug"handling PostDepositBTC ${value.sessionId}"
                 someSessionInfo <- standardResponse(

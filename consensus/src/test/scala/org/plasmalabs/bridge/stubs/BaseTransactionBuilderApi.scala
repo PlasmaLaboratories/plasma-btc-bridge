@@ -1,12 +1,12 @@
-package co.topl.brambl.cli.mockbase
+package org.plasmalabs.sdk.cli.mockbase
 
-import co.topl.brambl.builders.{BuilderError, TransactionBuilderApi}
-import co.topl.brambl.models.Event.{GroupPolicy, SeriesPolicy}
-import co.topl.brambl.models.box.{AssetMintingStatement, Attestation, FungibilityType, Lock, QuantityDescriptorType}
-import co.topl.brambl.models.transaction.{IoTransaction, UnspentTransactionOutput}
-import co.topl.brambl.models.{Datum, GroupId, LockAddress, SeriesId}
-import co.topl.brambl.syntax.ValueTypeIdentifier
-import co.topl.genus.services.Txo
+import org.plasmalabs.sdk.builders.{BuilderError, TransactionBuilderApi}
+import org.plasmalabs.sdk.models.Event.{GroupPolicy, SeriesPolicy}
+import org.plasmalabs.sdk.models.box.{AssetMintingStatement, Attestation, FungibilityType, Lock, QuantityDescriptorType}
+import org.plasmalabs.sdk.models.transaction.{IoTransaction, UnspentTransactionOutput}
+import org.plasmalabs.sdk.models.{Datum, GroupId, LockAddress, SeriesId}
+import org.plasmalabs.sdk.syntax.ValueTypeIdentifier
+import org.plasmalabs.indexer.services.Txo
 import com.google.protobuf.ByteString
 import com.google.protobuf.struct.Struct
 import quivr.models.Int128

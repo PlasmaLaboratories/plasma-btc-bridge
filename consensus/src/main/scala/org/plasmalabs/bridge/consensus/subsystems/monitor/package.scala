@@ -1,7 +1,7 @@
 package org.plasmalabs.bridge.consensus.subsystems
 
-import _root_.co.topl.brambl.models.box.Value
-import _root_.co.topl.brambl.utils.Encoding
+import _root_.org.plasmalabs.sdk.models.box.Value
+import _root_.org.plasmalabs.sdk.utils.Encoding
 import _root_.org.plasmalabs.bridge.consensus.shared.{AssetToken, GroupToken, Lvl, SeriesToken}
 
 package object monitor {

@@ -1,6 +1,6 @@
 package org.plasmalabs.bridge.consensus.core
 
-import co.topl.brambl.models.{GroupId, SeriesId}
+import org.plasmalabs.sdk.models.{GroupId, SeriesId}
 import org.bitcoins.core.currency.{CurrencyUnit, SatoshisLong}
 import scopt.OParser
 

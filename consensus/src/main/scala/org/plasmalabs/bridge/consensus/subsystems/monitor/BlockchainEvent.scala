@@ -1,7 +1,7 @@
 package org.plasmalabs.bridge.consensus.subsystems.monitor
 
 import org.bitcoins.core.currency.CurrencyUnit
-import org.plasmalabs.bridge.consensus.shared.BifrostCurrencyUnit
+import org.plasmalabs.bridge.consensus.shared.NodeCurrencyUnit
 
 sealed trait BlockchainEvent
 
@@ -23,18 +23,18 @@ case class BTCFundsDeposited(
   amount:               CurrencyUnit
 ) extends BlockchainEvent
 
-case class BifrostFundsDeposited(
+case class NodeFundsDeposited(
   currentStrataBlockHeight: Long,
   address:                  String,
   utxoTxId:                 String,
   utxoIndex:                Int,
-  amount:                   BifrostCurrencyUnit
+  amount:                   NodeCurrencyUnit
 ) extends BlockchainEvent
 
-case class BifrostFundsWithdrawn(
+case class NodeFundsWithdrawn(
   fundsWithdrawnHeight: Long,
   txId:                 String,
   txIndex:              Int,
   secret:               String,
-  amount:               BifrostCurrencyUnit
+  amount:               NodeCurrencyUnit
 ) extends BlockchainEvent
