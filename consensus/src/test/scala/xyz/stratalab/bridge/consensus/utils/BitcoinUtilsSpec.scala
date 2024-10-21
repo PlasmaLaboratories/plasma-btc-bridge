@@ -1,4 +1,4 @@
-package co.topl.bridge.consensus.core.utils
+package xyz.stratalab.bridge.consensus.core.utils
 
 import munit.CatsEffectSuite
 import org.bitcoins.core.config.RegTest

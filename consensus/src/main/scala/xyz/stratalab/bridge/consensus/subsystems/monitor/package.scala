@@ -1,8 +1,8 @@
 package xyz.stratalab.bridge.consensus.subsystems
 
-import _root_.co.topl.brambl.models.box.Value
-import _root_.co.topl.brambl.utils.Encoding
 import _root_.xyz.stratalab.bridge.consensus.shared.{AssetToken, GroupToken, Lvl, SeriesToken}
+import _root_.xyz.stratalab.sdk.models.box.Value
+import _root_.xyz.stratalab.sdk.utils.Encoding
 
 package object monitor {
 

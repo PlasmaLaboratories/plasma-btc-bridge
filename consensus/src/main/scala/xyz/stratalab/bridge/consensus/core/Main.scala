@@ -3,10 +3,6 @@ package xyz.stratalab.bridge.consensus.core
 import cats.effect.kernel.{Async, Ref, Sync}
 import cats.effect.std.{Mutex, Queue}
 import cats.effect.{ExitCode, IO, IOApp}
-import co.topl.brambl.dataApi.BifrostQueryAlgebra
-import co.topl.brambl.models.{GroupId, SeriesId}
-import co.topl.brambl.monitoring.{BifrostMonitor, BitcoinMonitor}
-import co.topl.brambl.utils.Encoding
 import com.google.protobuf.ByteString
 import com.typesafe.config.{Config, ConfigFactory}
 import io.grpc.netty.NettyServerBuilder
@@ -38,20 +34,28 @@ import xyz.stratalab.bridge.shared.{
   ClientCount,
   ClientId,
   ConsensusClientMessageId,
+  PBFTInternalGrpcServiceClientRetryConfigImpl,
   ReplicaCount,
   ReplicaId,
   ReplicaNode,
   ResponseGrpcServiceServer,
+  RetryPolicy,
   StateMachineServiceGrpcClient,
-  StateMachineServiceGrpcClientImpl
+  StateMachineServiceGrpcClientImpl,
+  StateMachineServiceGrpcClientRetryConfigImpl
 }
 import xyz.stratalab.consensus.core.{PBFTInternalGrpcServiceClient, PBFTInternalGrpcServiceClientImpl}
+import xyz.stratalab.sdk.dataApi.NodeQueryAlgebra
+import xyz.stratalab.sdk.models.{GroupId, SeriesId}
+import xyz.stratalab.sdk.monitoring.{BitcoinMonitor, NodeMonitor}
+import xyz.stratalab.sdk.utils.Encoding
 
 import java.net.InetSocketAddress
 import java.security.{KeyPair => JKeyPair, PublicKey, Security}
 import java.util.concurrent.atomic.LongAdder
 import java.util.concurrent.{ConcurrentHashMap, Executors}
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.FiniteDuration
 
 case class SystemGlobalState(
   currentStatus: Option[String],
@@ -246,7 +250,9 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
     clientId:           ClientId,
     replicaId:          ReplicaId,
     clientCount:        ClientCount,
-    replicaCount:       ReplicaCount
+    replicaCount:       ReplicaCount,
+    pbftInternalConfig: PBFTInternalGrpcServiceClientRetryConfigImpl,
+    stateMachineConf:   StateMachineServiceGrpcClientRetryConfigImpl
   ) = {
     import fs2.grpc.syntax.all._
     import scala.jdk.CollectionConverters._
@@ -260,6 +266,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         ConsensusClientMessageId,
         ConcurrentHashMap[Int, Int]
       ]()
+
     for {
       replicaKeyPair <- BridgeCryptoUtils
         .getKeyPair[IO](privateKeyFile)
@@ -316,7 +323,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
       _           <- requestStateManager.startProcessingEvents()
       _           <- IO.asyncForIO.background(bridgeStateMachineExecutionManager.runStream().compile.drain)
       pbftService <- pbftServiceResource
-      bifrostQueryAlgebra = BifrostQueryAlgebra
+      bifrostQueryAlgebra = NodeQueryAlgebra
         .make[IO](
           channelResource(
             params.toplHost,
@@ -329,7 +336,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         zmqHost = params.zmqHost,
         zmqPort = params.zmqPort
       )
-      bifrostMonitor <- BifrostMonitor(
+      bifrostMonitor <- NodeMonitor(
         params.toplHost,
         params.toplPort,
         params.toplSecureConnection,
@@ -420,7 +427,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
 
   def getAndSetCurrentStrataHeight[F[_]: Async: Logger](
     currentStrataHeight: Ref[F, Long],
-    bqa:                 BifrostQueryAlgebra[F]
+    bqa:                 NodeQueryAlgebra[F]
   ) = {
     import cats.implicits._
     import scala.concurrent.duration._
@@ -489,6 +496,29 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
     implicit val logger =
       org.typelevel.log4cats.slf4j.Slf4jLogger
         .getLoggerFromName[IO]("consensus-" + f"${replicaId.id}%02d")
+
+    implicit val pbftInternalConfig = PBFTInternalGrpcServiceClientRetryConfigImpl(
+      retryPolicy = RetryPolicy(
+        initialDelay =
+          FiniteDuration.apply(conf.getInt("bridge.replica.clients.pbftInternal.retryPolicy.initialDelay"), "second"),
+        maxRetries = conf.getInt("bridge.replica.clients.pbftInternal.retryPolicy.maxRetries"),
+        delayMultiplier = conf.getInt("bridge.replica.clients.pbftInternal.retryPolicy.delayMultiplier")
+      )
+    )
+
+    implicit val stateMachineConf = StateMachineServiceGrpcClientRetryConfigImpl(
+      primaryResponseWait =
+        FiniteDuration.apply(conf.getInt("bridge.replica.clients.monitor.client.primaryResponseWait"), "second"),
+      otherReplicasResponseWait =
+        FiniteDuration.apply(conf.getInt("bridge.replica.clients.monitor.client.otherReplicasResponseWait"), "second"),
+      retryPolicy = RetryPolicy(
+        initialDelay =
+          FiniteDuration.apply(conf.getInt("bridge.replica.clients.monitor.client.retryPolicy.initialDelay"), "second"),
+        maxRetries = conf.getInt("bridge.replica.clients.monitor.client.retryPolicy.maxRetries"),
+        delayMultiplier = conf.getInt("bridge.replica.clients.monitor.client.retryPolicy.delayMultiplier")
+      )
+    )
+
     (for {
       _                  <- IO(Security.addProvider(new BouncyCastleProvider()))
       pegInKm            <- loadKeyPegin(params)

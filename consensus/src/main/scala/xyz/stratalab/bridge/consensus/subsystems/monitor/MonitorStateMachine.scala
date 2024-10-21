@@ -2,7 +2,6 @@ package xyz.stratalab.bridge.consensus.subsystems.monitor
 
 import cats.effect.kernel.{Async, Ref, Sync}
 import cats.implicits._
-import co.topl.brambl.models.{GroupId, SeriesId}
 import org.typelevel.log4cats.Logger
 import xyz.stratalab.bridge.consensus.shared.{
   BTCConfirmationThreshold,
@@ -20,6 +19,7 @@ import xyz.stratalab.bridge.consensus.subsystems.monitor.{
   PeginStateMachineState
 }
 import xyz.stratalab.bridge.shared.{ClientId, SessionId, StateMachineServiceGrpcClient}
+import xyz.stratalab.sdk.models.{GroupId, SeriesId}
 
 trait MonitorStateMachineAlgebra[F[_]] {
 

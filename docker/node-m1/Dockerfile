@@ -11,5 +11,5 @@ RUN echo 'cs launch -r https://s01.oss.sonatype.org/content/repositories/staging
 RUN chmod +x /usr/local/bin/strata-cli
 USER 1001:0
 RUN strata-cli wallet init --network private --password password --newwalletdb /tmp/wallet.db --mnemonicfile /tmp/mnemonic.txt  -o /tmp/keyfile.json
-# ENTRYPOINT ["/opt/docker/bin/node-node"]
+# ENTRYPOINT ["/opt/docker/bin/bifrost-node"]
 # EXPOSE 9085 9084 9091

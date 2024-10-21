@@ -1,9 +1,7 @@
-package co.topl.bridge.consensus.monitor
+package xyz.stratalab.bridge.consensus.monitor
 
 import cats.effect.IO
 import cats.effect.kernel.Async
-import co.topl.brambl.syntax._
-import co.topl.brambl.utils.Encoding
 import munit.CatsEffectSuite
 import org.bitcoins.core.protocol.Bech32Address
 import xyz.stratalab.bridge.consensus.core.controllers.SharedData
@@ -11,8 +9,6 @@ import xyz.stratalab.bridge.consensus.shared.AssetToken
 import xyz.stratalab.bridge.consensus.subsystems.monitor.{
   BTCFundsDeposited,
   BTCFundsWithdrawn,
-  BifrostFundsDeposited,
-  BifrostFundsWithdrawn,
   BlockchainEvent,
   EndTransition,
   FSMTransitionTo,
@@ -27,8 +23,12 @@ import xyz.stratalab.bridge.consensus.subsystems.monitor.{
   MonitorTransitionRelation,
   NewBTCBlock,
   NewStrataBlock,
+  NodeFundsDeposited,
+  NodeFundsWithdrawn,
   PeginStateMachineState
 }
+import xyz.stratalab.sdk.syntax._
+import xyz.stratalab.sdk.utils.Encoding
 
 import scala.annotation.nowarn
 
@@ -128,11 +128,11 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
     )
   }
 
-  // MWaitingForBTCDeposit not transition on Bifrost events
+  // MWaitingForBTCDeposit not transition on Node events
   test(
-    "PeginTransitionRelation should not transition from MWaitingForBTCDeposit on Bifrost events"
+    "PeginTransitionRelation should not transition from MWaitingForBTCDeposit on Node events"
   ) {
-    import co.topl.brambl.syntax._
+    import xyz.stratalab.sdk.syntax._
     assert(
       MonitorTransitionRelation
         .handleBlockchainEvent[IO](
@@ -144,7 +144,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
             redeemAddress,
             claimAddress
           ),
-          BifrostFundsDeposited(
+          NodeFundsDeposited(
             currentStrataBlockHeight = 0L, // Assuming a placeholder value for the missing argument
             address = redeemAddress,
             utxoTxId = "utxoTxId",
@@ -163,9 +163,9 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
             redeemAddress,
             claimAddress
           ),
-          BifrostFundsWithdrawn(
+          NodeFundsWithdrawn(
             1L,
-            "bifrostTxId",
+            "nodeTxId",
             0,
             "strata-secret",
             AssetToken("groupId", "seriesId", 100L)
@@ -189,13 +189,13 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
             claimAddress = claimAddress,
             btcTxId = "txId",
             btcVout = 0,
-            utxoTxId = "bifrostTxId",
+            utxoTxId = "nodeTxId",
             utxoIndex = 0, // Added missing utxoIndex parameter
             amount = AssetToken("groupId", "seriesId", 100L)
           ),
-          BifrostFundsWithdrawn(
+          NodeFundsWithdrawn(
             1L,
-            "bifrostTxId",
+            "nodeTxId",
             0,
             "strata-secret",
             AssetToken("groupId", "seriesId", 100L)
@@ -222,7 +222,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
             claimAddress = claimAddress,
             btcTxId = "txId",
             btcVout = 0,
-            utxoTxId = "bifrostTxId",
+            utxoTxId = "nodeTxId",
             utxoIndex = 0,
             amount = AssetToken("groupId", "seriesId", 100L)
           ),
@@ -234,9 +234,9 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
   }
 
   test(
-    "PeginTransitionRelation should NOT transition from WaitingForRedemption to BifrostFundsWithdrawn if guard fails"
+    "PeginTransitionRelation should NOT transition from WaitingForRedemption to NodeFundsWithdrawn if guard fails"
   ) {
-    import co.topl.brambl.syntax._
+    import xyz.stratalab.sdk.syntax._
     assert(
       MonitorTransitionRelation
         .handleBlockchainEvent[IO](
@@ -248,13 +248,13 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
             claimAddress = claimAddress,
             btcTxId = "txId",
             btcVout = 0,
-            utxoTxId = "bifrostTxId",
+            utxoTxId = "nodeTxId",
             utxoIndex = 0,
             amount = AssetToken("groupId", "seriesId", 100L)
           ),
-          BifrostFundsWithdrawn(
+          NodeFundsWithdrawn(
             1L,
-            "bifrostTxIdDifferent",
+            "nodeTxIdDifferent",
             0,
             "strata-secret",
             AssetToken("groupId", "seriesId", 100L)
@@ -271,13 +271,13 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
             claimAddress = claimAddress,
             btcTxId = "txId",
             btcVout = 0,
-            utxoTxId = "bifrostTxId",
+            utxoTxId = "nodeTxId",
             utxoIndex = 0,
             amount = AssetToken("groupId", "seriesId", 100L)
           ),
-          BifrostFundsWithdrawn(
+          NodeFundsWithdrawn(
             1L,
-            "bifrostTxId",
+            "nodeTxId",
             1,
             "strata-secret",
             AssetToken("groupId", "seriesId", 100L)
@@ -302,7 +302,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
             claimAddress = claimAddress,
             btcTxId = "txId",
             btcVout = 0,
-            utxoTxId = "bifrostTxId",
+            utxoTxId = "nodeTxId",
             utxoIndex = 0,
             amount = AssetToken("groupId", "seriesId", 100L)
           ),
@@ -319,7 +319,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
             claimAddress = claimAddress,
             btcTxId = "txId",
             btcVout = 0,
-            utxoTxId = "bifrostTxId",
+            utxoTxId = "nodeTxId",
             utxoIndex = 0,
             amount = AssetToken("groupId", "seriesId", 100L)
           ),
@@ -443,11 +443,11 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
     )
   }
 
-  // WaitingForClaim not transition on Bifrost events
+  // WaitingForClaim not transition on Node events
   test(
-    "PeginTransitionRelation should not transition from WaitingForClaim on Bifrost events"
+    "PeginTransitionRelation should not transition from WaitingForClaim on Node events"
   ) {
-    import co.topl.brambl.syntax._
+    import xyz.stratalab.sdk.syntax._
     assert(
       MonitorTransitionRelation
         .handleBlockchainEvent[IO](
@@ -465,7 +465,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
             ), // Adjust amount as necessary
             claimAddress = claimAddress
           ),
-          BifrostFundsDeposited(
+          NodeFundsDeposited(
             currentStrataBlockHeight = 0L, // Assuming a missing parameter needs to be added
             address = redeemAddress,
             utxoTxId = "utxoTxId",
@@ -474,7 +474,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
               "groupId",
               "seriesId",
               100L
-            ) // Assuming AssetToken is a valid BifrostCurrencyUnit
+            ) // Assuming AssetToken is a valid NodeCurrencyUnit
           )
         )(transitionToEffect[IO](_, _))
         .isEmpty &&
@@ -494,9 +494,9 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
             ), // Adjust amount as necessary
             claimAddress = claimAddress
           ),
-          BifrostFundsWithdrawn(
+          NodeFundsWithdrawn(
             1L,
-            "bifrostTxId",
+            "nodeTxId",
             0,
             "strata-secret",
             AssetToken("groupId", "seriesId", 100L)
@@ -535,7 +535,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
     "PeginTransitionRelation should transition from MintingTBTC to MintingTBTCConfirmation"
   ) {
 
-    import co.topl.brambl.syntax._
+    import xyz.stratalab.sdk.syntax._
     assert(
       MonitorTransitionRelation
         .handleBlockchainEvent[IO](
@@ -549,7 +549,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
             0,
             100.satoshis
           ),
-          BifrostFundsDeposited(
+          NodeFundsDeposited(
             currentStrataBlockHeight = 0L, // Assuming a missing parameter needs to be added
             address = redeemAddress,
             utxoTxId = "utxoTxId",
@@ -558,7 +558,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
               Encoding.encodeToBase58(groupId.value.toByteArray),
               Encoding.encodeToBase58(seriesId.value.toByteArray),
               100L
-            ) // Assuming AssetToken is a valid BifrostCurrencyUnit
+            ) // Assuming AssetToken is a valid NodeCurrencyUnit
           )
         )(transitionToEffect[IO](_, _))
         .get
@@ -572,7 +572,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
   test(
     "PeginTransitionRelation should not transition from MintingTBTC to WaitingForRedemption"
   ) {
-    import co.topl.brambl.syntax._
+    import xyz.stratalab.sdk.syntax._
     assert(
       MonitorTransitionRelation
         .handleBlockchainEvent[IO](
@@ -586,7 +586,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
             0,
             100.satoshis
           ),
-          BifrostFundsDeposited(
+          NodeFundsDeposited(
             currentStrataBlockHeight = 0L, // Assuming a missing parameter needs to be added
             address = redeemAddressOther,
             utxoTxId = "utxoTxId",
@@ -595,7 +595,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
               "groupId",
               "seriesId",
               100L
-            ) // Assuming AssetToken is a valid BifrostCurrencyUnit
+            ) // Assuming AssetToken is a valid NodeCurrencyUnit
           )
         )(transitionToEffect[IO](_, _))
         .isEmpty
