@@ -44,7 +44,6 @@ import xyz.stratalab.bridge.shared.{
 import xyz.stratalab.consensus.core.{PBFTInternalGrpcServiceClient, PBFTInternalGrpcServiceClientImpl}
 import xyz.stratalab.sdk.dataApi.NodeQueryAlgebra
 import xyz.stratalab.sdk.models.{GroupId, SeriesId}
-import xyz.stratalab.sdk.monitoring.{BitcoinMonitor, NodeMonitor}
 import xyz.stratalab.sdk.utils.Encoding
 
 import java.net.InetSocketAddress
@@ -52,6 +51,8 @@ import java.security.{KeyPair => JKeyPair, PublicKey, Security}
 import java.util.concurrent.atomic.LongAdder
 import java.util.concurrent.{ConcurrentHashMap, Executors}
 import scala.concurrent.ExecutionContext
+import xyz.stratalab.bridge.consensus.subsystems.monitor.BitcoinMonitor
+import xyz.stratalab.bridge.consensus.subsystems.monitor.NodeMonitor
 
 case class SystemGlobalState(
   currentStatus: Option[String],
