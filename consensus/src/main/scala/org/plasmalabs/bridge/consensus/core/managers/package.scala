@@ -1,8 +1,8 @@
-package xyz.stratalab.bridge.consensus.core
+package org.plasmalabs.bridge.consensus.core
 
 import com.google.protobuf.struct.{ListValue, NullValue, Struct, Value}
 import io.circe.Json
-import xyz.stratalab.sdk.utils.Encoding
+import org.plasmalabs.sdk.utils.Encoding
 
 package object managers {
 

@@ -1,10 +1,10 @@
-package xyz.stratalab.bridge.consensus.core
+package org.plasmalabs.bridge.consensus.core
 
 import cats.effect.kernel.Sync
 import com.typesafe.config.Config
 import org.typelevel.log4cats.Logger
-import xyz.stratalab.bridge.shared.ReplicaId
-import xyz.stratalab.sdk.utils.Encoding
+import org.plasmalabs.bridge.shared.ReplicaId
+import org.plasmalabs.sdk.utils.Encoding
 
 trait InitUtils {
 

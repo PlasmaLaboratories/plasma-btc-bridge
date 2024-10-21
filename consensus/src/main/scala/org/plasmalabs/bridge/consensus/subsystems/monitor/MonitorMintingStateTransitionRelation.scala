@@ -1,12 +1,12 @@
-package xyz.stratalab.bridge.consensus.subsystems.monitor
+package org.plasmalabs.bridge.consensus.subsystems.monitor
 
-import xyz.stratalab.bridge.consensus.shared.{
+import org.plasmalabs.bridge.consensus.shared.{
   AssetToken,
   BTCWaitExpirationTime,
   StrataConfirmationThreshold,
   StrataWaitExpirationTime
 }
-import xyz.stratalab.bridge.consensus.subsystems.monitor.{
+import org.plasmalabs.bridge.consensus.subsystems.monitor.{
   EndTransition,
   FSMTransition,
   FSMTransitionTo,
@@ -16,8 +16,8 @@ import xyz.stratalab.bridge.consensus.subsystems.monitor.{
   MWaitingForRedemption,
   PeginStateMachineState
 }
-import xyz.stratalab.sdk.models.{GroupId, SeriesId}
-import xyz.stratalab.sdk.utils.Encoding
+import org.plasmalabs.sdk.models.{GroupId, SeriesId}
+import org.plasmalabs.sdk.utils.Encoding
 
 trait MonitorMintingStateTransitionRelation extends TransitionToEffect {
 
@@ -50,7 +50,7 @@ trait MonitorMintingStateTransitionRelation extends TransitionToEffect {
             cs: MMintingTBTC,
             be: NodeFundsDeposited
           ) =>
-        import xyz.stratalab.sdk.syntax._
+        import org.plasmalabs.sdk.syntax._
 
         if (
           cs.redeemAddress == be.address &&
@@ -96,7 +96,7 @@ trait MonitorMintingStateTransitionRelation extends TransitionToEffect {
             be: NewStrataBlock
           ) =>
         if (isAboveConfirmationThresholdStrata(be.height, cs.depositTBTCBlockHeight)) {
-          import xyz.stratalab.sdk.syntax._
+          import org.plasmalabs.sdk.syntax._
           Some(
             FSMTransitionTo(
               currentState,
@@ -203,7 +203,7 @@ trait MonitorMintingStateTransitionRelation extends TransitionToEffect {
           )
         else if (ev.height <= cs.currentTolpBlockHeight) {
           import cats.implicits._
-          import xyz.stratalab.sdk.syntax._
+          import org.plasmalabs.sdk.syntax._
           import org.bitcoins.core.currency.Satoshis
           // we are seeing the block where the transaction was found again
           // this can only mean that block is being unapplied

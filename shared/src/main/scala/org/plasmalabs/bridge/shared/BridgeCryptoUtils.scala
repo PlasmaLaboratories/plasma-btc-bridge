@@ -1,4 +1,4 @@
-package xyz.stratalab.bridge.shared
+package org.plasmalabs.bridge.shared
 
 import cats.effect.kernel.Sync
 import org.bouncycastle.openssl.PEMParser
@@ -16,9 +16,8 @@ object BridgeCryptoUtils {
   import cats.implicits._
 
   private def pemParser[F[_]: Sync](filePath: String): Resource[F, PEMParser] =
-    Resource.make(Sync[F].delay(new PEMParser(new FileReader(filePath)))) {
-      pemReader =>
-        Sync[F].delay(pemReader.close())
+    Resource.make(Sync[F].delay(new PEMParser(new FileReader(filePath)))) { pemReader =>
+      Sync[F].delay(pemReader.close())
     }
 
   def getKeyPair[F[_]: Sync](filePath: String): Resource[F, KeyPair] =
@@ -46,22 +45,22 @@ object BridgeCryptoUtils {
     }
 
   def signBytes[F[_]: Sync](
-      privateKey: PrivateKey,
-      bytes: Array[Byte]
+    privateKey: PrivateKey,
+    bytes:      Array[Byte]
   ): F[Array[Byte]] = {
     val signature = Signature.getInstance("SHA256withECDSA", "BC")
     for {
-      _ <- Sync[F].delay(signature.initSign(privateKey))
-      _ <- Sync[F].delay(signature.update(bytes))
+      _           <- Sync[F].delay(signature.initSign(privateKey))
+      _           <- Sync[F].delay(signature.update(bytes))
       signedBytes <- Sync[F].delay(signature.sign())
     } yield signedBytes
   }
 
   // verify bytes
   def verifyBytes[F[_]: Sync](
-      publicKey: PublicKey,
-      bytes: Array[Byte],
-      signature: Array[Byte]
+    publicKey: PublicKey,
+    bytes:     Array[Byte],
+    signature: Array[Byte]
   ): F[Boolean] = {
     val sig = Signature.getInstance("SHA256withECDSA", "BC")
     for {

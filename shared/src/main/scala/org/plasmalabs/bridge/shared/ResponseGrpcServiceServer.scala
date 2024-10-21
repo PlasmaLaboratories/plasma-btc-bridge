@@ -1,13 +1,22 @@
-package xyz.stratalab.bridge.shared
+package org.plasmalabs.bridge.shared
 
 import cats.effect.kernel.{Async, Ref, Sync}
 import cats.implicits._
 import io.grpc.Metadata
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
-import xyz.stratalab.bridge.consensus.service.StateMachineReply.Result.{SessionNotFound, StartSession}
-import xyz.stratalab.bridge.consensus.service.{ResponseServiceFs2Grpc, StateMachineReply}
-import xyz.stratalab.bridge.shared.{BridgeCryptoUtils, BridgeError, BridgeResponse, ConsensusClientMessageId, Empty, InvalidInput, SessionNotFoundError, StartPeginSessionResponse}
+import org.plasmalabs.bridge.consensus.service.StateMachineReply.Result.{SessionNotFound, StartSession}
+import org.plasmalabs.bridge.consensus.service.{ResponseServiceFs2Grpc, StateMachineReply}
+import org.plasmalabs.bridge.shared.{
+  BridgeCryptoUtils,
+  BridgeError,
+  BridgeResponse,
+  ConsensusClientMessageId,
+  Empty,
+  InvalidInput,
+  SessionNotFoundError,
+  StartPeginSessionResponse
+}
 
 import java.security.PublicKey
 import java.util.concurrent.ConcurrentHashMap
@@ -38,7 +47,7 @@ object ResponseGrpcServiceServer {
           ctx:     Metadata
         ): F[Empty] = {
 
-          import xyz.stratalab.bridge.shared.implicits._
+          import org.plasmalabs.bridge.shared.implicits._
           for {
             _ <- trace"Received response from replica ${request.replicaNumber}"
             publicKey = replicaKeysMap(request.replicaNumber)

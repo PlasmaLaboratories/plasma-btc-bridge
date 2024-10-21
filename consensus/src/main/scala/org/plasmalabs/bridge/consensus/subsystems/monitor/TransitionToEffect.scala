@@ -1,16 +1,16 @@
-package xyz.stratalab.bridge.consensus.subsystems.monitor
+package org.plasmalabs.bridge.consensus.subsystems.monitor
 
 import cats.effect.kernel.Async
 import cats.implicits._
 import com.google.protobuf.ByteString
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
-import xyz.stratalab.bridge.consensus.shared.{
+import org.plasmalabs.bridge.consensus.shared.{
   BTCConfirmationThreshold,
   StrataConfirmationThreshold,
   StrataWaitExpirationTime
 }
-import xyz.stratalab.bridge.consensus.subsystems.monitor.{
+import org.plasmalabs.bridge.consensus.subsystems.monitor.{
   MConfirmingBTCDeposit,
   MConfirmingTBTCMint,
   MMintingTBTC,
@@ -18,7 +18,7 @@ import xyz.stratalab.bridge.consensus.subsystems.monitor.{
   MWaitingForRedemption,
   PeginStateMachineState
 }
-import xyz.stratalab.bridge.shared.{
+import org.plasmalabs.bridge.shared.{
   ClientId,
   PostClaimTxOperation,
   PostDepositBTCOperation,
@@ -147,7 +147,7 @@ trait TransitionToEffect {
             cs: MConfirmingRedemption,
             ev: NewStrataBlock
           ) =>
-        import xyz.stratalab.sdk.syntax._
+        import org.plasmalabs.sdk.syntax._
         if (isAboveConfirmationThresholdStrata(ev.height, cs.currentTolpBlockHeight))
           Async[F]
             .start(

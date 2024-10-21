@@ -1,7 +1,7 @@
-package xyz.stratalab.bridge.stubs
+package org.plasmalabs.bridge.stubs
 
 import cats.effect.IO
-import xyz.stratalab.bridge.consensus.core.pbft.{RequestIdentifier, RequestTimerManager}
+import org.plasmalabs.bridge.consensus.core.pbft.{RequestIdentifier, RequestTimerManager}
 
 class BaseRequestTimerManager extends RequestTimerManager[IO] {
 

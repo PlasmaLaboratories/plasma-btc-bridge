@@ -1,9 +1,9 @@
-package xyz.stratalab.bridge.consensus.core
+package org.plasmalabs.bridge.consensus.core
 
 import com.google.protobuf.ByteString
 import org.bitcoins.core.currency.{CurrencyUnit, SatoshisLong}
-import xyz.stratalab.sdk.models.{GroupId, SeriesId}
-import xyz.stratalab.sdk.utils.Encoding
+import org.plasmalabs.sdk.models.{GroupId, SeriesId}
+import org.plasmalabs.sdk.utils.Encoding
 
 import scala.util.{Failure, Success, Try}
 

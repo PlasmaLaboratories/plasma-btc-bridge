@@ -1,7 +1,7 @@
-package xyz.stratalab.bridge.consensus.core.pbft
+package org.plasmalabs.bridge.consensus.core.pbft
 
-import xyz.stratalab.bridge.consensus.core.pbft.statemachine.PBFTState
-import xyz.stratalab.bridge.consensus.pbft.CheckpointRequest
+import org.plasmalabs.bridge.consensus.core.pbft.statemachine.PBFTState
+import org.plasmalabs.bridge.consensus.pbft.CheckpointRequest
 
 private[pbft] case class StableCheckpoint(
   sequenceNumber: Long,

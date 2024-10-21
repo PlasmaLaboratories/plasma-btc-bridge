@@ -1,4 +1,4 @@
-package xyz.stratalab.bridge.consensus.core.controllers
+package org.plasmalabs.bridge.consensus.core.controllers
 
 import cats.effect.kernel.{Async, Sync}
 import org.bitcoins.core.protocol.Bech32Address
@@ -8,22 +8,22 @@ import org.bitcoins.core.util.{BitcoinScriptUtil, BytesUtil}
 import org.bitcoins.crypto.{ECPublicKey, _}
 import org.typelevel.log4cats.Logger
 import scodec.bits.ByteVector
-import xyz.stratalab.bridge.consensus.core.managers.StrataWalletAlgebra
-import xyz.stratalab.bridge.consensus.core.utils.BitcoinUtils
-import xyz.stratalab.bridge.consensus.core.{
+import org.plasmalabs.bridge.consensus.core.managers.StrataWalletAlgebra
+import org.plasmalabs.bridge.consensus.core.utils.BitcoinUtils
+import org.plasmalabs.bridge.consensus.core.{
   BitcoinNetworkIdentifiers,
   BridgeWalletManager,
   CurrentStrataHeightRef,
   PeginWalletManager,
   StrataKeypair
 }
-import xyz.stratalab.bridge.consensus.shared.{
+import org.plasmalabs.bridge.consensus.shared.{
   BTCWaitExpirationTime,
   PeginSessionInfo,
   PeginSessionState,
   StrataWaitExpirationTime
 }
-import xyz.stratalab.bridge.shared.{
+import org.plasmalabs.bridge.shared.{
   BridgeError,
   InvalidHash,
   InvalidInput,
@@ -31,9 +31,9 @@ import xyz.stratalab.bridge.shared.{
   StartPeginSessionResponse,
   StartSessionOperation
 }
-import xyz.stratalab.sdk.builders.TransactionBuilderApi
-import xyz.stratalab.sdk.dataApi.{FellowshipStorageAlgebra, TemplateStorageAlgebra, WalletStateAlgebra}
-import xyz.stratalab.sdk.wallet.WalletApi
+import org.plasmalabs.sdk.builders.TransactionBuilderApi
+import org.plasmalabs.sdk.dataApi.{FellowshipStorageAlgebra, TemplateStorageAlgebra, WalletStateAlgebra}
+import org.plasmalabs.sdk.wallet.WalletApi
 
 import java.util.UUID
 

@@ -1,6 +1,6 @@
-package xyz.stratalab.tbcli
-// import xyz.stratalab.bridge.BitcoinNetworkIdentifiers
-// import xyz.stratalab.bridge.RegTest
+package org.plasmalabs.tbcli
+// import org.plasmalabs.bridge.BitcoinNetworkIdentifiers
+// import org.plasmalabs.bridge.RegTest
 
 sealed abstract class StrataBTCCLICommand
 

@@ -1,8 +1,8 @@
-package xyz.stratalab.bridge.consensus.core.pbft
+package org.plasmalabs.bridge.consensus.core.pbft
 
 import cats.effect.kernel.{Async, Ref}
-import xyz.stratalab.bridge.consensus.pbft.CheckpointRequest
-import xyz.stratalab.sdk.utils.Encoding
+import org.plasmalabs.bridge.consensus.pbft.CheckpointRequest
+import org.plasmalabs.sdk.utils.Encoding
 
 private[pbft] case class CheckpointIdentifier(
   sequenceNumber: Long,

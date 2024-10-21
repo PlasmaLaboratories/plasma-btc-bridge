@@ -1,4 +1,4 @@
-package xyz.stratalab.bridge.consensus.core.utils
+package org.plasmalabs.bridge.consensus.core.utils
 
 import munit.CatsEffectSuite
 import org.bitcoins.core.config.RegTest
@@ -16,8 +16,8 @@ import org.bitcoins.core.script.constant.ScriptConstant
 import org.bitcoins.core.wallet.fee.SatoshisPerVirtualByte
 import org.bitcoins.crypto.{CryptoUtil, ECDigitalSignature, ECPrivateKey, ECPublicKey, HashType, _}
 import scodec.bits.ByteVector
-import xyz.stratalab.bridge.consensus.core.utils.BitcoinUtils._
-import xyz.stratalab.bridge.consensus.shared.BTCWaitExpirationTime
+import org.plasmalabs.bridge.consensus.core.utils.BitcoinUtils._
+import org.plasmalabs.bridge.consensus.shared.BTCWaitExpirationTime
 
 import java.security.MessageDigest
 

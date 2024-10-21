@@ -1,8 +1,8 @@
-package xyz.stratalab.bridge.consensus.core.pbft.statemachine
+package org.plasmalabs.bridge.consensus.core.pbft.statemachine
 
 import cats.effect.kernel.{Ref, Sync}
 import org.typelevel.log4cats.Logger
-import xyz.stratalab.bridge.shared.{ReplicaCount, StateMachineRequest}
+import org.plasmalabs.bridge.shared.{ReplicaCount, StateMachineRequest}
 
 private[statemachine] trait ExecutionElegibilityManager[F[_]] {
 
@@ -66,7 +66,7 @@ private[statemachine] object ExecutionElegibilityManagerImpl {
                 Option(
                   (
                     sequenceNumber,
-                    request.withOperation(xyz.stratalab.bridge.shared.StateMachineRequest.Operation.Empty)
+                    request.withOperation(org.plasmalabs.bridge.shared.StateMachineRequest.Operation.Empty)
                   )
                 )
           case _ =>

@@ -1,4 +1,4 @@
-package xyz.stratalab.bridge.shared
+package org.plasmalabs.bridge.shared
 
 /**
  * This class is used to create a new session for a peg-in.

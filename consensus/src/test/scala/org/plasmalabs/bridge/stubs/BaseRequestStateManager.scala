@@ -1,8 +1,8 @@
-package xyz.stratalab.bridge.stubs
+package org.plasmalabs.bridge.stubs
 
 import cats.effect.IO
 import cats.effect.kernel.{Outcome, Resource}
-import xyz.stratalab.bridge.consensus.core.pbft.{RequestIdentifier, RequestStateManager}
+import org.plasmalabs.bridge.consensus.core.pbft.{RequestIdentifier, RequestStateManager}
 
 import scala.annotation.nowarn
 

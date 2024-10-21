@@ -1,7 +1,7 @@
-package xyz.stratalab.bridge.consensus.core.pbft
+package org.plasmalabs.bridge.consensus.core.pbft
 
-import xyz.stratalab.bridge.consensus.pbft.{CommitRequest, PrePrepareRequest, PrepareRequest}
-import xyz.stratalab.bridge.shared.ClientId
+import org.plasmalabs.bridge.consensus.pbft.{CommitRequest, PrePrepareRequest, PrepareRequest}
+import org.plasmalabs.bridge.shared.ClientId
 
 sealed abstract private[core] class PBFTInternalEvent(
   val requestIdentifier: RequestIdentifier

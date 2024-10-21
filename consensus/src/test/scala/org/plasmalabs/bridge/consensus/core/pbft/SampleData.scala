@@ -1,15 +1,15 @@
-package xyz.stratalab.bridge.consensus.core.pbft
+package org.plasmalabs.bridge.consensus.core.pbft
 
 import com.google.protobuf.ByteString
 import com.typesafe.config.ConfigFactory
 import org.bitcoins.core.config.RegTest
 import org.bitcoins.core.currency.CurrencyUnit
-import xyz.stratalab.bridge.consensus.core.{CheckpointInterval, Fellowship, KWatermark, LastReplyMap, Template}
-import xyz.stratalab.bridge.consensus.shared.{BTCWaitExpirationTime, Lvl, StrataWaitExpirationTime}
-import xyz.stratalab.bridge.shared.{ReplicaCount, ReplicaId}
-import xyz.stratalab.sdk.models.{GroupId, SeriesId}
-import xyz.stratalab.sdk.syntax._
-import xyz.stratalab.sdk.utils.Encoding
+import org.plasmalabs.bridge.consensus.core.{CheckpointInterval, Fellowship, KWatermark, LastReplyMap, Template}
+import org.plasmalabs.bridge.consensus.shared.{BTCWaitExpirationTime, Lvl, StrataWaitExpirationTime}
+import org.plasmalabs.bridge.shared.{ReplicaCount, ReplicaId}
+import org.plasmalabs.sdk.models.{GroupId, SeriesId}
+import org.plasmalabs.sdk.syntax._
+import org.plasmalabs.sdk.utils.Encoding
 
 import java.util.concurrent.ConcurrentHashMap
 

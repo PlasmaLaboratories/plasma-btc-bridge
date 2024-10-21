@@ -1,12 +1,12 @@
-package xyz.stratalab.bridge
+package org.plasmalabs.bridge
 
-import xyz.stratalab.bridge.consensus.service.StateMachineReply
-import xyz.stratalab.bridge.consensus.pbft.PrePrepareRequest
-import xyz.stratalab.bridge.consensus.pbft.PrepareRequest
-import xyz.stratalab.bridge.consensus.pbft.CommitRequest
-import xyz.stratalab.bridge.consensus.pbft.CheckpointRequest
-import xyz.stratalab.bridge.consensus.pbft.ViewChangeRequest
-import xyz.stratalab.bridge.consensus.pbft.NewViewRequest
+import org.plasmalabs.bridge.consensus.service.StateMachineReply
+import org.plasmalabs.bridge.consensus.pbft.PrePrepareRequest
+import org.plasmalabs.bridge.consensus.pbft.PrepareRequest
+import org.plasmalabs.bridge.consensus.pbft.CommitRequest
+import org.plasmalabs.bridge.consensus.pbft.CheckpointRequest
+import org.plasmalabs.bridge.consensus.pbft.ViewChangeRequest
+import org.plasmalabs.bridge.consensus.pbft.NewViewRequest
 
 package object shared {
 

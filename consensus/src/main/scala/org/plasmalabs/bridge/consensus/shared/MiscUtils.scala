@@ -1,6 +1,6 @@
-package xyz.stratalab.bridge.consensus.shared
+package org.plasmalabs.bridge.consensus.shared
 
-import xyz.stratalab.bridge.consensus.shared.{PeginSessionInfo, SessionInfo}
+import org.plasmalabs.bridge.consensus.shared.{PeginSessionInfo, SessionInfo}
 
 object MiscUtils {
   import monocle.macros.GenPrism

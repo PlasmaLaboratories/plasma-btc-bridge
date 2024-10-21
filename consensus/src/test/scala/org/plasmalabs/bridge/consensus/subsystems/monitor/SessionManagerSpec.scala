@@ -1,13 +1,13 @@
-package xyz.stratalab.bridge.consensus.subsystems.monitor
+package org.plasmalabs.bridge.consensus.subsystems.monitor
 
 import cats.effect.IO
 import cats.effect.kernel.Resource
 import cats.effect.std.Queue
 import munit.CatsEffectSuite
 import org.typelevel.log4cats.SelfAwareStructuredLogger
-import xyz.stratalab.bridge.consensus.shared.persistence.{StorageApi, StorageApiImpl}
-import xyz.stratalab.bridge.consensus.shared.{PeginSessionInfo, PeginSessionState}
-import xyz.stratalab.bridge.consensus.subsystems.monitor.SessionEvent
+import org.plasmalabs.bridge.consensus.shared.persistence.{StorageApi, StorageApiImpl}
+import org.plasmalabs.bridge.consensus.shared.{PeginSessionInfo, PeginSessionState}
+import org.plasmalabs.bridge.consensus.subsystems.monitor.SessionEvent
 
 import java.nio.file.{Files, Paths}
 import java.util.UUID
@@ -49,7 +49,7 @@ class SessionManagerSpec extends CatsEffectSuite {
     assertIO(
       for {
         queue <- Queue.unbounded[IO, SessionEvent]
-        sut = xyz.stratalab.bridge.consensus.subsystems.monitor.SessionManagerImpl.makePermanent[IO](
+        sut = org.plasmalabs.bridge.consensus.subsystems.monitor.SessionManagerImpl.makePermanent[IO](
           storageApi,
           queue
         )
@@ -67,7 +67,7 @@ class SessionManagerSpec extends CatsEffectSuite {
     assertIO(
       for {
         queue <- Queue.unbounded[IO, SessionEvent]
-        sut = xyz.stratalab.bridge.consensus.subsystems.monitor.SessionManagerImpl.makePermanent[IO](
+        sut = org.plasmalabs.bridge.consensus.subsystems.monitor.SessionManagerImpl.makePermanent[IO](
           storageApi,
           queue
         )

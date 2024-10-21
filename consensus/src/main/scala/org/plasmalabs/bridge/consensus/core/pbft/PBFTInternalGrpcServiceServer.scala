@@ -1,12 +1,12 @@
-package xyz.stratalab.bridge.consensus.core.pbft
+package org.plasmalabs.bridge.consensus.core.pbft
 
 import cats.effect.kernel.{Async, Resource}
 import cats.implicits._
 import io.grpc.{Metadata, ServerServiceDefinition}
 import org.typelevel.log4cats.Logger
-import xyz.stratalab.bridge.consensus.core.pbft.activities.CheckpointActivity
-import xyz.stratalab.bridge.consensus.core.{KWatermark, WatermarkRef}
-import xyz.stratalab.bridge.consensus.pbft.{
+import org.plasmalabs.bridge.consensus.core.pbft.activities.CheckpointActivity
+import org.plasmalabs.bridge.consensus.core.{KWatermark, WatermarkRef}
+import org.plasmalabs.bridge.consensus.pbft.{
   CheckpointRequest,
   CommitRequest,
   NewViewRequest,
@@ -15,8 +15,8 @@ import xyz.stratalab.bridge.consensus.pbft.{
   PrepareRequest,
   ViewChangeRequest
 }
-import xyz.stratalab.bridge.consensus.shared.persistence.StorageApi
-import xyz.stratalab.bridge.shared.{Empty, ReplicaCount}
+import org.plasmalabs.bridge.consensus.shared.persistence.StorageApi
+import org.plasmalabs.bridge.shared.{Empty, ReplicaCount}
 
 import java.security.PublicKey
 

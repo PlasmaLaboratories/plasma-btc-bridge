@@ -1,9 +1,9 @@
-package xyz.stratalab.bridge.consensus.core.managers
+package org.plasmalabs.bridge.consensus.core.managers
 
 import cats.effect.IO
 import munit.CatsEffectSuite
-import xyz.stratalab.bridge.consensus.core.RegTest
-import xyz.stratalab.bridge.consensus.core.utils.KeyGenerationUtils
+import org.plasmalabs.bridge.consensus.core.RegTest
+import org.plasmalabs.bridge.consensus.core.utils.KeyGenerationUtils
 
 class WalletManagerSpec extends CatsEffectSuite {
 
@@ -15,7 +15,7 @@ class WalletManagerSpec extends CatsEffectSuite {
           "src/test/resources/wallet.json",
           "password"
         )
-        sut <- xyz.stratalab.bridge.consensus.core.managers.BTCWalletAlgebraImpl.make[IO](km)
+        sut <- org.plasmalabs.bridge.consensus.core.managers.BTCWalletAlgebraImpl.make[IO](km)
         res <- sut.getCurrentPubKeyAndPrepareNext()
         (idx, pubKey) = res
         res <- sut.getCurrentPubKeyAndPrepareNext()
@@ -32,7 +32,7 @@ class WalletManagerSpec extends CatsEffectSuite {
           "src/test/resources/wallet.json",
           "password"
         )
-        sut <- xyz.stratalab.bridge.consensus.core.managers.BTCWalletAlgebraImpl.make[IO](km)
+        sut <- org.plasmalabs.bridge.consensus.core.managers.BTCWalletAlgebraImpl.make[IO](km)
         res <- sut.getCurrentPubKeyAndPrepareNext()
         (idx, _) = res
         pubKey  <- sut.getCurrentPubKey()

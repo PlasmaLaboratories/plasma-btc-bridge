@@ -1,4 +1,4 @@
-package xyz.stratalab.bridge.consensus
+package org.plasmalabs.bridge.consensus
 
 import quivr.models.Int128
 

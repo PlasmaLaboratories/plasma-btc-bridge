@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package xyz.stratalab.bridge.consensus.protobuf;
+package org.plasmalabs.bridge.consensus.protobuf;
 
 message Lvl {
   bytes amount = 1;

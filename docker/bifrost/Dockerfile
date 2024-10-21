@@ -7,7 +7,7 @@ RUN cs setup --yes
 ## create alias in profile
 RUN echo "#!/bin/bash" >> /usr/local/bin/strata-cli
 ## run forwarding the parameters
-RUN echo 'cs launch -r https://s01.oss.sonatype.org/content/repositories/staging xyz.stratalab:strata-cli_2.13:0.0.0+196-15bc1892-SNAPSHOT -- $@' >> /usr/local/bin/strata-cli
+RUN echo 'cs launch -r https://s01.oss.sonatype.org/content/repositories/staging org.plasmalabs:strata-cli_2.13:0.0.0+196-15bc1892-SNAPSHOT -- $@' >> /usr/local/bin/strata-cli
 RUN chmod +x /usr/local/bin/strata-cli
 USER 1001:0
 RUN strata-cli wallet init --network private --password password --newwalletdb /tmp/wallet.db --mnemonicfile /tmp/mnemonic.txt  -o /tmp/keyfile.json

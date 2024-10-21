@@ -1,7 +1,7 @@
-package xyz.stratalab.bridge.consensus.shared.persistence
+package org.plasmalabs.bridge.consensus.shared.persistence
 
 import com.google.protobuf.ByteString
-import xyz.stratalab.bridge.consensus.protobuf.BlockchainEvent.Event.{
+import org.plasmalabs.bridge.consensus.protobuf.BlockchainEvent.Event.{
   BtcFundsDeposited => BtcFundsDepositedEvent,
   BtcFundsWithdrawn => BtcFundsWithdrawnEvent,
   NewBTCBlock => NewBTCBlockEvent,
@@ -11,13 +11,13 @@ import xyz.stratalab.bridge.consensus.protobuf.BlockchainEvent.Event.{
   SkippedBTCBlock => SkippedBTCBlockEvent,
   SkippedStrataBlock => SkippedStrataBlockEvent
 }
-import xyz.stratalab.bridge.consensus.protobuf.NodeCurrencyUnit.Currency.{
+import org.plasmalabs.bridge.consensus.protobuf.NodeCurrencyUnit.Currency.{
   AssetToken => AssetTokenCurrency,
   GroupToken => GroupTokenCurrency,
   Lvl => LvlCurrency,
   SeriesToken => SeriesTokenCurrency
 }
-import xyz.stratalab.bridge.consensus.protobuf.{
+import org.plasmalabs.bridge.consensus.protobuf.{
   AssetToken => AssetTokenPb,
   BTCFundsDeposited => BTCFundsDepositedPb,
   BTCFundsWithdrawn => BTCFundsWithdrawnPb,
@@ -33,8 +33,8 @@ import xyz.stratalab.bridge.consensus.protobuf.{
   SkippedBTCBlock => SkippedBTCBlockPb,
   SkippedStrataBlock => SkippedStrataBlockPb
 }
-import xyz.stratalab.bridge.consensus.shared.{AssetToken, GroupToken, Lvl, NodeCurrencyUnit, SeriesToken}
-import xyz.stratalab.bridge.consensus.subsystems.monitor.{
+import org.plasmalabs.bridge.consensus.shared.{AssetToken, GroupToken, Lvl, NodeCurrencyUnit, SeriesToken}
+import org.plasmalabs.bridge.consensus.subsystems.monitor.{
   BTCFundsDeposited,
   BTCFundsWithdrawn,
   BlockchainEvent,

@@ -1,9 +1,9 @@
-package xyz.stratalab.bridge.consensus.shared.persistence
+package org.plasmalabs.bridge.consensus.shared.persistence
 
 import org.bitcoins.core.currency.Satoshis
 import quivr.models.Int128
 import scodec.bits.ByteVector
-import xyz.stratalab.bridge.consensus.protobuf.BlockchainEvent.Event.{
+import org.plasmalabs.bridge.consensus.protobuf.BlockchainEvent.Event.{
   BtcFundsDeposited => BtcFundsDepositedEvent,
   BtcFundsWithdrawn,
   Empty,
@@ -14,18 +14,18 @@ import xyz.stratalab.bridge.consensus.protobuf.BlockchainEvent.Event.{
   SkippedBTCBlock => SkippedBTCBlockEvent,
   SkippedStrataBlock => SkippedStrataBlockEvent
 }
-import xyz.stratalab.bridge.consensus.protobuf.NodeCurrencyUnit.Currency.{
+import org.plasmalabs.bridge.consensus.protobuf.NodeCurrencyUnit.Currency.{
   AssetToken => AssetTokenCurrency,
   GroupToken => GroupTokenCurrency,
   Lvl => LvlCurrency,
   SeriesToken => SeriesTokenCurrency
 }
-import xyz.stratalab.bridge.consensus.protobuf.{
+import org.plasmalabs.bridge.consensus.protobuf.{
   BlockchainEvent => BlockchainEventPb,
   NodeCurrencyUnit => NodeCurrencyUnitPb
 }
-import xyz.stratalab.bridge.consensus.shared.{AssetToken, GroupToken, Lvl, SeriesToken}
-import xyz.stratalab.bridge.consensus.subsystems.monitor.{
+import org.plasmalabs.bridge.consensus.shared.{AssetToken, GroupToken, Lvl, SeriesToken}
+import org.plasmalabs.bridge.consensus.subsystems.monitor.{
   BTCFundsDeposited,
   BTCFundsWithdrawn,
   BlockchainEvent,

@@ -1,12 +1,12 @@
-package xyz.stratalab.bridge.consensus.core
+package org.plasmalabs.bridge.consensus.core
 
 import cats.effect.kernel.Async
 import com.google.protobuf.ByteString
 import io.grpc.{ManagedChannel, Metadata}
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
-import xyz.stratalab.bridge.consensus.service.{ResponseServiceFs2Grpc, StateMachineReply}
-import xyz.stratalab.bridge.shared.{BridgeCryptoUtils, Empty, ReplicaId}
+import org.plasmalabs.bridge.consensus.service.{ResponseServiceFs2Grpc, StateMachineReply}
+import org.plasmalabs.bridge.shared.{BridgeCryptoUtils, Empty, ReplicaId}
 
 import java.security.KeyPair
 
@@ -32,7 +32,7 @@ object PublicApiClientGrpcImpl {
 
       import cats.implicits._
 
-      import xyz.stratalab.bridge.shared.implicits._
+      import org.plasmalabs.bridge.shared.implicits._
 
       private def prepareRequest(
         timestamp:   Long,

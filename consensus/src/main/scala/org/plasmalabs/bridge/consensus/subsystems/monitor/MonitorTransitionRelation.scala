@@ -1,16 +1,16 @@
-package xyz.stratalab.bridge.consensus.subsystems.monitor
+package org.plasmalabs.bridge.consensus.subsystems.monitor
 
 import cats.effect.kernel.Async
 import org.typelevel.log4cats.Logger
-import xyz.stratalab.bridge.consensus.shared.{
+import org.plasmalabs.bridge.consensus.shared.{
   BTCConfirmationThreshold,
   BTCRetryThreshold,
   BTCWaitExpirationTime,
   StrataConfirmationThreshold,
   StrataWaitExpirationTime
 }
-import xyz.stratalab.bridge.consensus.subsystems.monitor.{FSMTransition, PeginStateMachineState}
-import xyz.stratalab.sdk.models.{GroupId, SeriesId}
+import org.plasmalabs.bridge.consensus.subsystems.monitor.{FSMTransition, PeginStateMachineState}
+import org.plasmalabs.sdk.models.{GroupId, SeriesId}
 
 object MonitorTransitionRelation
     extends TransitionToEffect

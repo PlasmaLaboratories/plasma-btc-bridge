@@ -1,16 +1,16 @@
-package xyz.stratalab.bridge.consensus.core.modules
+package org.plasmalabs.bridge.consensus.core.modules
 
 import cats.effect.kernel.Sync
 import quivr.models.KeyPair
-import xyz.stratalab.bridge.consensus.core.managers.CreateTxError
-import xyz.stratalab.indexer.services.Txo
-import xyz.stratalab.sdk.builders.TransactionBuilderApi
-import xyz.stratalab.sdk.dataApi.WalletStateAlgebra
-import xyz.stratalab.sdk.models.box.Lock
-import xyz.stratalab.sdk.models.transaction.IoTransaction
-import xyz.stratalab.sdk.models.{Event, Indices, LockAddress}
-import xyz.stratalab.sdk.utils.Encoding
-import xyz.stratalab.sdk.wallet.WalletApi
+import org.plasmalabs.bridge.consensus.core.managers.CreateTxError
+import org.plasmalabs.indexer.services.Txo
+import org.plasmalabs.sdk.builders.TransactionBuilderApi
+import org.plasmalabs.sdk.dataApi.WalletStateAlgebra
+import org.plasmalabs.sdk.models.box.Lock
+import org.plasmalabs.sdk.models.transaction.IoTransaction
+import org.plasmalabs.sdk.models.{Event, Indices, LockAddress}
+import org.plasmalabs.sdk.utils.Encoding
+import org.plasmalabs.sdk.wallet.WalletApi
 
 import TransactionBuilderApi.implicits._
 

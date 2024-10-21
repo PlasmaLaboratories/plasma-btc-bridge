@@ -1,4 +1,4 @@
-package xyz.stratalab.bridge.stubs
+package org.plasmalabs.bridge.stubs
 
 import cats.effect.IO
 import org.typelevel.log4cats.Logger

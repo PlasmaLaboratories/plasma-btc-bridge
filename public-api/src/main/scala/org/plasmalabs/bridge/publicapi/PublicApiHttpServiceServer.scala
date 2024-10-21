@@ -1,4 +1,4 @@
-package xyz.stratalab.bridge.publicapi
+package org.plasmalabs.bridge.publicapi
 
 import cats.effect.IO
 import io.circe.Json
@@ -8,7 +8,7 @@ import org.http4s.headers.`Content-Type`
 import org.http4s.{HttpRoutes, _}
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
-import xyz.stratalab.bridge.shared.{
+import org.plasmalabs.bridge.shared.{
   BridgeContants,
   BridgeError,
   BridgeResponse,

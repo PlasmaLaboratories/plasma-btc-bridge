@@ -1,18 +1,18 @@
-package xyz.stratalab.bridge.consensus.core.managers
+package org.plasmalabs.bridge.consensus.core.managers
 
 import cats.data.OptionT
 import cats.effect.kernel.Sync
 import com.google.protobuf.ByteString
 import io.circe.Json
 import quivr.models.{KeyPair, VerificationKey}
-import xyz.stratalab.bridge.consensus.core.{Fellowship, StrataNetworkIdentifiers, Template}
-import xyz.stratalab.bridge.consensus.shared.Lvl
-import xyz.stratalab.bridge.shared.{InvalidHash, InvalidInput, InvalidKey}
-import xyz.stratalab.indexer.services.Txo
-import xyz.stratalab.sdk.builders.TransactionBuilderApi
-import xyz.stratalab.sdk.codecs.AddressCodecs
-import xyz.stratalab.sdk.constants.NetworkConstants
-import xyz.stratalab.sdk.dataApi.{
+import org.plasmalabs.bridge.consensus.core.{Fellowship, StrataNetworkIdentifiers, Template}
+import org.plasmalabs.bridge.consensus.shared.Lvl
+import org.plasmalabs.bridge.shared.{InvalidHash, InvalidInput, InvalidKey}
+import org.plasmalabs.indexer.services.Txo
+import org.plasmalabs.sdk.builders.TransactionBuilderApi
+import org.plasmalabs.sdk.codecs.AddressCodecs
+import org.plasmalabs.sdk.constants.NetworkConstants
+import org.plasmalabs.sdk.dataApi.{
   FellowshipStorageAlgebra,
   IndexerQueryAlgebra,
   TemplateStorageAlgebra,
@@ -20,11 +20,11 @@ import xyz.stratalab.sdk.dataApi.{
   WalletStateAlgebra,
   WalletTemplate
 }
-import xyz.stratalab.sdk.models.box.AssetMintingStatement
-import xyz.stratalab.sdk.models.transaction.IoTransaction
-import xyz.stratalab.sdk.models.{LockAddress, LockId}
-import xyz.stratalab.sdk.utils.Encoding
-import xyz.stratalab.sdk.wallet.WalletApi
+import org.plasmalabs.sdk.models.box.AssetMintingStatement
+import org.plasmalabs.sdk.models.transaction.IoTransaction
+import org.plasmalabs.sdk.models.{LockAddress, LockId}
+import org.plasmalabs.sdk.utils.Encoding
+import org.plasmalabs.sdk.wallet.WalletApi
 
 object StrataWalletAlgebra {
 
@@ -238,8 +238,8 @@ object StrataWalletAlgebra {
   ): F[Option[String]] = {
 
     import cats.implicits._
-    import xyz.stratalab.sdk.common.ContainsEvidence.Ops
-    import xyz.stratalab.sdk.common.ContainsImmutable.instances._
+    import org.plasmalabs.sdk.common.ContainsEvidence.Ops
+    import org.plasmalabs.sdk.common.ContainsImmutable.instances._
     import TransactionBuilderApi.implicits._
     implicit class ImplicitConversion[A](x: F[A]) {
       def optionT = OptionT(x.map(_.some))

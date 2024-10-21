@@ -1,4 +1,4 @@
-package xyz.stratalab.bridge.consensus.core.utils
+package org.plasmalabs.bridge.consensus.core.utils
 
 import cats.effect.kernel.Sync
 import org.bitcoins.core.crypto.MnemonicCode
@@ -7,7 +7,7 @@ import org.bitcoins.core.wallet.keymanagement.KeyManagerParams
 import org.bitcoins.crypto.{AesPassword, ECDigitalSignature, ECPublicKey, HashType}
 import org.bitcoins.keymanager.bip39.BIP39KeyManager
 import scodec.bits.ByteVector
-import xyz.stratalab.bridge.consensus.core.BitcoinNetworkIdentifiers
+import org.plasmalabs.bridge.consensus.core.BitcoinNetworkIdentifiers
 
 object KeyGenerationUtils {
 

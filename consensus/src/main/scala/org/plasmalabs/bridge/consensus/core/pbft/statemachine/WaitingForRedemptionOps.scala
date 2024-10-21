@@ -1,4 +1,4 @@
-package xyz.stratalab.bridge.consensus.core.pbft.statemachine
+package org.plasmalabs.bridge.consensus.core.pbft.statemachine
 
 import cats.effect.kernel.Async
 import org.bitcoins.core.currency.CurrencyUnit
@@ -8,8 +8,8 @@ import org.bitcoins.core.script.constant.{OP_0, ScriptConstant}
 import org.bitcoins.crypto._
 import org.bitcoins.rpc.client.common.BitcoindRpcClient
 import scodec.bits.ByteVector
-import xyz.stratalab.bridge.consensus.core.PeginWalletManager
-import xyz.stratalab.bridge.consensus.core.utils.BitcoinUtils
+import org.plasmalabs.bridge.consensus.core.PeginWalletManager
+import org.plasmalabs.bridge.consensus.core.utils.BitcoinUtils
 
 object WaitingForRedemptionOps {
 

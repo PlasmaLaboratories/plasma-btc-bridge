@@ -1,4 +1,4 @@
-package xyz.stratalab.bridge.consensus.core
+package org.plasmalabs.bridge.consensus.core
 
 import cats.effect.kernel.{Async, Ref, Sync}
 import cats.effect.std.{Mutex, Queue}
@@ -14,20 +14,20 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
 import scopt.OParser
-import xyz.stratalab.bridge.consensus.core.managers.{BTCWalletAlgebra, BTCWalletAlgebraImpl}
-import xyz.stratalab.bridge.consensus.core.modules.AppModule
-import xyz.stratalab.bridge.consensus.core.utils.KeyGenerationUtils
-import xyz.stratalab.bridge.consensus.core.{
+import org.plasmalabs.bridge.consensus.core.managers.{BTCWalletAlgebra, BTCWalletAlgebraImpl}
+import org.plasmalabs.bridge.consensus.core.modules.AppModule
+import org.plasmalabs.bridge.consensus.core.utils.KeyGenerationUtils
+import org.plasmalabs.bridge.consensus.core.{
   ConsensusParamsDescriptor,
   ServerConfig,
   StrataBTCBridgeConsensusParamConfig
 }
-import xyz.stratalab.bridge.consensus.service.StateMachineServiceFs2Grpc
-import xyz.stratalab.bridge.consensus.shared.BTCRetryThreshold
-import xyz.stratalab.bridge.consensus.shared.persistence.{StorageApi, StorageApiImpl}
-import xyz.stratalab.bridge.consensus.shared.utils.ConfUtils._
-import xyz.stratalab.bridge.consensus.subsystems.monitor.{BlockProcessor, SessionEvent}
-import xyz.stratalab.bridge.shared.{
+import org.plasmalabs.bridge.consensus.service.StateMachineServiceFs2Grpc
+import org.plasmalabs.bridge.consensus.shared.BTCRetryThreshold
+import org.plasmalabs.bridge.consensus.shared.persistence.{StorageApi, StorageApiImpl}
+import org.plasmalabs.bridge.consensus.shared.utils.ConfUtils._
+import org.plasmalabs.bridge.consensus.subsystems.monitor.{BlockProcessor, SessionEvent}
+import org.plasmalabs.bridge.shared.{
   BridgeCryptoUtils,
   BridgeError,
   BridgeResponse,
@@ -41,11 +41,11 @@ import xyz.stratalab.bridge.shared.{
   StateMachineServiceGrpcClient,
   StateMachineServiceGrpcClientImpl
 }
-import xyz.stratalab.consensus.core.{PBFTInternalGrpcServiceClient, PBFTInternalGrpcServiceClientImpl}
-import xyz.stratalab.sdk.dataApi.NodeQueryAlgebra
-import xyz.stratalab.sdk.models.{GroupId, SeriesId}
-import xyz.stratalab.sdk.monitoring.{BitcoinMonitor, NodeMonitor}
-import xyz.stratalab.sdk.utils.Encoding
+import org.plasmalabs.consensus.core.{PBFTInternalGrpcServiceClient, PBFTInternalGrpcServiceClientImpl}
+import org.plasmalabs.sdk.dataApi.NodeQueryAlgebra
+import org.plasmalabs.sdk.models.{GroupId, SeriesId}
+import org.plasmalabs.sdk.monitoring.{BitcoinMonitor, NodeMonitor}
+import org.plasmalabs.sdk.utils.Encoding
 
 import java.net.InetSocketAddress
 import java.security.{KeyPair => JKeyPair, PublicKey, Security}

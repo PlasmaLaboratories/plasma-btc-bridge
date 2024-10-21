@@ -1,23 +1,23 @@
-package xyz.stratalab.bridge.stubs
+package org.plasmalabs.bridge.stubs
 
 import cats.Monad
 import cats.effect.IO
 import com.google.protobuf.ByteString
 import quivr.models.{Int128, Proposition}
-import xyz.stratalab.bridge.consensus.core.managers.WalletManagementUtils
-import xyz.stratalab.indexer.services.{Txo, TxoState}
-import xyz.stratalab.sdk.codecs.AddressCodecs
-import xyz.stratalab.sdk.dataApi.IndexerQueryAlgebra
-import xyz.stratalab.sdk.models.box.{Attestation, Challenge, FungibilityType, Lock, QuantityDescriptorType, Value}
-import xyz.stratalab.sdk.models.transaction.{SpentTransactionOutput, UnspentTransactionOutput}
-import xyz.stratalab.sdk.models.{Datum, GroupId, LockAddress, SeriesId, TransactionId, TransactionOutputAddress}
-import xyz.stratalab.sdk.servicekit.WalletKeyApi
-import xyz.stratalab.sdk.utils.Encoding
-import xyz.stratalab.sdk.wallet.WalletApi
+import org.plasmalabs.bridge.consensus.core.managers.WalletManagementUtils
+import org.plasmalabs.indexer.services.{Txo, TxoState}
+import org.plasmalabs.sdk.codecs.AddressCodecs
+import org.plasmalabs.sdk.dataApi.IndexerQueryAlgebra
+import org.plasmalabs.sdk.models.box.{Attestation, Challenge, FungibilityType, Lock, QuantityDescriptorType, Value}
+import org.plasmalabs.sdk.models.transaction.{SpentTransactionOutput, UnspentTransactionOutput}
+import org.plasmalabs.sdk.models.{Datum, GroupId, LockAddress, SeriesId, TransactionId, TransactionOutputAddress}
+import org.plasmalabs.sdk.servicekit.WalletKeyApi
+import org.plasmalabs.sdk.utils.Encoding
+import org.plasmalabs.sdk.wallet.WalletApi
 
 object UnitTestStubs {
 
-  import xyz.stratalab.sdk.syntax._
+  import org.plasmalabs.sdk.syntax._
 
   lazy val transactionId01 = TransactionId(
     ByteString.copyFrom(
@@ -83,7 +83,7 @@ object UnitTestStubs {
       lockAddress01,
       lvlValue01
     ),
-    xyz.stratalab.indexer.services.TxoState.UNSPENT,
+    org.plasmalabs.indexer.services.TxoState.UNSPENT,
     transactionOutputAddress01
   )
 
@@ -162,7 +162,7 @@ object UnitTestStubs {
       lockAddress01,
       groupValue01
     ),
-    xyz.stratalab.indexer.services.TxoState.UNSPENT,
+    org.plasmalabs.indexer.services.TxoState.UNSPENT,
     transactionOutputAddress02
   )
 
@@ -171,7 +171,7 @@ object UnitTestStubs {
       lockAddress01,
       seriesValue01
     ),
-    xyz.stratalab.indexer.services.TxoState.UNSPENT,
+    org.plasmalabs.indexer.services.TxoState.UNSPENT,
     transactionOutputAddress03
   )
 
@@ -180,7 +180,7 @@ object UnitTestStubs {
       lockAddress01,
       assetValue01
     ),
-    xyz.stratalab.indexer.services.TxoState.UNSPENT,
+    org.plasmalabs.indexer.services.TxoState.UNSPENT,
     transactionOutputAddress03
   )
 
@@ -216,7 +216,7 @@ object UnitTestStubs {
     lvlValue01
   )
 
-  lazy val iotransaction01 = xyz.stratalab.sdk.models.transaction
+  lazy val iotransaction01 = org.plasmalabs.sdk.models.transaction
     .IoTransaction(
       Some(transactionId01),
       Seq(stxo01),

@@ -1,20 +1,20 @@
-package xyz.stratalab.bridge.consensus.core.pbft
+package org.plasmalabs.bridge.consensus.core.pbft
 
 import cats.effect.IO
 import cats.effect.kernel.Ref
 import cats.effect.std.Queue
 import org.typelevel.log4cats.Logger
-import xyz.stratalab.bridge.consensus.core.pbft.{
+import org.plasmalabs.bridge.consensus.core.pbft.{
   CheckpointManagerImpl,
   PBFTInternalEvent,
   PBFTInternalGrpcServiceServer,
   PBFTRequestPreProcessorImpl,
   ViewManagerImpl
 }
-import xyz.stratalab.bridge.consensus.core.{PublicApiClientGrpcMap, WatermarkRef}
-import xyz.stratalab.bridge.consensus.shared.persistence.StorageApi
-import xyz.stratalab.bridge.consensus.shared.utils.ConfUtils._
-import xyz.stratalab.bridge.stubs.{BasePBFTInternalGrpcServiceClient, BaseRequestStateManager, BaseRequestTimerManager}
+import org.plasmalabs.bridge.consensus.core.{PublicApiClientGrpcMap, WatermarkRef}
+import org.plasmalabs.bridge.consensus.shared.persistence.StorageApi
+import org.plasmalabs.bridge.consensus.shared.utils.ConfUtils._
+import org.plasmalabs.bridge.stubs.{BasePBFTInternalGrpcServiceClient, BaseRequestStateManager, BaseRequestTimerManager}
 
 trait PBFTInternalGrpcServiceServerSpecAux extends SampleData {
 

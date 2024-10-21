@@ -1,19 +1,19 @@
-package xyz.stratalab.bridge.consensus.core.managers
+package org.plasmalabs.bridge.consensus.core.managers
 
 import cats.effect.kernel.Sync
 import com.google.protobuf.ByteString
 import com.google.protobuf.struct.Struct
 import io.circe.Json
 import quivr.models.KeyPair
-import xyz.stratalab.bridge.consensus.shared.Lvl
-import xyz.stratalab.indexer.services.Txo
-import xyz.stratalab.sdk.builders.TransactionBuilderApi
-import xyz.stratalab.sdk.dataApi.WalletStateAlgebra
-import xyz.stratalab.sdk.models.box.{AssetMintingStatement, Lock}
-import xyz.stratalab.sdk.models.transaction.IoTransaction
-import xyz.stratalab.sdk.models.{Indices, LockAddress}
-import xyz.stratalab.sdk.utils.Encoding
-import xyz.stratalab.sdk.wallet.WalletApi
+import org.plasmalabs.bridge.consensus.shared.Lvl
+import org.plasmalabs.indexer.services.Txo
+import org.plasmalabs.sdk.builders.TransactionBuilderApi
+import org.plasmalabs.sdk.dataApi.WalletStateAlgebra
+import org.plasmalabs.sdk.models.box.{AssetMintingStatement, Lock}
+import org.plasmalabs.sdk.models.transaction.IoTransaction
+import org.plasmalabs.sdk.models.{Indices, LockAddress}
+import org.plasmalabs.sdk.utils.Encoding
+import org.plasmalabs.sdk.wallet.WalletApi
 
 import TransactionBuilderApi.implicits._
 
@@ -84,7 +84,7 @@ object AssetMintingOps {
     wsa: WalletStateAlgebra[G],
     wa:  WalletApi[G]
   ): G[IoTransaction] = {
-    import xyz.stratalab.sdk.syntax._
+    import org.plasmalabs.sdk.syntax._
     for {
       changeAddress <- tba.lockAddress(
         lockForChange

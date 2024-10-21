@@ -1,4 +1,4 @@
-package xyz.stratalab.bridge.consensus.core.utils
+package org.plasmalabs.bridge.consensus.core.utils
 
 import org.bitcoins.core.config.NetworkParameters
 import org.bitcoins.core.currency.CurrencyUnit
@@ -32,7 +32,7 @@ import org.bitcoins.core.wallet.fee.{FeeUnit, SatoshisPerVirtualByte}
 import org.bitcoins.core.wallet.utxo.{ConditionalPath, SegwitV0NativeInputInfo}
 import org.bitcoins.crypto.{ECPublicKey, _}
 import scodec.bits.ByteVector
-import xyz.stratalab.bridge.consensus.shared.BTCWaitExpirationTime
+import org.plasmalabs.bridge.consensus.shared.BTCWaitExpirationTime
 
 import java.security.MessageDigest
 

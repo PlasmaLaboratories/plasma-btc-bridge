@@ -1,4 +1,4 @@
-package xyz.stratalab.bridge.consensus.core.modules
+package org.plasmalabs.bridge.consensus.core.modules
 
 import cats.effect.IO
 import cats.effect.kernel.Ref
@@ -8,9 +8,9 @@ import org.bitcoins.rpc.client.common.BitcoindRpcClient
 import org.http4s.dsl.io._
 import org.http4s.{HttpRoutes, _}
 import org.typelevel.log4cats.Logger
-import xyz.stratalab.bridge.consensus.core.managers.{BTCWalletAlgebra, WalletManagementUtils}
-import xyz.stratalab.bridge.consensus.core.pbft.statemachine.BridgeStateMachineExecutionManagerImpl
-import xyz.stratalab.bridge.consensus.core.pbft.{
+import org.plasmalabs.bridge.consensus.core.managers.{BTCWalletAlgebra, WalletManagementUtils}
+import org.plasmalabs.bridge.consensus.core.pbft.statemachine.BridgeStateMachineExecutionManagerImpl
+import org.plasmalabs.bridge.consensus.core.pbft.{
   CheckpointManagerImpl,
   PBFTInternalEvent,
   PBFTRequestPreProcessorImpl,
@@ -18,7 +18,7 @@ import xyz.stratalab.bridge.consensus.core.pbft.{
   RequestTimerManagerImpl,
   ViewManagerImpl
 }
-import xyz.stratalab.bridge.consensus.core.{
+import org.plasmalabs.bridge.consensus.core.{
   BridgeWalletManager,
   CheckpointInterval,
   CurrentBTCHeightRef,
@@ -35,10 +35,10 @@ import xyz.stratalab.bridge.consensus.core.{
   WatermarkRef,
   channelResource
 }
-import xyz.stratalab.bridge.consensus.service.StateMachineReply.Result
-import xyz.stratalab.bridge.consensus.service.StateMachineServiceFs2Grpc
-import xyz.stratalab.bridge.consensus.shared.persistence.StorageApi
-import xyz.stratalab.bridge.consensus.shared.{
+import org.plasmalabs.bridge.consensus.service.StateMachineReply.Result
+import org.plasmalabs.bridge.consensus.service.StateMachineServiceFs2Grpc
+import org.plasmalabs.bridge.consensus.shared.persistence.StorageApi
+import org.plasmalabs.bridge.consensus.shared.{
   BTCConfirmationThreshold,
   BTCRetryThreshold,
   BTCWaitExpirationTime,
@@ -46,21 +46,21 @@ import xyz.stratalab.bridge.consensus.shared.{
   StrataConfirmationThreshold,
   StrataWaitExpirationTime
 }
-import xyz.stratalab.bridge.consensus.subsystems.monitor.{MonitorStateMachine, SessionEvent, SessionManagerImpl}
-import xyz.stratalab.bridge.shared.{ClientId, ReplicaCount, ReplicaId, StateMachineServiceGrpcClient}
-import xyz.stratalab.consensus.core.PBFTInternalGrpcServiceClient
-import xyz.stratalab.sdk.builders.TransactionBuilderApi
-import xyz.stratalab.sdk.constants.NetworkConstants
-import xyz.stratalab.sdk.dataApi.IndexerQueryAlgebra
-import xyz.stratalab.sdk.models.{GroupId, SeriesId}
-import xyz.stratalab.sdk.servicekit.{
+import org.plasmalabs.bridge.consensus.subsystems.monitor.{MonitorStateMachine, SessionEvent, SessionManagerImpl}
+import org.plasmalabs.bridge.shared.{ClientId, ReplicaCount, ReplicaId, StateMachineServiceGrpcClient}
+import org.plasmalabs.consensus.core.PBFTInternalGrpcServiceClient
+import org.plasmalabs.sdk.builders.TransactionBuilderApi
+import org.plasmalabs.sdk.constants.NetworkConstants
+import org.plasmalabs.sdk.dataApi.IndexerQueryAlgebra
+import org.plasmalabs.sdk.models.{GroupId, SeriesId}
+import org.plasmalabs.sdk.servicekit.{
   FellowshipStorageApi,
   TemplateStorageApi,
   WalletKeyApi,
   WalletStateApi,
   WalletStateResource
 }
-import xyz.stratalab.sdk.wallet.WalletApi
+import org.plasmalabs.sdk.wallet.WalletApi
 
 import java.security.{KeyPair => JKeyPair, PublicKey}
 import java.util.concurrent.ConcurrentHashMap
@@ -125,7 +125,7 @@ trait AppModule extends WalletStateResource {
       walletApi,
       walletKeyApi
     )
-    import xyz.stratalab.sdk.syntax._
+    import org.plasmalabs.sdk.syntax._
     implicit val defaultMintingFee = Lvl(params.mintingFee)
     implicit val asyncForIO = IO.asyncForIO
     implicit val l = logger
@@ -214,7 +214,7 @@ trait AppModule extends WalletStateResource {
       )
       (
         bridgeStateMachineExecutionManager,
-        xyz.stratalab.bridge.consensus.core.StateMachineGrpcServiceServer
+        org.plasmalabs.bridge.consensus.core.StateMachineGrpcServiceServer
           .stateMachineGrpcServiceServer(
             replicaKeyPair,
             pbftProtocolClient,
@@ -224,7 +224,7 @@ trait AppModule extends WalletStateResource {
         InitializationModule
           .make[IO](currentBitcoinNetworkHeight, currentState),
         peginStateMachine,
-        xyz.stratalab.bridge.consensus.core.pbft.PBFTInternalGrpcServiceServer
+        org.plasmalabs.bridge.consensus.core.pbft.PBFTInternalGrpcServiceServer
           .pbftInternalGrpcServiceServer(
             replicaKeysMap
           ),

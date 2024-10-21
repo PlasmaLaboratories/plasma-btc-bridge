@@ -1,9 +1,9 @@
-package xyz.stratalab.bridge.consensus.subsystems.monitor
+package org.plasmalabs.bridge.consensus.subsystems.monitor
 
 import cats.effect.kernel.{Async, Ref, Sync}
 import cats.implicits._
 import org.typelevel.log4cats.Logger
-import xyz.stratalab.bridge.consensus.shared.{
+import org.plasmalabs.bridge.consensus.shared.{
   BTCConfirmationThreshold,
   BTCRetryThreshold,
   BTCWaitExpirationTime,
@@ -11,15 +11,15 @@ import xyz.stratalab.bridge.consensus.shared.{
   StrataConfirmationThreshold,
   StrataWaitExpirationTime
 }
-import xyz.stratalab.bridge.consensus.subsystems.monitor.{
+import org.plasmalabs.bridge.consensus.subsystems.monitor.{
   EndTransition,
   FSMTransitionTo,
   MWaitingForBTCDeposit,
   MonitorTransitionRelation,
   PeginStateMachineState
 }
-import xyz.stratalab.bridge.shared.{ClientId, SessionId, StateMachineServiceGrpcClient}
-import xyz.stratalab.sdk.models.{GroupId, SeriesId}
+import org.plasmalabs.bridge.shared.{ClientId, SessionId, StateMachineServiceGrpcClient}
+import org.plasmalabs.sdk.models.{GroupId, SeriesId}
 
 trait MonitorStateMachineAlgebra[F[_]] {
 

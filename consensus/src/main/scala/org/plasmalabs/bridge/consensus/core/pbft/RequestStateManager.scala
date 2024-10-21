@@ -1,13 +1,13 @@
-package xyz.stratalab.bridge.consensus.core.pbft
+package org.plasmalabs.bridge.consensus.core.pbft
 
 import cats.effect.kernel.{Async, Outcome, Ref, Resource}
 import cats.effect.std.Queue
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
-import xyz.stratalab.bridge.consensus.core.pbft.statemachine.BridgeStateMachineExecutionManager
-import xyz.stratalab.bridge.consensus.pbft.{CommitRequest, PrePrepareRequest, PrepareRequest}
-import xyz.stratalab.bridge.shared.{ClientId, ReplicaId, StateMachineRequest}
-import xyz.stratalab.consensus.core.PBFTInternalGrpcServiceClient
+import org.plasmalabs.bridge.consensus.core.pbft.statemachine.BridgeStateMachineExecutionManager
+import org.plasmalabs.bridge.consensus.pbft.{CommitRequest, PrePrepareRequest, PrepareRequest}
+import org.plasmalabs.bridge.shared.{ClientId, ReplicaId, StateMachineRequest}
+import org.plasmalabs.consensus.core.PBFTInternalGrpcServiceClient
 
 trait RequestStateManager[F[_]] {
 

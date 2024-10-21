@@ -1,8 +1,8 @@
-package xyz.stratalab.bridge.consensus.subsystems
+package org.plasmalabs.bridge.consensus.subsystems
 
-import _root_.xyz.stratalab.bridge.consensus.shared.{AssetToken, GroupToken, Lvl, SeriesToken}
-import _root_.xyz.stratalab.sdk.models.box.Value
-import _root_.xyz.stratalab.sdk.utils.Encoding
+import _root_.org.plasmalabs.bridge.consensus.shared.{AssetToken, GroupToken, Lvl, SeriesToken}
+import _root_.org.plasmalabs.sdk.models.box.Value
+import _root_.org.plasmalabs.sdk.utils.Encoding
 
 package object monitor {
 

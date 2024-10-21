@@ -1,10 +1,10 @@
-package xyz.stratalab.bridge.consensus.subsystems.monitor
+package org.plasmalabs.bridge.consensus.subsystems.monitor
 
-import xyz.stratalab.sdk.codecs.AddressCodecs
-import xyz.stratalab.sdk.models.box.Attestation
-import xyz.stratalab.sdk.monitoring.BitcoinMonitor.BitcoinBlockSync
-import xyz.stratalab.sdk.monitoring.NodeMonitor
-import xyz.stratalab.sdk.utils.Encoding
+import org.plasmalabs.sdk.codecs.AddressCodecs
+import org.plasmalabs.sdk.models.box.Attestation
+import org.plasmalabs.sdk.monitoring.BitcoinMonitor.BitcoinBlockSync
+import org.plasmalabs.sdk.monitoring.NodeMonitor
+import org.plasmalabs.sdk.utils.Encoding
 
 import scala.util.Try
 

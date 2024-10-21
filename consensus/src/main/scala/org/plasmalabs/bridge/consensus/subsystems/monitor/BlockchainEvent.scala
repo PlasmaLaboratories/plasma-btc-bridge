@@ -1,7 +1,7 @@
-package xyz.stratalab.bridge.consensus.subsystems.monitor
+package org.plasmalabs.bridge.consensus.subsystems.monitor
 
 import org.bitcoins.core.currency.CurrencyUnit
-import xyz.stratalab.bridge.consensus.shared.NodeCurrencyUnit
+import org.plasmalabs.bridge.consensus.shared.NodeCurrencyUnit
 
 sealed trait BlockchainEvent
 

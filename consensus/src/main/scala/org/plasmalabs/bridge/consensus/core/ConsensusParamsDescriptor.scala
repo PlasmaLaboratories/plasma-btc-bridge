@@ -1,8 +1,8 @@
-package xyz.stratalab.bridge.consensus.core
+package org.plasmalabs.bridge.consensus.core
 
 import org.bitcoins.core.currency.{CurrencyUnit, SatoshisLong}
 import scopt.OParser
-import xyz.stratalab.sdk.models.{GroupId, SeriesId}
+import org.plasmalabs.sdk.models.{GroupId, SeriesId}
 
 import java.io.File
 

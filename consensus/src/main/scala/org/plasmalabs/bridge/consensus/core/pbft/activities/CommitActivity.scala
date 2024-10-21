@@ -1,14 +1,14 @@
-package xyz.stratalab.bridge.consensus.core.pbft.activities
+package org.plasmalabs.bridge.consensus.core.pbft.activities
 
 import cats.effect.kernel.Async
 import cats.implicits._
 import org.typelevel.log4cats.Logger
-import xyz.stratalab.bridge.consensus.core.pbft.{Commited, PBFTInternalEvent, RequestIdentifier, ViewManager}
-import xyz.stratalab.bridge.consensus.pbft.CommitRequest
-import xyz.stratalab.bridge.consensus.shared.persistence.StorageApi
-import xyz.stratalab.bridge.shared.implicits._
-import xyz.stratalab.bridge.shared.{ClientId, ReplicaCount}
-import xyz.stratalab.sdk.utils.Encoding
+import org.plasmalabs.bridge.consensus.core.pbft.{Commited, PBFTInternalEvent, RequestIdentifier, ViewManager}
+import org.plasmalabs.bridge.consensus.pbft.CommitRequest
+import org.plasmalabs.bridge.consensus.shared.persistence.StorageApi
+import org.plasmalabs.bridge.shared.implicits._
+import org.plasmalabs.bridge.shared.{ClientId, ReplicaCount}
+import org.plasmalabs.sdk.utils.Encoding
 
 import java.security.PublicKey
 

@@ -1,4 +1,5 @@
-package xyz.stratalab.bridge
+package org.plasmalabs.bridge
+
 import cats.effect.IO
 import org.typelevel.log4cats.syntax._
 
@@ -19,10 +20,10 @@ trait SuccessfulPeginModule {
           1,
           1
         ) // this will update the current topl height on the node, node should not work without this
-        _ <- initStrataWallet(1)
-        _ <- addFellowship(1)
-        _ <- addSecret(1)
-        newAddress <- getNewAddress
+        _                <- initStrataWallet(1)
+        _                <- addFellowship(1)
+        _                <- addSecret(1)
+        newAddress       <- getNewAddress
         txIdAndBTCAmount <- extractGetTxIdAndAmount
         (txId, btcAmount, btcAmountLong) = txIdAndBTCAmount
         startSessionResponse <- startSession(1)
@@ -38,16 +39,16 @@ trait SuccessfulPeginModule {
           btcAmount
         )
         signedTxHex <- signTransaction(bitcoinTx)
-        _ <- sendTransaction(signedTxHex)
-        _ <- IO.sleep(5.second)
-        _ <- generateToAddress(1, 8, newAddress)
+        _           <- sendTransaction(signedTxHex)
+        _           <- IO.sleep(5.second)
+        _           <- generateToAddress(1, 8, newAddress)
         mintingStatusResponse <-
           (for {
             status <- checkMintingStatus(startSessionResponse.sessionID)
-            _ <- info"Current minting status: ${status.mintingStatus}"
-            _ <- mintStrataBlock(1, 1)
-            _ <- generateToAddress(1, 1, newAddress)
-            _ <- IO.sleep(1.second)
+            _      <- info"Current minting status: ${status.mintingStatus}"
+            _      <- mintStrataBlock(1, 1)
+            _      <- generateToAddress(1, 1, newAddress)
+            _      <- IO.sleep(1.second)
           } yield status)
             .iterateUntil(_.mintingStatus == "PeginSessionStateMintingTBTC")
         _ <- createVkFile(vkFile)

@@ -1,9 +1,9 @@
-package xyz.stratalab.bridge.stubs
+package org.plasmalabs.bridge.stubs
 
 import cats.effect.IO
-import xyz.stratalab.indexer.services.{Txo, TxoState}
-import xyz.stratalab.sdk.dataApi.IndexerQueryAlgebra
-import xyz.stratalab.sdk.models.LockAddress
+import org.plasmalabs.indexer.services.{Txo, TxoState}
+import org.plasmalabs.sdk.dataApi.IndexerQueryAlgebra
+import org.plasmalabs.sdk.models.LockAddress
 
 class BaseIndexerQueryAlgebra extends IndexerQueryAlgebra[IO] {
 

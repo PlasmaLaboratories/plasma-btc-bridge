@@ -1,18 +1,18 @@
-package xyz.stratalab.bridge.consensus.core.controllers
+package org.plasmalabs.bridge.consensus.core.controllers
 
 import cats.effect.IO
 import com.google.protobuf.ByteString
 import org.typelevel.log4cats.SelfAwareStructuredLogger
-import xyz.stratalab.bridge.consensus.core.StrataPrivatenet
-import xyz.stratalab.bridge.consensus.shared.{
+import org.plasmalabs.bridge.consensus.core.StrataPrivatenet
+import org.plasmalabs.bridge.consensus.shared.{
   BTCConfirmationThreshold,
   BTCRetryThreshold,
   BTCWaitExpirationTime,
   StrataConfirmationThreshold,
   StrataWaitExpirationTime
 }
-import xyz.stratalab.sdk.models.{GroupId, SeriesId}
-import xyz.stratalab.sdk.utils.Encoding
+import org.plasmalabs.sdk.models.{GroupId, SeriesId}
+import org.plasmalabs.sdk.utils.Encoding
 
 trait SharedData {
 

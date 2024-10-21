@@ -1,4 +1,4 @@
-package xyz.stratalab.bridge.shared
+package org.plasmalabs.bridge.shared
 
 import cats.effect.kernel.{Async, Ref, Sync}
 import cats.effect.std.Mutex
@@ -7,8 +7,8 @@ import fs2.grpc.syntax.all._
 import io.grpc.{ManagedChannelBuilder, Metadata}
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
-import xyz.stratalab.bridge.consensus.service.{MintingStatusReply, StateMachineServiceFs2Grpc}
-import xyz.stratalab.bridge.shared.{
+import org.plasmalabs.bridge.consensus.service.{MintingStatusReply, StateMachineServiceFs2Grpc}
+import org.plasmalabs.bridge.shared.{
   BridgeCryptoUtils,
   BridgeError,
   BridgeResponse,
@@ -77,7 +77,7 @@ trait StateMachineServiceGrpcClient[F[_]] {
 object StateMachineServiceGrpcClientImpl {
 
   import cats.implicits._
-  import xyz.stratalab.bridge.shared.implicits._
+  import org.plasmalabs.bridge.shared.implicits._
   import scala.concurrent.duration._
 
   def makeContainer[F[_]: Async: Logger](

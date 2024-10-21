@@ -1,4 +1,4 @@
-package xyz.stratalab.tbcli
+package org.plasmalabs.tbcli
 
 import cats.effect.{ExitCode, IO, IOApp}
 
@@ -34,7 +34,7 @@ object Main extends IOApp with TBCLIParamsDescriptor {
   //     startSessionRequest: StartPeginSessionRequest
   // ): F[Unit] = {
   //   import cats.implicits._
-  //   import xyz.stratalab.tbcli.view.OutputView._
+  //   import org.plasmalabs.tbcli.view.OutputView._
   //   std.Console[F].println(startSessionRequest.show)
   // }
 

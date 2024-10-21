@@ -1,10 +1,10 @@
-package xyz.stratalab.bridge.consensus.shared.persistence
+package org.plasmalabs.bridge.consensus.shared.persistence
 
 import munit.CatsEffectSuite
 import org.bitcoins.core.currency.Satoshis
-import xyz.stratalab.bridge.consensus.shared.persistence.{DeserializationOps, SerializationOps}
-import xyz.stratalab.bridge.consensus.shared.{AssetToken, GroupToken, Lvl, SeriesToken}
-import xyz.stratalab.bridge.consensus.subsystems.monitor.{
+import org.plasmalabs.bridge.consensus.shared.persistence.{DeserializationOps, SerializationOps}
+import org.plasmalabs.bridge.consensus.shared.{AssetToken, GroupToken, Lvl, SeriesToken}
+import org.plasmalabs.bridge.consensus.subsystems.monitor.{
   BTCFundsDeposited,
   BTCFundsWithdrawn,
   NewBTCBlock,
@@ -48,7 +48,7 @@ class SerializationDeserializationSpec extends CatsEffectSuite with Serializatio
   }
 
   test("Serialization and Deserialization of NodeFundsDeposited") {
-    import xyz.stratalab.sdk.syntax._
+    import org.plasmalabs.sdk.syntax._
     val eventLvl = NodeFundsDeposited(1, "address", "utxoTxId", 1, Lvl(1L))
     assertEquals(fromProtobuf(toProtobuf(eventLvl)), eventLvl)
     val eventSeriesToken =
@@ -68,7 +68,7 @@ class SerializationDeserializationSpec extends CatsEffectSuite with Serializatio
   }
 
   test("Serialization and Deserialization of NodeFundsWithdrawn") {
-    import xyz.stratalab.sdk.syntax._
+    import org.plasmalabs.sdk.syntax._
     val eventLvl = NodeFundsWithdrawn(1L, "txId", 1, "secret", Lvl(1))
     assertEquals(fromProtobuf(toProtobuf(eventLvl)), eventLvl)
     val eventSeriesToken =

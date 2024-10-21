@@ -1,7 +1,7 @@
-package xyz.stratalab.tbcli.view
+package org.plasmalabs.tbcli.view
 
 import cats.Show
-import xyz.stratalab.bridge.shared.StartPeginSessionRequest
+import org.plasmalabs.bridge.shared.StartPeginSessionRequest
 
 object OutputView {
 

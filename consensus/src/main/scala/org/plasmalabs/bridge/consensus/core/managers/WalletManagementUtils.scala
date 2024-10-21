@@ -1,10 +1,10 @@
-package xyz.stratalab.bridge.consensus.core.managers
+package org.plasmalabs.bridge.consensus.core.managers
 
 import cats.effect.kernel.Sync
 import quivr.models.KeyPair
-import xyz.stratalab.crypto.encryption.VaultStore
-import xyz.stratalab.sdk.dataApi.WalletKeyApiAlgebra
-import xyz.stratalab.sdk.wallet.WalletApi
+import org.plasmalabs.crypto.encryption.VaultStore
+import org.plasmalabs.sdk.dataApi.WalletKeyApiAlgebra
+import org.plasmalabs.sdk.wallet.WalletApi
 
 class WalletManagementUtils[F[_]: Sync](
   walletApi: WalletApi[F],

@@ -1,4 +1,4 @@
-package xyz.stratalab.bridge
+package org.plasmalabs.bridge
 
 trait CommonSetupModule {
   lazy val requestPort = 4000

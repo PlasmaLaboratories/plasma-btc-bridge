@@ -1,4 +1,4 @@
-package xyz.stratalab.bridge.consensus.core
+package org.plasmalabs.bridge.consensus.core
 
 import cats.effect.kernel.{Ref, Sync}
 

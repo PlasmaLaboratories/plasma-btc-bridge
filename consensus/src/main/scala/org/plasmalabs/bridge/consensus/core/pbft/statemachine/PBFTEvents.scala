@@ -1,7 +1,7 @@
-package xyz.stratalab.bridge.consensus.core.pbft.statemachine
+package org.plasmalabs.bridge.consensus.core.pbft.statemachine
 
 import org.bitcoins.core.currency.CurrencyUnit
-import xyz.stratalab.bridge.consensus.shared.NodeCurrencyUnit
+import org.plasmalabs.bridge.consensus.shared.NodeCurrencyUnit
 
 trait PBFTEvent {
   val sessionId: String

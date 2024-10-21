@@ -1,4 +1,4 @@
-package xyz.stratalab.consensus.core
+package org.plasmalabs.consensus.core
 
 import cats.effect.kernel.Async
 import com.google.protobuf.ByteString
@@ -6,7 +6,7 @@ import fs2.grpc.syntax.all._
 import io.grpc.{ManagedChannelBuilder, Metadata}
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
-import xyz.stratalab.bridge.consensus.pbft.{
+import org.plasmalabs.bridge.consensus.pbft.{
   CheckpointRequest,
   CommitRequest,
   NewViewRequest,
@@ -15,7 +15,7 @@ import xyz.stratalab.bridge.consensus.pbft.{
   PrepareRequest,
   ViewChangeRequest
 }
-import xyz.stratalab.bridge.shared.{BridgeCryptoUtils, Empty, ReplicaNode}
+import org.plasmalabs.bridge.shared.{BridgeCryptoUtils, Empty, ReplicaNode}
 
 import java.security.KeyPair
 
@@ -75,7 +75,7 @@ object PBFTInternalGrpcServiceClientImpl {
       backupMap = idBackupMap.toMap
     } yield new PBFTInternalGrpcServiceClient[F] {
 
-      import xyz.stratalab.bridge.shared.implicits._
+      import org.plasmalabs.bridge.shared.implicits._
 
       override def viewChange(request: ViewChangeRequest): F[Empty] =
         for {

@@ -1,7 +1,7 @@
-package xyz.stratalab.bridge.stubs
+package org.plasmalabs.bridge.stubs
 
 import cats.effect.IO
-import xyz.stratalab.bridge.consensus.pbft.{
+import org.plasmalabs.bridge.consensus.pbft.{
   CheckpointRequest,
   CommitRequest,
   NewViewRequest,
@@ -9,8 +9,8 @@ import xyz.stratalab.bridge.consensus.pbft.{
   PrepareRequest,
   ViewChangeRequest
 }
-import xyz.stratalab.bridge.shared.Empty
-import xyz.stratalab.consensus.core.PBFTInternalGrpcServiceClient
+import org.plasmalabs.bridge.shared.Empty
+import org.plasmalabs.consensus.core.PBFTInternalGrpcServiceClient
 
 class BasePBFTInternalGrpcServiceClient extends PBFTInternalGrpcServiceClient[IO] {
 

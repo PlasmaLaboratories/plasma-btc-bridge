@@ -1,13 +1,13 @@
-package xyz.stratalab
+package org.plasmalabs
 
 import cats.effect.IO
 import cats.effect.kernel.Resource
-import xyz.stratalab.bridge.shared.BridgeContants
-import xyz.stratalab.bridge.shared.MintingStatusRequest
-import xyz.stratalab.bridge.shared.MintingStatusResponse
-import xyz.stratalab.bridge.shared.StartPeginSessionRequest
-import xyz.stratalab.bridge.shared.StartPeginSessionResponse
-import xyz.stratalab.bridge.shared.SyncWalletRequest
+import org.plasmalabs.bridge.shared.BridgeContants
+import org.plasmalabs.bridge.shared.MintingStatusRequest
+import org.plasmalabs.bridge.shared.MintingStatusResponse
+import org.plasmalabs.bridge.shared.StartPeginSessionRequest
+import org.plasmalabs.bridge.shared.StartPeginSessionResponse
+import org.plasmalabs.bridge.shared.SyncWalletRequest
 import fs2.io.process
 import io.circe.generic.auto._
 import io.circe.parser._
@@ -26,7 +26,7 @@ import fs2.io.file.Files
 
 package object bridge extends ProcessOps {
 
-  import xyz.stratalab.bridge.implicits._
+  import org.plasmalabs.bridge.implicits._
 
   val DOCKER_CMD = "docker"
 
@@ -391,7 +391,7 @@ package object bridge extends ProcessOps {
     "launch",
     "-r",
     "https://s01.oss.sonatype.org/content/repositories/staging",
-    "xyz.stratalab:strata-cli_2.13:0.0.0+196-15bc1892-SNAPSHOT",
+    "org.plasmalabs:strata-cli_2.13:0.0.0+196-15bc1892-SNAPSHOT",
     "--"
   )
 

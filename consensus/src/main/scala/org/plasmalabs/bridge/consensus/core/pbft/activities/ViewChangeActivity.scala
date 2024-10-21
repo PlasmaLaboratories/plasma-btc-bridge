@@ -1,13 +1,13 @@
-package xyz.stratalab.bridge.consensus.core.pbft.activities
+package org.plasmalabs.bridge.consensus.core.pbft.activities
 
 import cats.effect.kernel.Async
 import cats.implicits._
 import org.typelevel.log4cats.Logger
-import xyz.stratalab.bridge.consensus.core.PublicApiClientGrpcMap
-import xyz.stratalab.bridge.consensus.core.pbft.ViewManager
-import xyz.stratalab.bridge.consensus.pbft.{PrePrepareRequest, PrepareRequest, ViewChangeRequest}
-import xyz.stratalab.bridge.shared.BridgeCryptoUtils
-import xyz.stratalab.bridge.shared.implicits._
+import org.plasmalabs.bridge.consensus.core.PublicApiClientGrpcMap
+import org.plasmalabs.bridge.consensus.core.pbft.ViewManager
+import org.plasmalabs.bridge.consensus.pbft.{PrePrepareRequest, PrepareRequest, ViewChangeRequest}
+import org.plasmalabs.bridge.shared.BridgeCryptoUtils
+import org.plasmalabs.bridge.shared.implicits._
 
 import java.security.PublicKey
 

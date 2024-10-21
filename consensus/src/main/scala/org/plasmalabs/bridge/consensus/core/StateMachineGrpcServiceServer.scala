@@ -1,24 +1,24 @@
-package xyz.stratalab.bridge.consensus.core
+package org.plasmalabs.bridge.consensus.core
 
 import cats.effect.IO
 import cats.effect.kernel.Sync
 import com.google.protobuf.ByteString
 import io.grpc.Metadata
 import org.typelevel.log4cats.Logger
-import xyz.stratalab.bridge.consensus.core.pbft.{RequestIdentifier, RequestTimerManager, ViewManager}
-import xyz.stratalab.bridge.consensus.core.{LastReplyMap, PublicApiClientGrpcMap}
-import xyz.stratalab.bridge.consensus.pbft.PrePrepareRequest
-import xyz.stratalab.bridge.consensus.service.MintingStatusReply.{Result => MSReply}
-import xyz.stratalab.bridge.consensus.service.{
+import org.plasmalabs.bridge.consensus.core.pbft.{RequestIdentifier, RequestTimerManager, ViewManager}
+import org.plasmalabs.bridge.consensus.core.{LastReplyMap, PublicApiClientGrpcMap}
+import org.plasmalabs.bridge.consensus.pbft.PrePrepareRequest
+import org.plasmalabs.bridge.consensus.service.MintingStatusReply.{Result => MSReply}
+import org.plasmalabs.bridge.consensus.service.{
   MintingStatusReply,
   MintingStatusRes,
   SessionNotFoundRes,
   StateMachineServiceFs2Grpc
 }
-import xyz.stratalab.bridge.consensus.shared.PeginSessionInfo
-import xyz.stratalab.bridge.consensus.subsystems.monitor.SessionManagerAlgebra
-import xyz.stratalab.bridge.shared.StateMachineRequest.Operation.StartSession
-import xyz.stratalab.bridge.shared.{
+import org.plasmalabs.bridge.consensus.shared.PeginSessionInfo
+import org.plasmalabs.bridge.consensus.subsystems.monitor.SessionManagerAlgebra
+import org.plasmalabs.bridge.shared.StateMachineRequest.Operation.StartSession
+import org.plasmalabs.bridge.shared.{
   BridgeCryptoUtils,
   ClientId,
   Empty,
@@ -27,7 +27,7 @@ import xyz.stratalab.bridge.shared.{
   ReplicaId,
   StateMachineRequest
 }
-import xyz.stratalab.consensus.core.PBFTInternalGrpcServiceClient
+import org.plasmalabs.consensus.core.PBFTInternalGrpcServiceClient
 
 import java.security.{KeyPair => JKeyPair, MessageDigest}
 import java.util.UUID
@@ -98,7 +98,7 @@ object StateMachineGrpcServiceServer {
         mintingStatusAux[IO](request).map(MintingStatusReply(_))
 
       def executeRequest(
-        request: xyz.stratalab.bridge.shared.StateMachineRequest,
+        request: org.plasmalabs.bridge.shared.StateMachineRequest,
         ctx:     Metadata
       ): IO[Empty] =
         Option(
@@ -133,7 +133,7 @@ object StateMachineGrpcServiceServer {
                     currentPrimary
                   ).executeRequest(request, ctx)
                 else {
-                  import xyz.stratalab.bridge.shared.implicits._
+                  import org.plasmalabs.bridge.shared.implicits._
                   val prePrepareRequestNoSeq = PrePrepareRequest(
                     viewNumber = currentView,
                     digest = ByteString.copyFrom(

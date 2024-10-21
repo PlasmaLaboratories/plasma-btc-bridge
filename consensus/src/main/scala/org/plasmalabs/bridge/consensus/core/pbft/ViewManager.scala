@@ -1,10 +1,10 @@
-package xyz.stratalab.bridge.consensus.core.pbft
+package org.plasmalabs.bridge.consensus.core.pbft
 
 import cats.effect.kernel.{Async, Ref}
-import xyz.stratalab.bridge.consensus.pbft.{NewViewRequest, Pm, PrePrepareRequest, ViewChangeRequest}
-import xyz.stratalab.bridge.consensus.shared.persistence.StorageApi
-import xyz.stratalab.bridge.shared.{ReplicaCount, ReplicaId}
-import xyz.stratalab.consensus.core.PBFTInternalGrpcServiceClient
+import org.plasmalabs.bridge.consensus.pbft.{NewViewRequest, Pm, PrePrepareRequest, ViewChangeRequest}
+import org.plasmalabs.bridge.consensus.shared.persistence.StorageApi
+import org.plasmalabs.bridge.shared.{ReplicaCount, ReplicaId}
+import org.plasmalabs.consensus.core.PBFTInternalGrpcServiceClient
 
 trait ViewManager[F[_]] {
 

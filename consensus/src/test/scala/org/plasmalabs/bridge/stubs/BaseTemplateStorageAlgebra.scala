@@ -1,7 +1,7 @@
-package xyz.stratalab.bridge.stubs
+package org.plasmalabs.bridge.stubs
 
 import cats.effect.IO
-import xyz.stratalab.sdk.dataApi.{TemplateStorageAlgebra, WalletTemplate}
+import org.plasmalabs.sdk.dataApi.{TemplateStorageAlgebra, WalletTemplate}
 
 class BaseTemplateStorageAlgebra extends TemplateStorageAlgebra[IO] {
 

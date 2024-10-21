@@ -1,11 +1,11 @@
-package xyz.stratalab.bridge.consensus.shared.utils
+package org.plasmalabs.bridge.consensus.shared.utils
 
 import cats.effect.kernel.{Async, Resource, Sync}
 import com.typesafe.config.Config
 import io.grpc.ManagedChannelBuilder
 import org.typelevel.log4cats.Logger
-import xyz.stratalab.bridge.consensus.core.{PublicApiClientGrpc, PublicApiClientGrpcImpl}
-import xyz.stratalab.bridge.shared.{BridgeCryptoUtils, ClientCount, ClientId, ReplicaCount, ReplicaId}
+import org.plasmalabs.bridge.consensus.core.{PublicApiClientGrpc, PublicApiClientGrpcImpl}
+import org.plasmalabs.bridge.shared.{BridgeCryptoUtils, ClientCount, ClientId, ReplicaCount, ReplicaId}
 
 import java.security.{KeyPair, PublicKey}
 

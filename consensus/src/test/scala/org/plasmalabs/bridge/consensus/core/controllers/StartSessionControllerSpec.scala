@@ -1,12 +1,12 @@
-package xyz.stratalab.bridge.consensus.core.controllers
+package org.plasmalabs.bridge.consensus.core.controllers
 
 import cats.effect.IO
 import cats.effect.kernel.Ref
 import munit.CatsEffectSuite
-import xyz.stratalab.bridge.consensus.core.controllers.StartSessionController
-import xyz.stratalab.bridge.consensus.core.managers.{BTCWalletAlgebraImpl, WalletManagementUtils}
-import xyz.stratalab.bridge.consensus.core.utils.KeyGenerationUtils
-import xyz.stratalab.bridge.consensus.core.{
+import org.plasmalabs.bridge.consensus.core.controllers.StartSessionController
+import org.plasmalabs.bridge.consensus.core.managers.{BTCWalletAlgebraImpl, WalletManagementUtils}
+import org.plasmalabs.bridge.consensus.core.utils.KeyGenerationUtils
+import org.plasmalabs.bridge.consensus.core.{
   BridgeWalletManager,
   CurrentStrataHeightRef,
   PeginWalletManager,
@@ -14,18 +14,18 @@ import xyz.stratalab.bridge.consensus.core.{
   StrataKeypair,
   StrataPrivatenet
 }
-import xyz.stratalab.bridge.shared.{InvalidHash, InvalidKey, StartSessionOperation}
-import xyz.stratalab.sdk.builders.TransactionBuilderApi
-import xyz.stratalab.sdk.constants.NetworkConstants
-import xyz.stratalab.sdk.dataApi.RpcChannelResource
-import xyz.stratalab.sdk.servicekit.{
+import org.plasmalabs.bridge.shared.{InvalidHash, InvalidKey, StartSessionOperation}
+import org.plasmalabs.sdk.builders.TransactionBuilderApi
+import org.plasmalabs.sdk.constants.NetworkConstants
+import org.plasmalabs.sdk.dataApi.RpcChannelResource
+import org.plasmalabs.sdk.servicekit.{
   FellowshipStorageApi,
   TemplateStorageApi,
   WalletKeyApi,
   WalletStateApi,
   WalletStateResource
 }
-import xyz.stratalab.sdk.wallet.WalletApi
+import org.plasmalabs.sdk.wallet.WalletApi
 
 import java.nio.file.{Files, Path, Paths}
 

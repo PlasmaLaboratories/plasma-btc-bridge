@@ -1,10 +1,10 @@
-package xyz.stratalab.bridge.consensus.subsystems.monitor
+package org.plasmalabs.bridge.consensus.subsystems.monitor
 
 import cats.effect.kernel.Sync
 import cats.effect.std.Queue
 import cats.implicits._
-import xyz.stratalab.bridge.consensus.shared.persistence.StorageApi
-import xyz.stratalab.bridge.consensus.shared.{MiscUtils, PeginSessionInfo, PeginSessionState, SessionInfo}
+import org.plasmalabs.bridge.consensus.shared.persistence.StorageApi
+import org.plasmalabs.bridge.consensus.shared.{MiscUtils, PeginSessionInfo, PeginSessionState, SessionInfo}
 
 sealed trait SessionEvent
 

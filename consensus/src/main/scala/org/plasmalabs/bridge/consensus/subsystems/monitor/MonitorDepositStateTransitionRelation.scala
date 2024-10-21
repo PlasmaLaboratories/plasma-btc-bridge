@@ -1,8 +1,8 @@
-package xyz.stratalab.bridge.consensus.subsystems.monitor
+package org.plasmalabs.bridge.consensus.subsystems.monitor
 
 import org.bitcoins.core.protocol.Bech32Address
-import xyz.stratalab.bridge.consensus.shared.{BTCConfirmationThreshold, BTCWaitExpirationTime}
-import xyz.stratalab.bridge.consensus.subsystems.monitor.{
+import org.plasmalabs.bridge.consensus.shared.{BTCConfirmationThreshold, BTCWaitExpirationTime}
+import org.plasmalabs.bridge.consensus.subsystems.monitor.{
   EndTransition,
   FSMTransition,
   FSMTransitionTo,

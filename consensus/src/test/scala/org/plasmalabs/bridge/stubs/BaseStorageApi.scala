@@ -1,10 +1,10 @@
-package xyz.stratalab.bridge.stubs
+package org.plasmalabs.bridge.stubs
 
 import cats.effect.IO
-import xyz.stratalab.bridge.consensus.pbft.{CheckpointRequest, CommitRequest, PrePrepareRequest, PrepareRequest}
-import xyz.stratalab.bridge.consensus.shared.SessionInfo
-import xyz.stratalab.bridge.consensus.shared.persistence.StorageApi
-import xyz.stratalab.bridge.consensus.subsystems.monitor.BlockchainEvent
+import org.plasmalabs.bridge.consensus.pbft.{CheckpointRequest, CommitRequest, PrePrepareRequest, PrepareRequest}
+import org.plasmalabs.bridge.consensus.shared.SessionInfo
+import org.plasmalabs.bridge.consensus.shared.persistence.StorageApi
+import org.plasmalabs.bridge.consensus.subsystems.monitor.BlockchainEvent
 
 class BaseStorageApi extends StorageApi[IO] {
 

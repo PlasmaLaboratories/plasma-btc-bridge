@@ -1,4 +1,4 @@
-package xyz.stratalab.bridge.publicapi
+package org.plasmalabs.bridge.publicapi
 
 import cats.data.Kleisli
 import cats.effect.kernel.{Ref, Sync}
@@ -17,7 +17,7 @@ import org.http4s.server.staticcontent.resourceServiceBuilder
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
 import scopt.OParser
-import xyz.stratalab.bridge.shared.{
+import org.plasmalabs.bridge.shared.{
   BridgeCryptoUtils,
   BridgeError,
   BridgeResponse,

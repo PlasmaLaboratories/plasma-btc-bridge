@@ -1,8 +1,8 @@
-package xyz.stratalab.bridge.stubs
+package org.plasmalabs.bridge.stubs
 
 import cats.effect.IO
-import xyz.stratalab.bridge.consensus.shared.{PeginSessionInfo, PeginSessionState, SessionInfo}
-import xyz.stratalab.bridge.consensus.subsystems.monitor.SessionManagerAlgebra
+import org.plasmalabs.bridge.consensus.shared.{PeginSessionInfo, PeginSessionState, SessionInfo}
+import org.plasmalabs.bridge.consensus.subsystems.monitor.SessionManagerAlgebra
 
 class BaseSessionManagerAlgebra extends SessionManagerAlgebra[IO] {
 

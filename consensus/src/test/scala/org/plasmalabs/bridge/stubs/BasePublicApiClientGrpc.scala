@@ -1,9 +1,9 @@
-package xyz.stratalab.bridge.stubs
+package org.plasmalabs.bridge.stubs
 
 import cats.effect.IO
-import xyz.stratalab.bridge.consensus.core.PublicApiClientGrpc
-import xyz.stratalab.bridge.consensus.service.StateMachineReply
-import xyz.stratalab.bridge.shared.Empty
+import org.plasmalabs.bridge.consensus.core.PublicApiClientGrpc
+import org.plasmalabs.bridge.consensus.service.StateMachineReply
+import org.plasmalabs.bridge.shared.Empty
 
 class BasePublicApiClientGrpc extends PublicApiClientGrpc[IO] {
 

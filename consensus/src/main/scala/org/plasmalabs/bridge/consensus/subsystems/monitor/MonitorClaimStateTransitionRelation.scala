@@ -1,12 +1,12 @@
-package xyz.stratalab.bridge.consensus.subsystems.monitor
+package org.plasmalabs.bridge.consensus.subsystems.monitor
 
 import cats.effect.kernel.Async
 import cats.implicits._
 import org.bitcoins.core.protocol.Bech32Address
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
-import xyz.stratalab.bridge.consensus.shared.{BTCConfirmationThreshold, BTCRetryThreshold}
-import xyz.stratalab.bridge.consensus.subsystems.monitor.{
+import org.plasmalabs.bridge.consensus.shared.{BTCConfirmationThreshold, BTCRetryThreshold}
+import org.plasmalabs.bridge.consensus.subsystems.monitor.{
   EndTransition,
   FSMTransition,
   FSMTransitionTo,

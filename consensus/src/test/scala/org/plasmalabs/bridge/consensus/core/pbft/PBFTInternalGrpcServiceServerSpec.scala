@@ -1,4 +1,4 @@
-package xyz.stratalab.bridge.consensus.core.pbft
+package org.plasmalabs.bridge.consensus.core.pbft
 
 import cats.effect.IO
 import cats.effect.kernel.Ref
@@ -8,10 +8,10 @@ import io.grpc.Metadata
 import munit.CatsEffectSuite
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.typelevel.log4cats.Logger
-import xyz.stratalab.bridge.consensus.core.{PublicApiClientGrpcMap, stateDigest}
-import xyz.stratalab.bridge.consensus.pbft.{CheckpointRequest, PBFTInternalServiceFs2Grpc}
-import xyz.stratalab.bridge.shared.BridgeCryptoUtils
-import xyz.stratalab.bridge.stubs.{BaseLogger, BaseStorageApi}
+import org.plasmalabs.bridge.consensus.core.{PublicApiClientGrpcMap, stateDigest}
+import org.plasmalabs.bridge.consensus.pbft.{CheckpointRequest, PBFTInternalServiceFs2Grpc}
+import org.plasmalabs.bridge.shared.BridgeCryptoUtils
+import org.plasmalabs.bridge.stubs.{BaseLogger, BaseStorageApi}
 
 import java.security.Security
 
@@ -195,7 +195,7 @@ class PBFTInternalGrpcServiceServerSpec extends CatsEffectSuite with PBFTInterna
   ) { serverAndLogChecker =>
     val (server, _, warningChecker) = serverAndLogChecker
 
-    import xyz.stratalab.bridge.shared.implicits._
+    import org.plasmalabs.bridge.shared.implicits._
     val checkpointRequest = CheckpointRequest(
       sequenceNumber = -1L,
       digest = ByteString.copyFrom(stateDigest(Map.empty)),
@@ -229,7 +229,7 @@ class PBFTInternalGrpcServiceServerSpec extends CatsEffectSuite with PBFTInterna
   ) { serverAndLogChecker =>
     val (server, _, warningChecker) = serverAndLogChecker
 
-    import xyz.stratalab.bridge.shared.implicits._
+    import org.plasmalabs.bridge.shared.implicits._
     val checkpointRequest = CheckpointRequest(
       sequenceNumber = 100L,
       digest = ByteString.copyFrom(stateDigest(Map.empty)),

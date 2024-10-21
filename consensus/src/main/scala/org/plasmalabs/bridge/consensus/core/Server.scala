@@ -1,4 +1,4 @@
-package xyz.stratalab.bridge.consensus.core
+package org.plasmalabs.bridge.consensus.core
 
 import com.comcast.ip4s.{Host, Port}
 

@@ -1,4 +1,4 @@
-package xyz.stratalab.bridge
+package org.plasmalabs.bridge
 
 import cats.effect.IO
 import fs2.io.process
@@ -213,7 +213,7 @@ trait ProcessOps {
         "launch",
         "-r",
         "https://s01.oss.sonatype.org/content/repositories/staging",
-        "xyz.stratalab:strata-cli_2.13:0.0.0+196-15bc1892-SNAPSHOT",
+        "org.plasmalabs:strata-cli_2.13:0.0.0+196-15bc1892-SNAPSHOT",
         "--",
         "fellowships",
         "add",

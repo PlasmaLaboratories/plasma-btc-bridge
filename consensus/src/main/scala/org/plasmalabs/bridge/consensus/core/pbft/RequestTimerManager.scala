@@ -1,9 +1,9 @@
-package xyz.stratalab.bridge.consensus.core.pbft
+package org.plasmalabs.bridge.consensus.core.pbft
 
 import cats.effect.kernel.{Async, Ref}
 import cats.effect.std.Queue
 import org.typelevel.log4cats.Logger
-import xyz.stratalab.bridge.shared.ClientId
+import org.plasmalabs.bridge.shared.ClientId
 
 import scala.concurrent.duration.Duration
 

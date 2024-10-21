@@ -1,4 +1,4 @@
-package xyz.stratalab.bridge.consensus.core.pbft.statemachine
+package org.plasmalabs.bridge.consensus.core.pbft.statemachine
 
 import cats.effect.kernel.{Async, Ref, Resource, Sync}
 import cats.effect.std.Queue
@@ -8,11 +8,11 @@ import org.bitcoins.core.currency.{CurrencyUnit, Satoshis}
 import org.bitcoins.rpc.client.common.BitcoindRpcClient
 import org.typelevel.log4cats.Logger
 import scodec.bits.ByteVector
-import xyz.stratalab.bridge.consensus.core.controllers.StartSessionController
-import xyz.stratalab.bridge.consensus.core.managers.WalletManagementUtils
-import xyz.stratalab.bridge.consensus.core.pbft.ViewManager
-import xyz.stratalab.bridge.consensus.core.pbft.statemachine.PBFTEvent
-import xyz.stratalab.bridge.consensus.core.{
+import org.plasmalabs.bridge.consensus.core.controllers.StartSessionController
+import org.plasmalabs.bridge.consensus.core.managers.WalletManagementUtils
+import org.plasmalabs.bridge.consensus.core.pbft.ViewManager
+import org.plasmalabs.bridge.consensus.core.pbft.statemachine.PBFTEvent
+import org.plasmalabs.bridge.consensus.core.{
   BitcoinNetworkIdentifiers,
   BridgeWalletManager,
   CheckpointInterval,
@@ -26,17 +26,17 @@ import xyz.stratalab.bridge.consensus.core.{
   Template,
   stateDigest
 }
-import xyz.stratalab.bridge.consensus.pbft.CheckpointRequest
-import xyz.stratalab.bridge.consensus.service.StateMachineReply.Result
-import xyz.stratalab.bridge.consensus.service.{InvalidInputRes, StartSessionRes, StateMachineReply}
-import xyz.stratalab.bridge.consensus.shared.PeginSessionState.{
+import org.plasmalabs.bridge.consensus.pbft.CheckpointRequest
+import org.plasmalabs.bridge.consensus.service.StateMachineReply.Result
+import org.plasmalabs.bridge.consensus.service.{InvalidInputRes, StartSessionRes, StateMachineReply}
+import org.plasmalabs.bridge.consensus.shared.PeginSessionState.{
   PeginSessionStateMintingTBTC,
   PeginSessionStateSuccessfulPegin,
   PeginSessionStateTimeout,
   PeginSessionStateWaitingForBTC,
   PeginSessionWaitingForClaim
 }
-import xyz.stratalab.bridge.consensus.shared.{
+import org.plasmalabs.bridge.consensus.shared.{
   AssetToken,
   BTCWaitExpirationTime,
   Lvl,
@@ -44,8 +44,8 @@ import xyz.stratalab.bridge.consensus.shared.{
   PeginSessionState,
   StrataWaitExpirationTime
 }
-import xyz.stratalab.bridge.consensus.subsystems.monitor.SessionManagerAlgebra
-import xyz.stratalab.bridge.shared.StateMachineRequest.Operation.{
+import org.plasmalabs.bridge.consensus.subsystems.monitor.SessionManagerAlgebra
+import org.plasmalabs.bridge.shared.StateMachineRequest.Operation.{
   PostClaimTx,
   PostDepositBTC,
   PostRedemptionTx,
@@ -53,7 +53,7 @@ import xyz.stratalab.bridge.shared.StateMachineRequest.Operation.{
   TimeoutDepositBTC,
   TimeoutTBTCMint
 }
-import xyz.stratalab.bridge.shared.{
+import org.plasmalabs.bridge.shared.{
   BridgeCryptoUtils,
   BridgeError,
   ClientId,
@@ -62,17 +62,17 @@ import xyz.stratalab.bridge.shared.{
   StartSessionOperation,
   StateMachineRequest
 }
-import xyz.stratalab.consensus.core.PBFTInternalGrpcServiceClient
-import xyz.stratalab.sdk.builders.TransactionBuilderApi
-import xyz.stratalab.sdk.dataApi.{
+import org.plasmalabs.consensus.core.PBFTInternalGrpcServiceClient
+import org.plasmalabs.sdk.builders.TransactionBuilderApi
+import org.plasmalabs.sdk.dataApi.{
   FellowshipStorageAlgebra,
   IndexerQueryAlgebra,
   TemplateStorageAlgebra,
   WalletStateAlgebra
 }
-import xyz.stratalab.sdk.models.{GroupId, SeriesId}
-import xyz.stratalab.sdk.utils.Encoding
-import xyz.stratalab.sdk.wallet.WalletApi
+import org.plasmalabs.sdk.models.{GroupId, SeriesId}
+import org.plasmalabs.sdk.utils.Encoding
+import org.plasmalabs.sdk.wallet.WalletApi
 
 import java.security.{KeyPair => JKeyPair}
 import java.util.UUID
@@ -81,7 +81,7 @@ trait BridgeStateMachineExecutionManager[F[_]] {
 
   def executeRequest(
     sequenceNumber: Long,
-    request:        xyz.stratalab.bridge.shared.StateMachineRequest
+    request:        org.plasmalabs.bridge.shared.StateMachineRequest
   ): F[Unit]
 
   def runStream(): fs2.Stream[F, Unit]
@@ -238,7 +238,7 @@ object BridgeStateMachineExecutionManagerImpl {
                 amount = Satoshis.fromBytes(ByteVector(value.amount.toByteArray))
               )
             case PostRedemptionTx(value) =>
-              import xyz.stratalab.sdk.syntax._
+              import org.plasmalabs.sdk.syntax._
               PostRedemptionTxEvt(
                 sessionId = value.sessionId,
                 secret = value.secret,
@@ -315,7 +315,7 @@ object BridgeStateMachineExecutionManagerImpl {
           } yield someSessionInfo
 
         private def executeRequestAux(
-          request: xyz.stratalab.bridge.shared.StateMachineRequest
+          request: org.plasmalabs.bridge.shared.StateMachineRequest
         ): F[StateMachineReply.Result] =
           (request.operation match {
             case StateMachineRequest.Operation.Empty =>
@@ -332,7 +332,7 @@ object BridgeStateMachineExecutionManagerImpl {
                   value
                 ) =>
               import WaitingBTCOps._
-              import xyz.stratalab.sdk.syntax._
+              import org.plasmalabs.sdk.syntax._
               for {
                 _ <- debug"handling PostDepositBTC ${value.sessionId}"
                 someSessionInfo <- standardResponse(
@@ -415,9 +415,9 @@ object BridgeStateMachineExecutionManagerImpl {
 
         private def executeRequestF(
           sequenceNumber: Long,
-          request:        xyz.stratalab.bridge.shared.StateMachineRequest
+          request:        org.plasmalabs.bridge.shared.StateMachineRequest
         ) = {
-          import xyz.stratalab.bridge.shared.implicits._
+          import org.plasmalabs.bridge.shared.implicits._
           import cats.implicits._
           for {
             resp        <- executeRequestAux(request)
@@ -456,7 +456,7 @@ object BridgeStateMachineExecutionManagerImpl {
 
         def executeRequest(
           sequenceNumber: Long,
-          request:        xyz.stratalab.bridge.shared.StateMachineRequest
+          request:        org.plasmalabs.bridge.shared.StateMachineRequest
         ): F[Unit] =
           for {
             _ <- queue.offer((sequenceNumber, request))

@@ -1,11 +1,11 @@
-package xyz.stratalab.bridge.consensus.core.managers
+package org.plasmalabs.bridge.consensus.core.managers
 
 import cats.effect.kernel.{Ref, Sync}
 import org.bitcoins.core.hd.HDPath
 import org.bitcoins.crypto.{ECDigitalSignature, ECPublicKey, HashType}
 import org.bitcoins.keymanager.bip39.BIP39KeyManager
 import scodec.bits.ByteVector
-import xyz.stratalab.bridge.consensus.core.utils.KeyGenerationUtils
+import org.plasmalabs.bridge.consensus.core.utils.KeyGenerationUtils
 
 trait BTCWalletAlgebra[F[_]] {
   def getCurrentPubKeyAndPrepareNext(): F[(Int, ECPublicKey)]

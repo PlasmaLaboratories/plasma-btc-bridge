@@ -1,9 +1,9 @@
-package xyz.stratalab.bridge
+package org.plasmalabs.bridge
 
 import cats.effect.IO
 
 import scala.concurrent.duration._
-import xyz.stratalab.bridge.checkMintingStatus
+import org.plasmalabs.bridge.checkMintingStatus
 
 trait SuccessfulPeginWithClaimReorgRetryModule {
 

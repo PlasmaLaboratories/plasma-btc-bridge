@@ -1,4 +1,4 @@
-package xyz.stratalab.bridge.publicapi
+package org.plasmalabs.bridge.publicapi
 
 import java.io.File
 

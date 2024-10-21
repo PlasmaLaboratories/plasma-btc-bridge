@@ -1,12 +1,12 @@
-package xyz.stratalab.bridge.consensus.monitor
+package org.plasmalabs.bridge.consensus.monitor
 
 import cats.effect.IO
 import cats.effect.kernel.Async
 import munit.CatsEffectSuite
 import org.bitcoins.core.protocol.Bech32Address
-import xyz.stratalab.bridge.consensus.core.controllers.SharedData
-import xyz.stratalab.bridge.consensus.shared.AssetToken
-import xyz.stratalab.bridge.consensus.subsystems.monitor.{
+import org.plasmalabs.bridge.consensus.core.controllers.SharedData
+import org.plasmalabs.bridge.consensus.shared.AssetToken
+import org.plasmalabs.bridge.consensus.subsystems.monitor.{
   BTCFundsDeposited,
   BTCFundsWithdrawn,
   BlockchainEvent,
@@ -27,8 +27,8 @@ import xyz.stratalab.bridge.consensus.subsystems.monitor.{
   NodeFundsWithdrawn,
   PeginStateMachineState
 }
-import xyz.stratalab.sdk.syntax._
-import xyz.stratalab.sdk.utils.Encoding
+import org.plasmalabs.sdk.syntax._
+import org.plasmalabs.sdk.utils.Encoding
 
 import scala.annotation.nowarn
 
@@ -132,7 +132,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
   test(
     "PeginTransitionRelation should not transition from MWaitingForBTCDeposit on Node events"
   ) {
-    import xyz.stratalab.sdk.syntax._
+    import org.plasmalabs.sdk.syntax._
     assert(
       MonitorTransitionRelation
         .handleBlockchainEvent[IO](
@@ -236,7 +236,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
   test(
     "PeginTransitionRelation should NOT transition from WaitingForRedemption to NodeFundsWithdrawn if guard fails"
   ) {
-    import xyz.stratalab.sdk.syntax._
+    import org.plasmalabs.sdk.syntax._
     assert(
       MonitorTransitionRelation
         .handleBlockchainEvent[IO](
@@ -447,7 +447,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
   test(
     "PeginTransitionRelation should not transition from WaitingForClaim on Node events"
   ) {
-    import xyz.stratalab.sdk.syntax._
+    import org.plasmalabs.sdk.syntax._
     assert(
       MonitorTransitionRelation
         .handleBlockchainEvent[IO](
@@ -535,7 +535,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
     "PeginTransitionRelation should transition from MintingTBTC to MintingTBTCConfirmation"
   ) {
 
-    import xyz.stratalab.sdk.syntax._
+    import org.plasmalabs.sdk.syntax._
     assert(
       MonitorTransitionRelation
         .handleBlockchainEvent[IO](
@@ -572,7 +572,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
   test(
     "PeginTransitionRelation should not transition from MintingTBTC to WaitingForRedemption"
   ) {
-    import xyz.stratalab.sdk.syntax._
+    import org.plasmalabs.sdk.syntax._
     assert(
       MonitorTransitionRelation
         .handleBlockchainEvent[IO](
@@ -645,7 +645,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
     "PeginTransitionRelation should transition from WaitingForEscrowBTCConfirmation to MintingTBTC"
   ) {
     println(
-      xyz.stratalab.bridge.consensus.subsystems.monitor.MonitorTransitionRelation
+      org.plasmalabs.bridge.consensus.subsystems.monitor.MonitorTransitionRelation
         .handleBlockchainEvent[IO](
           MConfirmingBTCDeposit(
             1,
@@ -663,7 +663,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
         )(transitionToEffect[IO](_, _))
     )
     assert(
-      xyz.stratalab.bridge.consensus.subsystems.monitor.MonitorTransitionRelation
+      org.plasmalabs.bridge.consensus.subsystems.monitor.MonitorTransitionRelation
         .handleBlockchainEvent[IO](
           MConfirmingBTCDeposit(
             1,
@@ -691,7 +691,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
     "PeginTransitionRelation should transition from WaitingForEscrowBTCConfirmation to MWaitingForBTCDeposit on reorg"
   ) {
     assert(
-      xyz.stratalab.bridge.consensus.subsystems.monitor.MonitorTransitionRelation
+      org.plasmalabs.bridge.consensus.subsystems.monitor.MonitorTransitionRelation
         .handleBlockchainEvent[IO](
           MConfirmingBTCDeposit(
             1,

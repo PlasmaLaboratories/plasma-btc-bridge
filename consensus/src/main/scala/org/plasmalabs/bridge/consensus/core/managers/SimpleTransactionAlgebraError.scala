@@ -1,4 +1,4 @@
-package xyz.stratalab.bridge.consensus.core.managers
+package org.plasmalabs.bridge.consensus.core.managers
 
 sealed trait SimpleTransactionAlgebraError extends Throwable {
 

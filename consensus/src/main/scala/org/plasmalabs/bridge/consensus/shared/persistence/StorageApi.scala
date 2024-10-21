@@ -1,14 +1,14 @@
-package xyz.stratalab.bridge.consensus.shared.persistence
+package org.plasmalabs.bridge.consensus.shared.persistence
 
 import cats.effect.kernel.{Resource, Sync}
 import cats.implicits._
 import com.google.common.io.BaseEncoding
 import com.google.protobuf.ByteString
-import xyz.stratalab.bridge.consensus.pbft.{CheckpointRequest, CommitRequest, PrePrepareRequest, PrepareRequest}
-import xyz.stratalab.bridge.consensus.shared.{MiscUtils, PeginSessionInfo, PeginSessionState, SessionInfo}
-import xyz.stratalab.bridge.consensus.subsystems.monitor.BlockchainEvent
-import xyz.stratalab.bridge.shared.StateMachineRequest
-import xyz.stratalab.sdk.utils.Encoding
+import org.plasmalabs.bridge.consensus.pbft.{CheckpointRequest, CommitRequest, PrePrepareRequest, PrepareRequest}
+import org.plasmalabs.bridge.consensus.shared.{MiscUtils, PeginSessionInfo, PeginSessionState, SessionInfo}
+import org.plasmalabs.bridge.consensus.subsystems.monitor.BlockchainEvent
+import org.plasmalabs.bridge.shared.StateMachineRequest
+import org.plasmalabs.sdk.utils.Encoding
 
 import java.sql.DriverManager
 
