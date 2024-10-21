@@ -31,8 +31,8 @@ import org.bitcoins.core.wallet.builder.SubtractFeeFromOutputsFinalizer
 import org.bitcoins.core.wallet.fee.{FeeUnit, SatoshisPerVirtualByte}
 import org.bitcoins.core.wallet.utxo.{ConditionalPath, SegwitV0NativeInputInfo}
 import org.bitcoins.crypto.{ECPublicKey, _}
-import scodec.bits.ByteVector
 import org.plasmalabs.bridge.consensus.shared.BTCWaitExpirationTime
+import scodec.bits.ByteVector
 
 import java.security.MessageDigest
 

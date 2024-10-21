@@ -2,8 +2,8 @@ package org.plasmalabs.bridge.consensus.core.pbft
 
 import cats.effect.kernel.{Async, Ref}
 import cats.effect.std.Queue
-import org.typelevel.log4cats.Logger
 import org.plasmalabs.bridge.shared.ClientId
+import org.typelevel.log4cats.Logger
 
 import scala.concurrent.duration.Duration
 

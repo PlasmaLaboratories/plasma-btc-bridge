@@ -1,13 +1,13 @@
 package org.plasmalabs.bridge.consensus.core.pbft.activities
 
 import cats.effect.kernel.Async
-import org.typelevel.log4cats.Logger
 import org.plasmalabs.bridge.consensus.core.pbft.{PBFTInternalEvent, Prepared, RequestIdentifier, ViewManager}
 import org.plasmalabs.bridge.consensus.pbft.PrepareRequest
 import org.plasmalabs.bridge.consensus.shared.persistence.StorageApi
 import org.plasmalabs.bridge.shared.implicits._
 import org.plasmalabs.bridge.shared.{ClientId, ReplicaCount}
 import org.plasmalabs.sdk.utils.Encoding
+import org.typelevel.log4cats.Logger
 
 import java.security.PublicKey
 

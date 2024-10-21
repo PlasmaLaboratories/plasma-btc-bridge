@@ -4,8 +4,6 @@ import cats.effect.kernel.Async
 import com.google.protobuf.ByteString
 import fs2.grpc.syntax.all._
 import io.grpc.{ManagedChannelBuilder, Metadata}
-import org.typelevel.log4cats.Logger
-import org.typelevel.log4cats.syntax._
 import org.plasmalabs.bridge.consensus.pbft.{
   CheckpointRequest,
   CommitRequest,
@@ -16,6 +14,8 @@ import org.plasmalabs.bridge.consensus.pbft.{
   ViewChangeRequest
 }
 import org.plasmalabs.bridge.shared.{BridgeCryptoUtils, Empty, ReplicaNode}
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.syntax._
 
 import java.security.KeyPair
 

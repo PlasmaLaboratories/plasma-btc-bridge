@@ -2,7 +2,6 @@ package org.plasmalabs.bridge.consensus.core.pbft
 
 import cats.effect.kernel.Async
 import cats.effect.std.Queue
-import org.typelevel.log4cats.Logger
 import org.plasmalabs.bridge.consensus.core.PublicApiClientGrpcMap
 import org.plasmalabs.bridge.consensus.core.pbft.activities.{
   CommitActivity,
@@ -13,6 +12,7 @@ import org.plasmalabs.bridge.consensus.core.pbft.activities.{
 import org.plasmalabs.bridge.consensus.pbft.{CommitRequest, PrePrepareRequest, PrepareRequest, ViewChangeRequest}
 import org.plasmalabs.bridge.consensus.shared.persistence.StorageApi
 import org.plasmalabs.bridge.shared.ReplicaCount
+import org.typelevel.log4cats.Logger
 
 import java.security.PublicKey
 

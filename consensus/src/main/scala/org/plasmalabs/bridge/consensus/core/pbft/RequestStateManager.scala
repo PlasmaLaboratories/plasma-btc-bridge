@@ -2,12 +2,12 @@ package org.plasmalabs.bridge.consensus.core.pbft
 
 import cats.effect.kernel.{Async, Outcome, Ref, Resource}
 import cats.effect.std.Queue
-import org.typelevel.log4cats.Logger
-import org.typelevel.log4cats.syntax._
 import org.plasmalabs.bridge.consensus.core.pbft.statemachine.BridgeStateMachineExecutionManager
 import org.plasmalabs.bridge.consensus.pbft.{CommitRequest, PrePrepareRequest, PrepareRequest}
 import org.plasmalabs.bridge.shared.{ClientId, ReplicaId, StateMachineRequest}
 import org.plasmalabs.consensus.core.PBFTInternalGrpcServiceClient
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.syntax._
 
 trait RequestStateManager[F[_]] {
 

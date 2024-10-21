@@ -3,8 +3,6 @@ package org.plasmalabs.bridge.consensus.core.pbft.statemachine
 import cats.effect.kernel.{Async, Resource}
 import cats.implicits._
 import io.grpc.ManagedChannel
-import org.typelevel.log4cats.Logger
-import quivr.models.{Int128, KeyPair}
 import org.plasmalabs.bridge.consensus.core.managers.{StrataWalletAlgebra, TransactionAlgebra, WalletApiHelpers}
 import org.plasmalabs.bridge.consensus.core.{Fellowship, StrataKeypair, Template}
 import org.plasmalabs.bridge.consensus.shared.Lvl
@@ -14,6 +12,8 @@ import org.plasmalabs.sdk.dataApi.{IndexerQueryAlgebra, WalletStateAlgebra}
 import org.plasmalabs.sdk.models.LockAddress
 import org.plasmalabs.sdk.models.box.AssetMintingStatement
 import org.plasmalabs.sdk.wallet.WalletApi
+import org.typelevel.log4cats.Logger
+import quivr.models.{Int128, KeyPair}
 
 object WaitingBTCOps {
 

@@ -1,8 +1,8 @@
 package org.plasmalabs.bridge.consensus.core
 
 import org.bitcoins.core.currency.{CurrencyUnit, SatoshisLong}
-import scopt.OParser
 import org.plasmalabs.sdk.models.{GroupId, SeriesId}
+import scopt.OParser
 
 import java.io.File
 

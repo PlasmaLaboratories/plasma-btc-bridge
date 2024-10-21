@@ -7,7 +7,6 @@ import io.grpc.Metadata
 import org.bitcoins.rpc.client.common.BitcoindRpcClient
 import org.http4s.dsl.io._
 import org.http4s.{HttpRoutes, _}
-import org.typelevel.log4cats.Logger
 import org.plasmalabs.bridge.consensus.core.managers.{BTCWalletAlgebra, WalletManagementUtils}
 import org.plasmalabs.bridge.consensus.core.pbft.statemachine.BridgeStateMachineExecutionManagerImpl
 import org.plasmalabs.bridge.consensus.core.pbft.{
@@ -61,6 +60,7 @@ import org.plasmalabs.sdk.servicekit.{
   WalletStateResource
 }
 import org.plasmalabs.sdk.wallet.WalletApi
+import org.typelevel.log4cats.Logger
 
 import java.security.{KeyPair => JKeyPair, PublicKey}
 import java.util.concurrent.ConcurrentHashMap
@@ -103,7 +103,7 @@ trait AppModule extends WalletStateResource {
   ) = {
     val walletKeyApi = WalletKeyApi.make[IO]()
     implicit val walletApi = WalletApi.make[IO](walletKeyApi)
-    val walletRes = walletResource(params.toplWalletDb)
+    val walletRes = WalletStateResource.walletResource[IO](params.toplWalletDb)
     implicit val walletStateAlgebra = WalletStateApi
       .make[IO](walletRes, walletApi)
     implicit val transactionBuilderApi = TransactionBuilderApi.make[IO](

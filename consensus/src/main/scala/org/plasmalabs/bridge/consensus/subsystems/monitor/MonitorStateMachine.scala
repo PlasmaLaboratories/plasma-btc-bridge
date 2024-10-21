@@ -2,7 +2,6 @@ package org.plasmalabs.bridge.consensus.subsystems.monitor
 
 import cats.effect.kernel.{Async, Ref, Sync}
 import cats.implicits._
-import org.typelevel.log4cats.Logger
 import org.plasmalabs.bridge.consensus.shared.{
   BTCConfirmationThreshold,
   BTCRetryThreshold,
@@ -20,6 +19,7 @@ import org.plasmalabs.bridge.consensus.subsystems.monitor.{
 }
 import org.plasmalabs.bridge.shared.{ClientId, SessionId, StateMachineServiceGrpcClient}
 import org.plasmalabs.sdk.models.{GroupId, SeriesId}
+import org.typelevel.log4cats.Logger
 
 trait MonitorStateMachineAlgebra[F[_]] {
 

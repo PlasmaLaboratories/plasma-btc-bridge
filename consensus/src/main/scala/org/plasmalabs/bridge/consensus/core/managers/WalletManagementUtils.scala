@@ -1,10 +1,10 @@
 package org.plasmalabs.bridge.consensus.core.managers
 
 import cats.effect.kernel.Sync
-import quivr.models.KeyPair
 import org.plasmalabs.crypto.encryption.VaultStore
 import org.plasmalabs.sdk.dataApi.WalletKeyApiAlgebra
 import org.plasmalabs.sdk.wallet.WalletApi
+import quivr.models.KeyPair
 
 class WalletManagementUtils[F[_]: Sync](
   walletApi: WalletApi[F],

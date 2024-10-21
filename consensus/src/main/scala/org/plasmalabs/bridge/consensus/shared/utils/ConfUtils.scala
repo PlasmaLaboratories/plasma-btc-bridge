@@ -3,9 +3,9 @@ package org.plasmalabs.bridge.consensus.shared.utils
 import cats.effect.kernel.{Async, Resource, Sync}
 import com.typesafe.config.Config
 import io.grpc.ManagedChannelBuilder
-import org.typelevel.log4cats.Logger
 import org.plasmalabs.bridge.consensus.core.{PublicApiClientGrpc, PublicApiClientGrpcImpl}
 import org.plasmalabs.bridge.shared.{BridgeCryptoUtils, ClientCount, ClientId, ReplicaCount, ReplicaId}
+import org.typelevel.log4cats.Logger
 
 import java.security.{KeyPair, PublicKey}
 

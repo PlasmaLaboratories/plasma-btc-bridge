@@ -4,7 +4,6 @@ import cats.effect.IO
 import cats.effect.kernel.Sync
 import com.google.protobuf.ByteString
 import io.grpc.Metadata
-import org.typelevel.log4cats.Logger
 import org.plasmalabs.bridge.consensus.core.pbft.{RequestIdentifier, RequestTimerManager, ViewManager}
 import org.plasmalabs.bridge.consensus.core.{LastReplyMap, PublicApiClientGrpcMap}
 import org.plasmalabs.bridge.consensus.pbft.PrePrepareRequest
@@ -28,6 +27,7 @@ import org.plasmalabs.bridge.shared.{
   StateMachineRequest
 }
 import org.plasmalabs.consensus.core.PBFTInternalGrpcServiceClient
+import org.typelevel.log4cats.Logger
 
 import java.security.{KeyPair => JKeyPair, MessageDigest}
 import java.util.UUID

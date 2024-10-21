@@ -7,9 +7,9 @@ import org.bitcoins.core.protocol.transaction.WitnessTransaction
 import org.bitcoins.core.script.constant.{OP_0, ScriptConstant}
 import org.bitcoins.crypto._
 import org.bitcoins.rpc.client.common.BitcoindRpcClient
-import scodec.bits.ByteVector
 import org.plasmalabs.bridge.consensus.core.PeginWalletManager
 import org.plasmalabs.bridge.consensus.core.utils.BitcoinUtils
+import scodec.bits.ByteVector
 
 object WaitingForRedemptionOps {
 

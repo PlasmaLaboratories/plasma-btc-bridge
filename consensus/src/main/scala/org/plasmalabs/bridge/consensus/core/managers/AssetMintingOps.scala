@@ -4,7 +4,6 @@ import cats.effect.kernel.Sync
 import com.google.protobuf.ByteString
 import com.google.protobuf.struct.Struct
 import io.circe.Json
-import quivr.models.KeyPair
 import org.plasmalabs.bridge.consensus.shared.Lvl
 import org.plasmalabs.indexer.services.Txo
 import org.plasmalabs.sdk.builders.TransactionBuilderApi
@@ -14,6 +13,7 @@ import org.plasmalabs.sdk.models.transaction.IoTransaction
 import org.plasmalabs.sdk.models.{Indices, LockAddress}
 import org.plasmalabs.sdk.utils.Encoding
 import org.plasmalabs.sdk.wallet.WalletApi
+import quivr.models.KeyPair
 
 import TransactionBuilderApi.implicits._
 

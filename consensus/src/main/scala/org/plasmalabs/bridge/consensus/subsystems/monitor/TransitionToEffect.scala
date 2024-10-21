@@ -3,8 +3,6 @@ package org.plasmalabs.bridge.consensus.subsystems.monitor
 import cats.effect.kernel.Async
 import cats.implicits._
 import com.google.protobuf.ByteString
-import org.typelevel.log4cats.Logger
-import org.typelevel.log4cats.syntax._
 import org.plasmalabs.bridge.consensus.shared.{
   BTCConfirmationThreshold,
   StrataConfirmationThreshold,
@@ -28,6 +26,8 @@ import org.plasmalabs.bridge.shared.{
   TimeoutDepositBTCOperation,
   TimeoutTBTCMintOperation
 }
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.syntax._
 
 trait TransitionToEffect {
 

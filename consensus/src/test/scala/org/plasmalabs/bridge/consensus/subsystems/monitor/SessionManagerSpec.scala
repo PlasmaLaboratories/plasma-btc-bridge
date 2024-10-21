@@ -4,10 +4,10 @@ import cats.effect.IO
 import cats.effect.kernel.Resource
 import cats.effect.std.Queue
 import munit.CatsEffectSuite
-import org.typelevel.log4cats.SelfAwareStructuredLogger
 import org.plasmalabs.bridge.consensus.shared.persistence.{StorageApi, StorageApiImpl}
 import org.plasmalabs.bridge.consensus.shared.{PeginSessionInfo, PeginSessionState}
 import org.plasmalabs.bridge.consensus.subsystems.monitor.SessionEvent
+import org.typelevel.log4cats.SelfAwareStructuredLogger
 
 import java.nio.file.{Files, Paths}
 import java.util.UUID

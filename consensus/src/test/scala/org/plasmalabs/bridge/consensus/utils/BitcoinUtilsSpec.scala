@@ -15,9 +15,9 @@ import org.bitcoins.core.protocol.transaction.{TransactionOutput, _}
 import org.bitcoins.core.script.constant.ScriptConstant
 import org.bitcoins.core.wallet.fee.SatoshisPerVirtualByte
 import org.bitcoins.crypto.{CryptoUtil, ECDigitalSignature, ECPrivateKey, ECPublicKey, HashType, _}
-import scodec.bits.ByteVector
 import org.plasmalabs.bridge.consensus.core.utils.BitcoinUtils._
 import org.plasmalabs.bridge.consensus.shared.BTCWaitExpirationTime
+import scodec.bits.ByteVector
 
 import java.security.MessageDigest
 

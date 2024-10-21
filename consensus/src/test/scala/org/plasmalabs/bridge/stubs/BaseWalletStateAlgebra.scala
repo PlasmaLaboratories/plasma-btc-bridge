@@ -1,13 +1,19 @@
 package org.plasmalabs.sdk.cli.mockbase
 
 import cats.data.ValidatedNel
-import quivr.models.{KeyPair, Preimage, Proposition}
 import org.plasmalabs.sdk.builders.locks.LockTemplate
 import org.plasmalabs.sdk.dataApi.WalletStateAlgebra
 import org.plasmalabs.sdk.models.Indices
 import org.plasmalabs.sdk.models.box.Lock
+import quivr.models.{KeyPair, Preimage, Proposition}
 
 class BaseWalletStateAlgebra[F[_]] extends WalletStateAlgebra[F] {
+
+  override def validateWalletInitialization(
+    networkId: Int,
+    ledgerId:  Int,
+    mainKey:   KeyPair
+  ): F[Either[Seq[String], Unit]] = ???
 
   override def getInteractionList(fellowship: String, template: String): F[Option[List[(Indices, String)]]] = ???
 

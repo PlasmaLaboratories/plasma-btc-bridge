@@ -6,8 +6,6 @@ import com.google.protobuf.ByteString
 import io.grpc.ManagedChannel
 import org.bitcoins.core.currency.{CurrencyUnit, Satoshis}
 import org.bitcoins.rpc.client.common.BitcoindRpcClient
-import org.typelevel.log4cats.Logger
-import scodec.bits.ByteVector
 import org.plasmalabs.bridge.consensus.core.controllers.StartSessionController
 import org.plasmalabs.bridge.consensus.core.managers.WalletManagementUtils
 import org.plasmalabs.bridge.consensus.core.pbft.ViewManager
@@ -73,6 +71,8 @@ import org.plasmalabs.sdk.dataApi.{
 import org.plasmalabs.sdk.models.{GroupId, SeriesId}
 import org.plasmalabs.sdk.utils.Encoding
 import org.plasmalabs.sdk.wallet.WalletApi
+import org.typelevel.log4cats.Logger
+import scodec.bits.ByteVector
 
 import java.security.{KeyPair => JKeyPair}
 import java.util.UUID

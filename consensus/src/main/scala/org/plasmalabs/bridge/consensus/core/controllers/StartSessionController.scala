@@ -6,8 +6,6 @@ import org.bitcoins.core.protocol.script.{P2WPKHWitnessSPKV0, WitnessScriptPubKe
 import org.bitcoins.core.script.constant.{OP_0, ScriptConstant}
 import org.bitcoins.core.util.{BitcoinScriptUtil, BytesUtil}
 import org.bitcoins.crypto.{ECPublicKey, _}
-import org.typelevel.log4cats.Logger
-import scodec.bits.ByteVector
 import org.plasmalabs.bridge.consensus.core.managers.StrataWalletAlgebra
 import org.plasmalabs.bridge.consensus.core.utils.BitcoinUtils
 import org.plasmalabs.bridge.consensus.core.{
@@ -34,6 +32,8 @@ import org.plasmalabs.bridge.shared.{
 import org.plasmalabs.sdk.builders.TransactionBuilderApi
 import org.plasmalabs.sdk.dataApi.{FellowshipStorageAlgebra, TemplateStorageAlgebra, WalletStateAlgebra}
 import org.plasmalabs.sdk.wallet.WalletApi
+import org.typelevel.log4cats.Logger
+import scodec.bits.ByteVector
 
 import java.util.UUID
 

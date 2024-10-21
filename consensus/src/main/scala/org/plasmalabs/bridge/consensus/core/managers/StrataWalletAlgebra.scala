@@ -4,7 +4,6 @@ import cats.data.OptionT
 import cats.effect.kernel.Sync
 import com.google.protobuf.ByteString
 import io.circe.Json
-import quivr.models.{KeyPair, VerificationKey}
 import org.plasmalabs.bridge.consensus.core.{Fellowship, StrataNetworkIdentifiers, Template}
 import org.plasmalabs.bridge.consensus.shared.Lvl
 import org.plasmalabs.bridge.shared.{InvalidHash, InvalidInput, InvalidKey}
@@ -25,6 +24,7 @@ import org.plasmalabs.sdk.models.transaction.IoTransaction
 import org.plasmalabs.sdk.models.{LockAddress, LockId}
 import org.plasmalabs.sdk.utils.Encoding
 import org.plasmalabs.sdk.wallet.WalletApi
+import quivr.models.{KeyPair, VerificationKey}
 
 object StrataWalletAlgebra {
 

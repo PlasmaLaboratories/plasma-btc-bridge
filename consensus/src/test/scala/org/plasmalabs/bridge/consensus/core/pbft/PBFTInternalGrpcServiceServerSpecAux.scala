@@ -3,7 +3,6 @@ package org.plasmalabs.bridge.consensus.core.pbft
 import cats.effect.IO
 import cats.effect.kernel.Ref
 import cats.effect.std.Queue
-import org.typelevel.log4cats.Logger
 import org.plasmalabs.bridge.consensus.core.pbft.{
   CheckpointManagerImpl,
   PBFTInternalEvent,
@@ -15,6 +14,7 @@ import org.plasmalabs.bridge.consensus.core.{PublicApiClientGrpcMap, WatermarkRe
 import org.plasmalabs.bridge.consensus.shared.persistence.StorageApi
 import org.plasmalabs.bridge.consensus.shared.utils.ConfUtils._
 import org.plasmalabs.bridge.stubs.{BasePBFTInternalGrpcServiceClient, BaseRequestStateManager, BaseRequestTimerManager}
+import org.typelevel.log4cats.Logger
 
 trait PBFTInternalGrpcServiceServerSpecAux extends SampleData {
 

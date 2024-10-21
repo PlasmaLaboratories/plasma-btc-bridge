@@ -3,11 +3,11 @@ package org.plasmalabs.bridge.consensus
 import cats.effect.kernel.{Ref, Sync}
 import fs2.grpc.syntax.all._
 import io.grpc.ManagedChannelBuilder
-import quivr.models.KeyPair
 import org.plasmalabs.bridge.consensus.core.managers.BTCWalletAlgebra
 import org.plasmalabs.bridge.consensus.core.pbft.statemachine.PBFTState
 import org.plasmalabs.bridge.consensus.service.StateMachineReply.Result
 import org.plasmalabs.bridge.shared.ClientId
+import quivr.models.KeyPair
 
 import java.security.{MessageDigest, PublicKey}
 import java.util.concurrent.ConcurrentHashMap

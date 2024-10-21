@@ -1,7 +1,6 @@
 package org.plasmalabs.bridge.consensus.subsystems.monitor
 
 import cats.effect.kernel.Async
-import org.typelevel.log4cats.Logger
 import org.plasmalabs.bridge.consensus.shared.{
   BTCConfirmationThreshold,
   BTCRetryThreshold,
@@ -11,6 +10,7 @@ import org.plasmalabs.bridge.consensus.shared.{
 }
 import org.plasmalabs.bridge.consensus.subsystems.monitor.{FSMTransition, PeginStateMachineState}
 import org.plasmalabs.sdk.models.{GroupId, SeriesId}
+import org.typelevel.log4cats.Logger
 
 object MonitorTransitionRelation
     extends TransitionToEffect

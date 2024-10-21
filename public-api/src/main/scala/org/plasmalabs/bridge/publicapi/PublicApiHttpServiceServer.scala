@@ -6,8 +6,6 @@ import io.circe.generic.auto._
 import org.http4s.circe._
 import org.http4s.headers.`Content-Type`
 import org.http4s.{HttpRoutes, _}
-import org.typelevel.log4cats.Logger
-import org.typelevel.log4cats.syntax._
 import org.plasmalabs.bridge.shared.{
   BridgeContants,
   BridgeError,
@@ -22,6 +20,8 @@ import org.plasmalabs.bridge.shared.{
   StartSessionOperation,
   StateMachineServiceGrpcClient
 }
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.syntax._
 
 object PublicApiHttpServiceServer {
 

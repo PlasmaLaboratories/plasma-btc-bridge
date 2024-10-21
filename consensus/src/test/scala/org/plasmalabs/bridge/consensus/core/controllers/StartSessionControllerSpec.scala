@@ -58,16 +58,16 @@ class StartSessionControllerSpec
       walletKeyApi
     )
     implicit val walletStateAlgebra = WalletStateApi
-      .make[IO](walletResource(toplWalletDb), walletApi)
+      .make[IO](walletResource[IO](toplWalletDb), walletApi)
     implicit val transactionBuilderApi = TransactionBuilderApi.make[IO](
       StrataPrivatenet.networkId,
       NetworkConstants.MAIN_LEDGER_ID
     )
 
     implicit val fellowshipStorageApi =
-      FellowshipStorageApi.make(walletResource(toplWalletDb))
+      FellowshipStorageApi.make(walletResource[IO](toplWalletDb))
     implicit val templateStorageApi =
-      TemplateStorageApi.make(walletResource(toplWalletDb))
+      TemplateStorageApi.make(walletResource[IO](toplWalletDb))
     assertIOBoolean(
       (for {
         km0 <- KeyGenerationUtils.createKeyManager[IO](
@@ -113,16 +113,16 @@ class StartSessionControllerSpec
       walletKeyApi
     )
     implicit val walletStateAlgebra = WalletStateApi
-      .make[IO](walletResource(toplWalletDb), walletApi)
+      .make[IO](walletResource[IO](toplWalletDb), walletApi)
     implicit val transactionBuilderApi = TransactionBuilderApi.make[IO](
       StrataPrivatenet.networkId,
       NetworkConstants.MAIN_LEDGER_ID
     )
 
     implicit val fellowshipStorageApi =
-      FellowshipStorageApi.make(walletResource(toplWalletDb))
+      FellowshipStorageApi.make(walletResource[IO](toplWalletDb))
     implicit val templateStorageApi =
-      TemplateStorageApi.make(walletResource(toplWalletDb))
+      TemplateStorageApi.make(walletResource[IO](toplWalletDb))
     assertIOBoolean((for {
       keypair <- walletManagementUtils.loadKeys(
         toplWalletFile,
@@ -166,16 +166,16 @@ class StartSessionControllerSpec
       walletKeyApi
     )
     implicit val walletStateAlgebra = WalletStateApi
-      .make[IO](walletResource(toplWalletDb), walletApi)
+      .make[IO](walletResource[IO](toplWalletDb), walletApi)
     implicit val transactionBuilderApi = TransactionBuilderApi.make[IO](
       StrataPrivatenet.networkId,
       NetworkConstants.MAIN_LEDGER_ID
     )
 
     implicit val fellowshipStorageApi =
-      FellowshipStorageApi.make(walletResource(toplWalletDb))
+      FellowshipStorageApi.make(walletResource[IO](toplWalletDb))
     implicit val templateStorageApi =
-      TemplateStorageApi.make(walletResource(toplWalletDb))
+      TemplateStorageApi.make(walletResource[IO](toplWalletDb))
 
     assertIOBoolean(
       (for {

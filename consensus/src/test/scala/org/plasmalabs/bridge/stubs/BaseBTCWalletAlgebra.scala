@@ -2,8 +2,8 @@ package org.plasmalabs.bridge.stubs
 
 import cats.effect.IO
 import org.bitcoins.crypto.{ECDigitalSignature, ECPublicKey}
-import scodec.bits.ByteVector
 import org.plasmalabs.bridge.consensus.core.managers.BTCWalletAlgebra
+import scodec.bits.ByteVector
 
 class BaseBTCWalletAlgebra extends BTCWalletAlgebra[IO] {
 

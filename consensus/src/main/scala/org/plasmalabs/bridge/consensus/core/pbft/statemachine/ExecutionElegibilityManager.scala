@@ -1,8 +1,8 @@
 package org.plasmalabs.bridge.consensus.core.pbft.statemachine
 
 import cats.effect.kernel.{Ref, Sync}
-import org.typelevel.log4cats.Logger
 import org.plasmalabs.bridge.shared.{ReplicaCount, StateMachineRequest}
+import org.typelevel.log4cats.Logger
 
 private[statemachine] trait ExecutionElegibilityManager[F[_]] {
 

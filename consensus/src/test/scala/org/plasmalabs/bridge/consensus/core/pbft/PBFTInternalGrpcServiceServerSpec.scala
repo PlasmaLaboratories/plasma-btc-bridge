@@ -7,11 +7,11 @@ import fs2.io.process
 import io.grpc.Metadata
 import munit.CatsEffectSuite
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.typelevel.log4cats.Logger
 import org.plasmalabs.bridge.consensus.core.{PublicApiClientGrpcMap, stateDigest}
 import org.plasmalabs.bridge.consensus.pbft.{CheckpointRequest, PBFTInternalServiceFs2Grpc}
 import org.plasmalabs.bridge.shared.BridgeCryptoUtils
 import org.plasmalabs.bridge.stubs.{BaseLogger, BaseStorageApi}
+import org.typelevel.log4cats.Logger
 
 import java.security.Security
 

@@ -1,8 +1,6 @@
 package org.plasmalabs.bridge.consensus.shared.persistence
 
 import org.bitcoins.core.currency.Satoshis
-import quivr.models.Int128
-import scodec.bits.ByteVector
 import org.plasmalabs.bridge.consensus.protobuf.BlockchainEvent.Event.{
   BtcFundsDeposited => BtcFundsDepositedEvent,
   BtcFundsWithdrawn,
@@ -36,6 +34,8 @@ import org.plasmalabs.bridge.consensus.subsystems.monitor.{
   SkippedBTCBlock,
   SkippedStrataBlock
 }
+import quivr.models.Int128
+import scodec.bits.ByteVector
 
 trait DeserializationOps {
 

@@ -6,8 +6,8 @@ import org.bitcoins.core.hd.{BIP32Path, HDAccount, HDPath, HDPurposes}
 import org.bitcoins.core.wallet.keymanagement.KeyManagerParams
 import org.bitcoins.crypto.{AesPassword, ECDigitalSignature, ECPublicKey, HashType}
 import org.bitcoins.keymanager.bip39.BIP39KeyManager
-import scodec.bits.ByteVector
 import org.plasmalabs.bridge.consensus.core.BitcoinNetworkIdentifiers
+import scodec.bits.ByteVector
 
 object KeyGenerationUtils {
 

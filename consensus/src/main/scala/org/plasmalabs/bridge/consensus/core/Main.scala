@@ -11,9 +11,6 @@ import org.bitcoins.keymanager.bip39.BIP39KeyManager
 import org.bitcoins.rpc.client.common.BitcoindRpcClient
 import org.bitcoins.rpc.config.BitcoindAuthCredentials
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.typelevel.log4cats.Logger
-import org.typelevel.log4cats.syntax._
-import scopt.OParser
 import org.plasmalabs.bridge.consensus.core.managers.{BTCWalletAlgebra, BTCWalletAlgebraImpl}
 import org.plasmalabs.bridge.consensus.core.modules.AppModule
 import org.plasmalabs.bridge.consensus.core.utils.KeyGenerationUtils
@@ -46,6 +43,9 @@ import org.plasmalabs.sdk.dataApi.NodeQueryAlgebra
 import org.plasmalabs.sdk.models.{GroupId, SeriesId}
 import org.plasmalabs.sdk.monitoring.{BitcoinMonitor, NodeMonitor}
 import org.plasmalabs.sdk.utils.Encoding
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.syntax._
+import scopt.OParser
 
 import java.net.InetSocketAddress
 import java.security.{KeyPair => JKeyPair, PublicKey, Security}

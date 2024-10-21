@@ -2,7 +2,6 @@ package org.plasmalabs.bridge.consensus.core.managers
 
 import cats.effect.kernel.{Resource, Sync}
 import io.grpc.ManagedChannel
-import quivr.models.KeyPair
 import org.plasmalabs.crypto.signing.ExtendedEd25519
 import org.plasmalabs.quivr.runtime.{QuivrRuntimeError, QuivrRuntimeErrors}
 import org.plasmalabs.sdk.Context
@@ -18,6 +17,7 @@ import org.plasmalabs.sdk.validation.{
   TransactionSyntaxInterpreter
 }
 import org.plasmalabs.sdk.wallet.{CredentiallerInterpreter, WalletApi}
+import quivr.models.KeyPair
 
 object TransactionAlgebra {
 

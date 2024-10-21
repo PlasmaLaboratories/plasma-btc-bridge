@@ -4,8 +4,8 @@ import cats.effect.kernel.{Ref, Sync}
 import org.bitcoins.core.hd.HDPath
 import org.bitcoins.crypto.{ECDigitalSignature, ECPublicKey, HashType}
 import org.bitcoins.keymanager.bip39.BIP39KeyManager
-import scodec.bits.ByteVector
 import org.plasmalabs.bridge.consensus.core.utils.KeyGenerationUtils
+import scodec.bits.ByteVector
 
 trait BTCWalletAlgebra[F[_]] {
   def getCurrentPubKeyAndPrepareNext(): F[(Int, ECPublicKey)]

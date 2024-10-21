@@ -3,10 +3,10 @@ package org.plasmalabs.bridge.consensus.core
 import cats.effect.kernel.Async
 import com.google.protobuf.ByteString
 import io.grpc.{ManagedChannel, Metadata}
-import org.typelevel.log4cats.Logger
-import org.typelevel.log4cats.syntax._
 import org.plasmalabs.bridge.consensus.service.{ResponseServiceFs2Grpc, StateMachineReply}
 import org.plasmalabs.bridge.shared.{BridgeCryptoUtils, Empty, ReplicaId}
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.syntax._
 
 import java.security.KeyPair
 

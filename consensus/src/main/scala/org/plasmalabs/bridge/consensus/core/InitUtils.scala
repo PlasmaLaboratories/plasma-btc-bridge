@@ -2,9 +2,9 @@ package org.plasmalabs.bridge.consensus.core
 
 import cats.effect.kernel.Sync
 import com.typesafe.config.Config
-import org.typelevel.log4cats.Logger
 import org.plasmalabs.bridge.shared.ReplicaId
 import org.plasmalabs.sdk.utils.Encoding
+import org.typelevel.log4cats.Logger
 
 trait InitUtils {
 

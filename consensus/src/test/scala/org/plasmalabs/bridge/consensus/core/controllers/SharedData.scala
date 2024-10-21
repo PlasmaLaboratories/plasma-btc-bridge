@@ -2,7 +2,6 @@ package org.plasmalabs.bridge.consensus.core.controllers
 
 import cats.effect.IO
 import com.google.protobuf.ByteString
-import org.typelevel.log4cats.SelfAwareStructuredLogger
 import org.plasmalabs.bridge.consensus.core.StrataPrivatenet
 import org.plasmalabs.bridge.consensus.shared.{
   BTCConfirmationThreshold,
@@ -13,6 +12,7 @@ import org.plasmalabs.bridge.consensus.shared.{
 }
 import org.plasmalabs.sdk.models.{GroupId, SeriesId}
 import org.plasmalabs.sdk.utils.Encoding
+import org.typelevel.log4cats.SelfAwareStructuredLogger
 
 trait SharedData {
 

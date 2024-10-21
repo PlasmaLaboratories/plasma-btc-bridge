@@ -1,7 +1,6 @@
 package org.plasmalabs.bridge.consensus.core.modules
 
 import cats.effect.kernel.Sync
-import quivr.models.KeyPair
 import org.plasmalabs.bridge.consensus.core.managers.CreateTxError
 import org.plasmalabs.indexer.services.Txo
 import org.plasmalabs.sdk.builders.TransactionBuilderApi
@@ -11,6 +10,7 @@ import org.plasmalabs.sdk.models.transaction.IoTransaction
 import org.plasmalabs.sdk.models.{Event, Indices, LockAddress}
 import org.plasmalabs.sdk.utils.Encoding
 import org.plasmalabs.sdk.wallet.WalletApi
+import quivr.models.KeyPair
 
 import TransactionBuilderApi.implicits._
 

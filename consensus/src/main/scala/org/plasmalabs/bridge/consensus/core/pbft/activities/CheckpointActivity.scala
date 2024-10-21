@@ -2,7 +2,6 @@ package org.plasmalabs.bridge.consensus.core.pbft.activities
 
 import cats.effect.kernel.Async
 import cats.implicits._
-import org.typelevel.log4cats.Logger
 import org.plasmalabs.bridge.consensus.core.pbft.statemachine.PBFTState
 import org.plasmalabs.bridge.consensus.core.pbft.{CheckpointIdentifier, CheckpointManager, StableCheckpoint}
 import org.plasmalabs.bridge.consensus.core.{KWatermark, WatermarkRef, stateDigest}
@@ -11,6 +10,7 @@ import org.plasmalabs.bridge.consensus.shared.persistence.StorageApi
 import org.plasmalabs.bridge.shared.implicits._
 import org.plasmalabs.bridge.shared.{Empty, ReplicaCount}
 import org.plasmalabs.sdk.utils.Encoding
+import org.typelevel.log4cats.Logger
 
 import java.security.PublicKey
 
