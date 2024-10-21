@@ -46,19 +46,17 @@ class NodeMonitor(
 }
 
 /**
-   * A wrapper for a Node Block Sync update.
-   */
-  trait NodeBlockSync {
-    // The node Block being wrapped. This represents either an Applied block or an Unapplied block
-    val block: FullBlockBody
-    val id: BlockId
-    val height: Long
-    def transactions[F[_]]: Stream[F, IoTransaction] = Stream.emits(block.transactions)
-  }
+ * A wrapper for a Node Block Sync update.
+ */
+trait NodeBlockSync {
+  // The node Block being wrapped. This represents either an Applied block or an Unapplied block
+  val block: FullBlockBody
+  val id: BlockId
+  val height: Long
+  def transactions[F[_]]: Stream[F, IoTransaction] = Stream.emits(block.transactions)
+}
 
 object NodeMonitor {
-
-  
 
   // Represents a new block applied to the chain tip
   case class AppliedNodeBlock(block: FullBlockBody, id: BlockId, height: Long) extends NodeBlockSync

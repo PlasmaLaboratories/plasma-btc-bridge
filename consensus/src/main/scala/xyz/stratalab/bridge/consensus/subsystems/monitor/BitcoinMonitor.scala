@@ -23,14 +23,14 @@ import xyz.stratalab.bridge.consensus.subsystems.monitor.BitcoinMonitor.AppliedB
 import xyz.stratalab.bridge.consensus.subsystems.monitor.BitcoinMonitor.UnappliedBitcoinBlock
 
 /**
-   * A wrapper for a bitcoin Block update.
-   */
-  trait BitcoinBlockSync {
-    val block: Block
-    val height: Int
+ * A wrapper for a bitcoin Block update.
+ */
+trait BitcoinBlockSync {
+  val block: Block
+  val height: Int
 
-    def transactions[F[_]]: Stream[F, Transaction] = Stream.emits(block.transactions)
-  }
+  def transactions[F[_]]: Stream[F, Transaction] = Stream.emits(block.transactions)
+}
 
 /**
  * Class to monitor incoming bitcoin blocks via a queue.
@@ -186,8 +186,6 @@ object BitcoinMonitor {
       )
     )
   }
-
-  
 
   // Represents a new block applied to the chain tip
   case class AppliedBitcoinBlock(block: Block, height: Int) extends BitcoinBlockSync
