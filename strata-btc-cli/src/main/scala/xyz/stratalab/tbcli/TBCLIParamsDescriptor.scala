@@ -1,10 +1,10 @@
 package xyz.stratalab.tbcli
 
-// import co.topl.shared.BitcoinNetworkIdentifiers
+// import xyz.stratalab.shared.BitcoinNetworkIdentifiers
 // import scopt.OParser
 
 trait TBCLIParamsDescriptor {
-  // import co.topl.bridge.ParamParser._
+  // import xyz.stratalab.bridge.ParamParser._
 
   // val builder = OParser.builder[StrataBTCCLIParamConfig]
 

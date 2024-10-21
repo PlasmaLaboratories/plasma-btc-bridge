@@ -1,7 +1,7 @@
 package xyz.stratalab.bridge.consensus.core
 
-import co.topl.brambl.models.{GroupId, SeriesId}
 import org.bitcoins.core.currency.{CurrencyUnit, SatoshisLong}
+import xyz.stratalab.sdk.models.{GroupId, SeriesId}
 
 import java.io.File
 

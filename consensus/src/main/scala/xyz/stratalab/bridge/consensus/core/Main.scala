@@ -3,10 +3,6 @@ package xyz.stratalab.bridge.consensus.core
 import cats.effect.kernel.{Async, Ref, Sync}
 import cats.effect.std.{Mutex, Queue}
 import cats.effect.{ExitCode, IO, IOApp}
-import co.topl.brambl.dataApi.BifrostQueryAlgebra
-import co.topl.brambl.models.{GroupId, SeriesId}
-import co.topl.brambl.monitoring.{BifrostMonitor, BitcoinMonitor}
-import co.topl.brambl.utils.Encoding
 import com.google.protobuf.ByteString
 import com.typesafe.config.{Config, ConfigFactory}
 import io.grpc.netty.NettyServerBuilder
@@ -30,7 +26,7 @@ import xyz.stratalab.bridge.consensus.service.StateMachineServiceFs2Grpc
 import xyz.stratalab.bridge.consensus.shared.BTCRetryThreshold
 import xyz.stratalab.bridge.consensus.shared.persistence.{StorageApi, StorageApiImpl}
 import xyz.stratalab.bridge.consensus.shared.utils.ConfUtils._
-import xyz.stratalab.bridge.consensus.subsystems.monitor.{BlockProcessor, SessionEvent}
+import xyz.stratalab.bridge.consensus.subsystems.monitor.{BitcoinMonitor, BlockProcessor, NodeMonitor, SessionEvent}
 import xyz.stratalab.bridge.shared.{
   BridgeCryptoUtils,
   BridgeError,
@@ -46,6 +42,9 @@ import xyz.stratalab.bridge.shared.{
   StateMachineServiceGrpcClientImpl
 }
 import xyz.stratalab.consensus.core.{PBFTInternalGrpcServiceClient, PBFTInternalGrpcServiceClientImpl}
+import xyz.stratalab.sdk.dataApi.NodeQueryAlgebra
+import xyz.stratalab.sdk.models.{GroupId, SeriesId}
+import xyz.stratalab.sdk.utils.Encoding
 
 import java.net.InetSocketAddress
 import java.security.{KeyPair => JKeyPair, PublicKey, Security}
@@ -316,7 +315,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
       _           <- requestStateManager.startProcessingEvents()
       _           <- IO.asyncForIO.background(bridgeStateMachineExecutionManager.runStream().compile.drain)
       pbftService <- pbftServiceResource
-      bifrostQueryAlgebra = BifrostQueryAlgebra
+      nodeQueryAlgebra = NodeQueryAlgebra
         .make[IO](
           channelResource(
             params.toplHost,
@@ -329,11 +328,11 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         zmqHost = params.zmqHost,
         zmqPort = params.zmqPort
       )
-      bifrostMonitor <- BifrostMonitor(
+      nodeMonitor <- NodeMonitor(
         params.toplHost,
         params.toplPort,
         params.toplSecureConnection,
-        bifrostQueryAlgebra
+        nodeQueryAlgebra
       )
       _              <- storageApi.initializeStorage().toResource
       currentViewRef <- Ref[IO].of(0L).toResource
@@ -347,7 +346,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
       grpcService <- grpcServiceResource
       _ <- getAndSetCurrentStrataHeight(
         currentStrataHeight,
-        bifrostQueryAlgebra
+        nodeQueryAlgebra
       ).toResource
       _ <- getAndSetCurrentBitcoinHeight(
         currentBitcoinNetworkHeight,
@@ -355,7 +354,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
       ).toResource
       _ <- getAndSetCurrentStrataHeight( // we do this again in case the BTC height took too much time to get
         currentStrataHeight,
-        bifrostQueryAlgebra
+        nodeQueryAlgebra
       ).toResource
       replicaGrpcListener <- NettyServerBuilder
         .forAddress(new InetSocketAddress(replicaHost, replicaPort))
@@ -393,7 +392,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         .backgroundOn(
           btcMonitor
             .either(
-              bifrostMonitor
+              nodeMonitor
                 .handleErrorWith { e =>
                   e.printStackTrace()
                   fs2.Stream.empty
@@ -420,7 +419,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
 
   def getAndSetCurrentStrataHeight[F[_]: Async: Logger](
     currentStrataHeight: Ref[F, Long],
-    bqa:                 BifrostQueryAlgebra[F]
+    bqa:                 NodeQueryAlgebra[F]
   ) = {
     import cats.implicits._
     import scala.concurrent.duration._

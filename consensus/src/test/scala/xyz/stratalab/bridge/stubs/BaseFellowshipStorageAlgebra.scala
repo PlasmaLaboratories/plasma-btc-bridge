@@ -1,7 +1,7 @@
 package xyz.stratalab.bridge.stubs
 
 import cats.effect.IO
-import co.topl.brambl.dataApi.{FellowshipStorageAlgebra, WalletFellowship}
+import xyz.stratalab.sdk.dataApi.{FellowshipStorageAlgebra, WalletFellowship}
 
 class BaseFellowshipStorageAlgebra extends FellowshipStorageAlgebra[IO] {
 

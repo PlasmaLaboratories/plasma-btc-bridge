@@ -2,7 +2,6 @@ package xyz.stratalab.bridge.consensus.core.pbft.activities
 
 import cats.effect.kernel.Async
 import cats.implicits._
-import co.topl.brambl.utils.Encoding
 import org.typelevel.log4cats.Logger
 import xyz.stratalab.bridge.consensus.core.PublicApiClientGrpcMap
 import xyz.stratalab.bridge.consensus.core.pbft.{
@@ -16,6 +15,7 @@ import xyz.stratalab.bridge.consensus.pbft.PrePrepareRequest
 import xyz.stratalab.bridge.consensus.shared.persistence.StorageApi
 import xyz.stratalab.bridge.shared.ClientId
 import xyz.stratalab.bridge.shared.implicits._
+import xyz.stratalab.sdk.utils.Encoding
 
 import java.security.PublicKey
 

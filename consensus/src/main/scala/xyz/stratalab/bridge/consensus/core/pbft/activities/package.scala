@@ -2,12 +2,12 @@ package xyz.stratalab.bridge.consensus.core.pbft
 
 import cats.effect.kernel.{Async, Sync}
 import cats.implicits._
-import co.topl.brambl.utils.Encoding
 import xyz.stratalab.bridge.consensus.core.PublicApiClientGrpcMap
 import xyz.stratalab.bridge.consensus.pbft.PrePrepareRequest
 import xyz.stratalab.bridge.consensus.shared.persistence.StorageApi
 import xyz.stratalab.bridge.shared.implicits._
 import xyz.stratalab.bridge.shared.{BridgeCryptoUtils, ClientId, ReplicaCount}
+import xyz.stratalab.sdk.utils.Encoding
 
 import java.security.{MessageDigest, PublicKey}
 

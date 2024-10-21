@@ -1,10 +1,9 @@
 package xyz.stratalab.bridge.consensus.subsystems.monitor
 
-import co.topl.brambl.codecs.AddressCodecs
-import co.topl.brambl.models.box.Attestation
-import co.topl.brambl.monitoring.BifrostMonitor
-import co.topl.brambl.monitoring.BitcoinMonitor.BitcoinBlockSync
-import co.topl.brambl.utils.Encoding
+import xyz.stratalab.bridge.consensus.subsystems.monitor.BitcoinBlockSync
+import xyz.stratalab.sdk.codecs.AddressCodecs
+import xyz.stratalab.sdk.models.box.Attestation
+import xyz.stratalab.sdk.utils.Encoding
 
 import scala.util.Try
 
@@ -22,7 +21,7 @@ object BlockProcessor {
   def process[F[_]](
     initialBTCHeight:    Int,
     initialStrataHeight: Long
-  ): Either[BitcoinBlockSync, BifrostMonitor.BifrostBlockSync] => fs2.Stream[
+  ): Either[BitcoinBlockSync, NodeBlockSync] => fs2.Stream[
     F,
     BlockchainEvent
   ] = {
@@ -32,7 +31,7 @@ object BlockProcessor {
     var btcAscending = false
     var toplAscending = false
     def processAux[F[_]](
-      block: Either[BitcoinBlockSync, BifrostMonitor.BifrostBlockSync]
+      block: Either[BitcoinBlockSync, NodeBlockSync]
     ): fs2.Stream[F, BlockchainEvent] = block match {
       case Left(b) =>
         val allTransactions = fs2.Stream(
@@ -95,7 +94,7 @@ object BlockProcessor {
             transaction.inputs
               .filter(x => isLvlSeriesGroupOrAsset(x.value.value))
               .map { input =>
-                BifrostFundsWithdrawn(
+                NodeFundsWithdrawn(
                   b.height,
                   Encoding.encodeToBase58(input.address.id.value.toByteArray()),
                   input.address.index,
@@ -107,15 +106,15 @@ object BlockProcessor {
           ) ++ b.block.transactions.flatMap(transaction =>
             transaction.outputs.zipWithIndex.map { outputAndIdx =>
               val (output, idx) = outputAndIdx
-              val bifrostCurrencyUnit = toCurrencyUnit(output.value.value)
-              BifrostFundsDeposited(
+              val nodeCurrencyUnit = toCurrencyUnit(output.value.value)
+              NodeFundsDeposited(
                 b.height,
                 AddressCodecs.encodeAddress(output.address),
                 Encoding.encodeToBase58(
                   transaction.transactionId.get.value.toByteArray()
                 ),
                 idx,
-                bifrostCurrencyUnit
+                nodeCurrencyUnit
               )
             }
           ): _*

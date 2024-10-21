@@ -1,11 +1,11 @@
-package co.topl.brambl.cli.mockbase
+package xyz.stratalab.sdk.cli.mockbase
 
 import cats.data.ValidatedNel
-import co.topl.brambl.builders.locks.LockTemplate
-import co.topl.brambl.dataApi.WalletStateAlgebra
-import co.topl.brambl.models.Indices
-import co.topl.brambl.models.box.Lock
 import quivr.models.{KeyPair, Preimage, Proposition}
+import xyz.stratalab.sdk.builders.locks.LockTemplate
+import xyz.stratalab.sdk.dataApi.WalletStateAlgebra
+import xyz.stratalab.sdk.models.Indices
+import xyz.stratalab.sdk.models.box.Lock
 
 class BaseWalletStateAlgebra[F[_]] extends WalletStateAlgebra[F] {
 

@@ -42,3 +42,4 @@ integration/bridge.db
 integration/user-wallet.db
 
 .direnv
+/.idea/
