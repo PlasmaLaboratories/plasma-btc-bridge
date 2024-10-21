@@ -27,7 +27,23 @@ import xyz.stratalab.bridge.consensus.shared.BTCRetryThreshold
 import xyz.stratalab.bridge.consensus.shared.persistence.{StorageApi, StorageApiImpl}
 import xyz.stratalab.bridge.consensus.shared.utils.ConfUtils._
 import xyz.stratalab.bridge.consensus.subsystems.monitor.{BlockProcessor, SessionEvent}
-import xyz.stratalab.bridge.shared.{BridgeCryptoUtils, BridgeError, BridgeResponse, ClientCount, ClientId, ConsensusClientMessageId, PBFTInternalGrpcServiceClientRetryConfigImpl, ReplicaCount, ReplicaId, ReplicaNode, ResponseGrpcServiceServer, RetryPolicy, StateMachineServiceGrpcClient, StateMachineServiceGrpcClientImpl, StateMachineServiceGrpcClientRetryConfigImpl}
+import xyz.stratalab.bridge.shared.{
+  BridgeCryptoUtils,
+  BridgeError,
+  BridgeResponse,
+  ClientCount,
+  ClientId,
+  ConsensusClientMessageId,
+  PBFTInternalGrpcServiceClientRetryConfigImpl,
+  ReplicaCount,
+  ReplicaId,
+  ReplicaNode,
+  ResponseGrpcServiceServer,
+  RetryPolicy,
+  StateMachineServiceGrpcClient,
+  StateMachineServiceGrpcClientImpl,
+  StateMachineServiceGrpcClientRetryConfigImpl
+}
 import xyz.stratalab.consensus.core.{PBFTInternalGrpcServiceClient, PBFTInternalGrpcServiceClientImpl}
 import xyz.stratalab.sdk.dataApi.NodeQueryAlgebra
 import xyz.stratalab.sdk.models.{GroupId, SeriesId}
