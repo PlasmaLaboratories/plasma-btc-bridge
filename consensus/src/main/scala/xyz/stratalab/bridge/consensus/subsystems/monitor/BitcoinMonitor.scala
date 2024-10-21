@@ -4,6 +4,8 @@ import cats.effect.kernel.Resource
 import cats.effect.std.Queue
 import cats.effect.{IO, Ref}
 import fs2.{Pipe, Stream}
+import org.apache.pekko.actor.ActorSystem
+import org.bitcoins.core.api.tor.Socks5ProxyParams
 import org.bitcoins.core.config.NetworkParameters
 import org.bitcoins.core.protocol.blockchain.Block
 import org.bitcoins.core.protocol.transaction.Transaction
@@ -11,16 +13,13 @@ import org.bitcoins.crypto.DoubleSha256DigestBE
 import org.bitcoins.rpc.client.common.BitcoindRpcClient
 import org.bitcoins.rpc.config.{BitcoindAuthCredentials, BitcoindInstanceLocal, BitcoindInstanceRemote}
 import org.bitcoins.zmq.ZMQSubscriber
+import xyz.stratalab.bridge.consensus.subsystems.monitor.BitcoinMonitor.{AppliedBitcoinBlock, UnappliedBitcoinBlock}
 
 import java.io.File
 import java.net.{InetSocketAddress, URI}
 import scala.annotation.tailrec
 import scala.concurrent.duration.DurationInt
 import scala.concurrent.{Await, Future}
-import org.bitcoins.core.api.tor.Socks5ProxyParams
-import org.apache.pekko.actor.ActorSystem
-import xyz.stratalab.bridge.consensus.subsystems.monitor.BitcoinMonitor.AppliedBitcoinBlock
-import xyz.stratalab.bridge.consensus.subsystems.monitor.BitcoinMonitor.UnappliedBitcoinBlock
 
 /**
  * A wrapper for a bitcoin Block update.

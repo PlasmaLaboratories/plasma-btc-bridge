@@ -1,11 +1,11 @@
 package xyz.stratalab.bridge.consensus.subsystems.monitor
 
+import xyz.stratalab.bridge.consensus.subsystems.monitor.BitcoinBlockSync
 import xyz.stratalab.sdk.codecs.AddressCodecs
 import xyz.stratalab.sdk.models.box.Attestation
 import xyz.stratalab.sdk.utils.Encoding
 
 import scala.util.Try
-import xyz.stratalab.bridge.consensus.subsystems.monitor.BitcoinBlockSync
 
 object BlockProcessor {
 

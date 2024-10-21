@@ -26,7 +26,7 @@ import xyz.stratalab.bridge.consensus.service.StateMachineServiceFs2Grpc
 import xyz.stratalab.bridge.consensus.shared.BTCRetryThreshold
 import xyz.stratalab.bridge.consensus.shared.persistence.{StorageApi, StorageApiImpl}
 import xyz.stratalab.bridge.consensus.shared.utils.ConfUtils._
-import xyz.stratalab.bridge.consensus.subsystems.monitor.{BlockProcessor, SessionEvent}
+import xyz.stratalab.bridge.consensus.subsystems.monitor.{BitcoinMonitor, BlockProcessor, NodeMonitor, SessionEvent}
 import xyz.stratalab.bridge.shared.{
   BridgeCryptoUtils,
   BridgeError,
@@ -51,8 +51,6 @@ import java.security.{KeyPair => JKeyPair, PublicKey, Security}
 import java.util.concurrent.atomic.LongAdder
 import java.util.concurrent.{ConcurrentHashMap, Executors}
 import scala.concurrent.ExecutionContext
-import xyz.stratalab.bridge.consensus.subsystems.monitor.BitcoinMonitor
-import xyz.stratalab.bridge.consensus.subsystems.monitor.NodeMonitor
 
 case class SystemGlobalState(
   currentStatus: Option[String],

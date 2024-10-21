@@ -3,18 +3,17 @@ package xyz.stratalab.bridge.consensus.subsystems.monitor
 import cats.effect.IO
 import cats.effect.kernel.Resource
 import cats.implicits.{catsSyntaxParallelSequence1, toTraverseOps}
-import xyz.stratalab.sdk.dataApi.NodeQueryAlgebra
-import xyz.stratalab.sdk.dataApi.RpcChannelResource.channelResource
-import xyz.stratalab.sdk.display.blockIdDisplay.display
-import xyz.stratalab.sdk.models.transaction.IoTransaction
+import fs2.Stream
+import io.grpc.Metadata
+import xyz.stratalab.bridge.consensus.subsystems.monitor.NodeMonitor.{AppliedNodeBlock, UnappliedNodeBlock}
 import xyz.stratalab.consensus.models.{BlockHeader, BlockId}
 import xyz.stratalab.node.models.FullBlockBody
 import xyz.stratalab.node.services.SynchronizationTraversalRes.Status.{Applied, Empty, Unapplied}
 import xyz.stratalab.node.services.{NodeRpcFs2Grpc, SynchronizationTraversalReq, SynchronizationTraversalRes}
-import fs2.Stream
-import io.grpc.Metadata
-import xyz.stratalab.bridge.consensus.subsystems.monitor.NodeMonitor.AppliedNodeBlock
-import xyz.stratalab.bridge.consensus.subsystems.monitor.NodeMonitor.UnappliedNodeBlock
+import xyz.stratalab.sdk.dataApi.NodeQueryAlgebra
+import xyz.stratalab.sdk.dataApi.RpcChannelResource.channelResource
+import xyz.stratalab.sdk.display.blockIdDisplay.display
+import xyz.stratalab.sdk.models.transaction.IoTransaction
 
 /**
  * Class to monitor incoming node blocks via an iterator.
