@@ -165,7 +165,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
           ),
           NodeFundsWithdrawn(
             1L,
-            "bifrostTxId",
+            "nodeTxId",
             0,
             "strata-secret",
             AssetToken("groupId", "seriesId", 100L)
@@ -189,13 +189,13 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
             claimAddress = claimAddress,
             btcTxId = "txId",
             btcVout = 0,
-            utxoTxId = "bifrostTxId",
+            utxoTxId = "nodeTxId",
             utxoIndex = 0, // Added missing utxoIndex parameter
             amount = AssetToken("groupId", "seriesId", 100L)
           ),
           NodeFundsWithdrawn(
             1L,
-            "bifrostTxId",
+            "nodeTxId",
             0,
             "strata-secret",
             AssetToken("groupId", "seriesId", 100L)
@@ -222,7 +222,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
             claimAddress = claimAddress,
             btcTxId = "txId",
             btcVout = 0,
-            utxoTxId = "bifrostTxId",
+            utxoTxId = "nodeTxId",
             utxoIndex = 0,
             amount = AssetToken("groupId", "seriesId", 100L)
           ),
@@ -248,13 +248,13 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
             claimAddress = claimAddress,
             btcTxId = "txId",
             btcVout = 0,
-            utxoTxId = "bifrostTxId",
+            utxoTxId = "nodeTxId",
             utxoIndex = 0,
             amount = AssetToken("groupId", "seriesId", 100L)
           ),
           NodeFundsWithdrawn(
             1L,
-            "bifrostTxIdDifferent",
+            "nodeTxIdDifferent",
             0,
             "strata-secret",
             AssetToken("groupId", "seriesId", 100L)
@@ -271,13 +271,13 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
             claimAddress = claimAddress,
             btcTxId = "txId",
             btcVout = 0,
-            utxoTxId = "bifrostTxId",
+            utxoTxId = "nodeTxId",
             utxoIndex = 0,
             amount = AssetToken("groupId", "seriesId", 100L)
           ),
           NodeFundsWithdrawn(
             1L,
-            "bifrostTxId",
+            "nodeTxId",
             1,
             "strata-secret",
             AssetToken("groupId", "seriesId", 100L)
@@ -302,7 +302,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
             claimAddress = claimAddress,
             btcTxId = "txId",
             btcVout = 0,
-            utxoTxId = "bifrostTxId",
+            utxoTxId = "nodeTxId",
             utxoIndex = 0,
             amount = AssetToken("groupId", "seriesId", 100L)
           ),
@@ -319,7 +319,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
             claimAddress = claimAddress,
             btcTxId = "txId",
             btcVout = 0,
-            utxoTxId = "bifrostTxId",
+            utxoTxId = "nodeTxId",
             utxoIndex = 0,
             amount = AssetToken("groupId", "seriesId", 100L)
           ),
@@ -496,7 +496,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
           ),
           NodeFundsWithdrawn(
             1L,
-            "bifrostTxId",
+            "nodeTxId",
             0,
             "strata-secret",
             AssetToken("groupId", "seriesId", 100L)

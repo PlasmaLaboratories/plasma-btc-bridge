@@ -214,7 +214,7 @@ package object bridge extends ProcessOps {
     parse(bridgeNetwork)
       .map(x =>
         (((x.asArray.get.head \\ "Containers").head.asObject.map { x =>
-          x.filter(x => (x._2 \\ "Name").head.asString.get == "bifrost" + f"${id}%02d").values.head
+          x.filter(x => (x._2 \\ "Name").head.asString.get == "node" + f"${id}%02d").values.head
         }).get \\ "IPv4Address").head.asString.get
           .split("/")
           .head
@@ -390,8 +390,8 @@ package object bridge extends ProcessOps {
   val csParams = Seq(
     "launch",
     "-r",
-    "https://s01.oss.sonatype.org/content/repositories/releases",
-    "xyz.stratalab:brambl-cli_2.13:2.0.0-beta6",
+    "https://s01.oss.sonatype.org/content/repositories/staging",
+    "xyz.stratalab:strata-cli_2.13:0.0.0+196-15bc1892-SNAPSHOT",
     "--"
   )
 
@@ -403,13 +403,13 @@ package object bridge extends ProcessOps {
 
   val vkFile = "key.txt"
 
-  // brambl-cli wallet init --network private --password password --newwalletdb user-wallet.db --mnemonicfile user-wallet-mnemonic.txt --output user-wallet.json
+  // strata-cli wallet init --network private --password password --newwalletdb user-wallet.db --mnemonicfile user-wallet-mnemonic.txt --output user-wallet.json
 
   def getCurrentUtxosFromAddressP(id: Int, address: String) = process
     .ProcessBuilder(
       CS_CMD,
       csParams ++ Seq(
-        "genus-query",
+        "indexer-query",
         "utxo-by-address",
         "--host",
         "localhost",
@@ -429,7 +429,7 @@ package object bridge extends ProcessOps {
     .ProcessBuilder(
       CS_CMD,
       csParams ++ Seq(
-        "genus-query",
+        "indexer-query",
         "utxo-by-address",
         "--host",
         "localhost",
@@ -450,10 +450,10 @@ package object bridge extends ProcessOps {
 
   val secretMap = Map(1 -> "strata-secret", 2 -> "strata-secret01")
 
-  val bifrostHostMap =
+  val nodeHostMap =
     Map(1 -> "localhost", 2 -> "localhost")
 
-  val bifrostPortMap =
+  val nodePortMap =
     Map(1 -> 9084, 2 -> 9086)
 
   val shaSecretMap = Map(
@@ -461,7 +461,7 @@ package object bridge extends ProcessOps {
     2 -> "2d537c332fe62c45bfe38aea3ea7239163d49fa67b7c46031749eb982b2f6024"
   )
 
-  // brambl-cli templates add --walletdb user-wallet.db --template-name redeemBridge --lock-template
+  // strata-cli templates add --walletdb user-wallet.db --template-name redeemBridge --lock-template
   def addTemplateP(id: Int, sha256: String, min: Long, max: Long) = process
     .ProcessBuilder(
       CS_CMD,
@@ -478,7 +478,7 @@ package object bridge extends ProcessOps {
     )
     .spawn[IO]
 
-  // brambl-cli wallet import-vks --walletdb user-wallet.db --input-vks key.txt --fellowship-name bridge --template-name redeemBridge -w password -k user-wallet.json
+  // strata-cli wallet import-vks --walletdb user-wallet.db --input-vks key.txt --fellowship-name bridge --template-name redeemBridge -w password -k user-wallet.json
   def importVksP(id: Int) = process
     .ProcessBuilder(
       CS_CMD,
@@ -501,7 +501,7 @@ package object bridge extends ProcessOps {
     )
     .spawn[IO]
 
-  // brambl-cli wallet current-address --walletdb user-wallet.db
+  // strata-cli wallet current-address --walletdb user-wallet.db
   def currentAddressP(id: Int) = process
     .ProcessBuilder(
       CS_CMD,
@@ -526,7 +526,7 @@ package object bridge extends ProcessOps {
     )
     .spawn[IO]
 
-  // brambl-cli simple-transaction create --from-fellowship nofellowship --from-template genesis --from-interaction 1 -t ptetP7jshHTzLLp81RbPkeHKWFJWeE3ijH94TAmiBRPTUTj2htC31NyEWU8p -w password -o genesisTx.pbuf -n private -a 10 -h  localhost --port 9084  --keyfile user-keyfile.json --walletdb user-wallet.db --fee 10 --transfer-token lvl
+  // strata-cli simple-transaction create --from-fellowship nofellowship --from-template genesis --from-interaction 1 -t ptetP7jshHTzLLp81RbPkeHKWFJWeE3ijH94TAmiBRPTUTj2htC31NyEWU8p -w password -o genesisTx.pbuf -n private -a 10 -h  localhost --port 9084  --keyfile user-keyfile.json --walletdb user-wallet.db --fee 10 --transfer-token lvl
   def fundRedeemAddressTxP(id: Int, redeemAddress: String) = process
     .ProcessBuilder(
       CS_CMD,
@@ -571,7 +571,7 @@ package object bridge extends ProcessOps {
     )
     .spawn[IO]
 
-  // brambl-cli simple-transaction create --from-fellowship bridge --from-template redeemBridge -t ptetP7jshHTzLLp81RbPkeHKWFJWeE3ijH94TAmiBRPTUTj2htC31NyEWU8p -w password -o redeemTx.pbuf -n private -a 10 -h  localhost --port 9084  --keyfile user-keyfile.json --walletdb user-wallet.db --fee 10 --transfer-token asset
+  // strata-cli simple-transaction create --from-fellowship bridge --from-template redeemBridge -t ptetP7jshHTzLLp81RbPkeHKWFJWeE3ijH94TAmiBRPTUTj2htC31NyEWU8p -w password -o redeemTx.pbuf -n private -a 10 -h  localhost --port 9084  --keyfile user-keyfile.json --walletdb user-wallet.db --fee 10 --transfer-token asset
   def redeemAddressTxP(
     id:            Int,
     redeemAddress: String,
@@ -618,7 +618,7 @@ package object bridge extends ProcessOps {
     )
     .spawn[IO]
 
-  // brambl-cli tx prove -i fundRedeemTx.pbuf --walletdb user-wallet.db --keyfile user-keyfile.json -w password -o fundRedeemTxProved.pbuf
+  // strata-cli tx prove -i fundRedeemTx.pbuf --walletdb user-wallet.db --keyfile user-keyfile.json -w password -o fundRedeemTxProved.pbuf
   def proveFundRedeemAddressTxP(
     id:          Int,
     fileToProve: String,
@@ -644,7 +644,7 @@ package object bridge extends ProcessOps {
       )
       .spawn[IO]
 
-  // brambl-cli tx broadcast -i fundRedeemTxProved.pbuf -h localhost --port 9084
+  // strata-cli tx broadcast -i fundRedeemTxProved.pbuf -h localhost --port 9084
   def broadcastFundRedeemAddressTxP(txFile: String) = process
     .ProcessBuilder(
       CS_CMD,

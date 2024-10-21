@@ -316,7 +316,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
       _           <- requestStateManager.startProcessingEvents()
       _           <- IO.asyncForIO.background(bridgeStateMachineExecutionManager.runStream().compile.drain)
       pbftService <- pbftServiceResource
-      bifrostQueryAlgebra = NodeQueryAlgebra
+      nodeQueryAlgebra = NodeQueryAlgebra
         .make[IO](
           channelResource(
             params.toplHost,
@@ -329,11 +329,11 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         zmqHost = params.zmqHost,
         zmqPort = params.zmqPort
       )
-      bifrostMonitor <- NodeMonitor(
+      nodeMonitor <- NodeMonitor(
         params.toplHost,
         params.toplPort,
         params.toplSecureConnection,
-        bifrostQueryAlgebra
+        nodeQueryAlgebra
       )
       _              <- storageApi.initializeStorage().toResource
       currentViewRef <- Ref[IO].of(0L).toResource
@@ -347,7 +347,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
       grpcService <- grpcServiceResource
       _ <- getAndSetCurrentStrataHeight(
         currentStrataHeight,
-        bifrostQueryAlgebra
+        nodeQueryAlgebra
       ).toResource
       _ <- getAndSetCurrentBitcoinHeight(
         currentBitcoinNetworkHeight,
@@ -355,7 +355,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
       ).toResource
       _ <- getAndSetCurrentStrataHeight( // we do this again in case the BTC height took too much time to get
         currentStrataHeight,
-        bifrostQueryAlgebra
+        nodeQueryAlgebra
       ).toResource
       replicaGrpcListener <- NettyServerBuilder
         .forAddress(new InetSocketAddress(replicaHost, replicaPort))
@@ -393,7 +393,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         .backgroundOn(
           btcMonitor
             .either(
-              bifrostMonitor
+              nodeMonitor
                 .handleErrorWith { e =>
                   e.printStackTrace()
                   fs2.Stream.empty

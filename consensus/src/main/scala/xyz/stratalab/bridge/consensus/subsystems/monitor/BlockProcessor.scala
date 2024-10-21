@@ -107,7 +107,7 @@ object BlockProcessor {
           ) ++ b.block.transactions.flatMap(transaction =>
             transaction.outputs.zipWithIndex.map { outputAndIdx =>
               val (output, idx) = outputAndIdx
-              val bifrostCurrencyUnit = toCurrencyUnit(output.value.value)
+              val nodeCurrencyUnit = toCurrencyUnit(output.value.value)
               NodeFundsDeposited(
                 b.height,
                 AddressCodecs.encodeAddress(output.address),
@@ -115,7 +115,7 @@ object BlockProcessor {
                   transaction.transactionId.get.value.toByteArray()
                 ),
                 idx,
-                bifrostCurrencyUnit
+                nodeCurrencyUnit
               )
             }
           ): _*
