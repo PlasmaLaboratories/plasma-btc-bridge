@@ -48,7 +48,9 @@ mkdir -p node02
 chmod 777 node01
 chmod 777 node02
 # sed -i  -e 's/public/private/' staking/config.yaml
-export TIMESTAMP=`date --date="+10 seconds" +%s%N | cut -b1-13`
+# export TIMESTAMP=`date --date="+10 seconds" +%s%N | cut -b1-13`
+export TIMESTAMP=$(date -v+10S +%s000)
+
 echo > node01/config.yaml "\
 node:
   big-bang:
@@ -80,7 +82,9 @@ sleep 15
 # Prepare the environment
 echo "Preparing the environment"
 shopt -s expand_aliases
-alias strata-cli="cs launch -r https://s01.oss.sonatype.org/content/repositories/staging xyz.stratalab:strata-cli_2.13:0.0.0+196-15bc1892-SNAPSHOT -- "
+# alias strata-cli="cs launch -r https://s01.oss.sonatype.org/content/repositories/staging xyz.stratalab:strata-cli_2.13:0.0.0+196-15bc1892-SNAPSHOT -- "
+alias strata-cli="cs launch -r https://s01.oss.sonatype.org/content/repositories/releases co.topl:brambl-cli_2.13:2.0.0-beta6 -- "
+
 export BTC_USER=bitcoin
 export BTC_PASSWORD=password
 export STRATA_WALLET_DB=strata-wallet.db

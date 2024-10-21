@@ -27,20 +27,7 @@ import xyz.stratalab.bridge.consensus.shared.BTCRetryThreshold
 import xyz.stratalab.bridge.consensus.shared.persistence.{StorageApi, StorageApiImpl}
 import xyz.stratalab.bridge.consensus.shared.utils.ConfUtils._
 import xyz.stratalab.bridge.consensus.subsystems.monitor.{BlockProcessor, SessionEvent}
-import xyz.stratalab.bridge.shared.{
-  BridgeCryptoUtils,
-  BridgeError,
-  BridgeResponse,
-  ClientCount,
-  ClientId,
-  ConsensusClientMessageId,
-  ReplicaCount,
-  ReplicaId,
-  ReplicaNode,
-  ResponseGrpcServiceServer,
-  StateMachineServiceGrpcClient,
-  StateMachineServiceGrpcClientImpl
-}
+import xyz.stratalab.bridge.shared.{BridgeCryptoUtils, BridgeError, BridgeResponse, ClientCount, ClientId, ConsensusClientMessageId, PBFTInternalGrpcServiceClientRetryConfigImpl, ReplicaCount, ReplicaId, ReplicaNode, ResponseGrpcServiceServer, RetryPolicy, StateMachineServiceGrpcClient, StateMachineServiceGrpcClientImpl, StateMachineServiceGrpcClientRetryConfigImpl}
 import xyz.stratalab.consensus.core.{PBFTInternalGrpcServiceClient, PBFTInternalGrpcServiceClientImpl}
 import xyz.stratalab.sdk.dataApi.NodeQueryAlgebra
 import xyz.stratalab.sdk.models.{GroupId, SeriesId}
@@ -52,6 +39,7 @@ import java.security.{KeyPair => JKeyPair, PublicKey, Security}
 import java.util.concurrent.atomic.LongAdder
 import java.util.concurrent.{ConcurrentHashMap, Executors}
 import scala.concurrent.ExecutionContext
+import scala.concurrent.duration.FiniteDuration
 
 case class SystemGlobalState(
   currentStatus: Option[String],
@@ -246,7 +234,9 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
     clientId:           ClientId,
     replicaId:          ReplicaId,
     clientCount:        ClientCount,
-    replicaCount:       ReplicaCount
+    replicaCount:       ReplicaCount,
+    pbftInternalConfig: PBFTInternalGrpcServiceClientRetryConfigImpl,
+    stateMachineConf:   StateMachineServiceGrpcClientRetryConfigImpl
   ) = {
     import fs2.grpc.syntax.all._
     import scala.jdk.CollectionConverters._
@@ -260,6 +250,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         ConsensusClientMessageId,
         ConcurrentHashMap[Int, Int]
       ]()
+
     for {
       replicaKeyPair <- BridgeCryptoUtils
         .getKeyPair[IO](privateKeyFile)
@@ -316,7 +307,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
       _           <- requestStateManager.startProcessingEvents()
       _           <- IO.asyncForIO.background(bridgeStateMachineExecutionManager.runStream().compile.drain)
       pbftService <- pbftServiceResource
-      nodeQueryAlgebra = NodeQueryAlgebra
+      bifrostQueryAlgebra = NodeQueryAlgebra
         .make[IO](
           channelResource(
             params.toplHost,
@@ -329,11 +320,11 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         zmqHost = params.zmqHost,
         zmqPort = params.zmqPort
       )
-      nodeMonitor <- NodeMonitor(
+      bifrostMonitor <- NodeMonitor(
         params.toplHost,
         params.toplPort,
         params.toplSecureConnection,
-        nodeQueryAlgebra
+        bifrostQueryAlgebra
       )
       _              <- storageApi.initializeStorage().toResource
       currentViewRef <- Ref[IO].of(0L).toResource
@@ -347,7 +338,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
       grpcService <- grpcServiceResource
       _ <- getAndSetCurrentStrataHeight(
         currentStrataHeight,
-        nodeQueryAlgebra
+        bifrostQueryAlgebra
       ).toResource
       _ <- getAndSetCurrentBitcoinHeight(
         currentBitcoinNetworkHeight,
@@ -355,7 +346,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
       ).toResource
       _ <- getAndSetCurrentStrataHeight( // we do this again in case the BTC height took too much time to get
         currentStrataHeight,
-        nodeQueryAlgebra
+        bifrostQueryAlgebra
       ).toResource
       replicaGrpcListener <- NettyServerBuilder
         .forAddress(new InetSocketAddress(replicaHost, replicaPort))
@@ -393,7 +384,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         .backgroundOn(
           btcMonitor
             .either(
-              nodeMonitor
+              bifrostMonitor
                 .handleErrorWith { e =>
                   e.printStackTrace()
                   fs2.Stream.empty
@@ -489,6 +480,29 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
     implicit val logger =
       org.typelevel.log4cats.slf4j.Slf4jLogger
         .getLoggerFromName[IO]("consensus-" + f"${replicaId.id}%02d")
+
+    implicit val pbftInternalConfig = PBFTInternalGrpcServiceClientRetryConfigImpl(
+      retryPolicy = RetryPolicy(
+        initialDelay =
+          FiniteDuration.apply(conf.getInt("bridge.replica.clients.pbftInternal.retryPolicy.initialDelay"), "second"),
+        maxRetries = conf.getInt("bridge.replica.clients.pbftInternal.retryPolicy.maxRetries"),
+        delayMultiplier = conf.getInt("bridge.replica.clients.pbftInternal.retryPolicy.delayMultiplier")
+      )
+    )
+
+    implicit val stateMachineConf = StateMachineServiceGrpcClientRetryConfigImpl(
+      primaryResponseWait =
+        FiniteDuration.apply(conf.getInt("bridge.replica.clients.monitor.client.primaryResponseWait"), "second"),
+      otherReplicasResponseWait =
+        FiniteDuration.apply(conf.getInt("bridge.replica.clients.monitor.client.otherReplicasResponseWait"), "second"),
+      retryPolicy = RetryPolicy(
+        initialDelay =
+          FiniteDuration.apply(conf.getInt("bridge.replica.clients.monitor.client.retryPolicy.initialDelay"), "second"),
+        maxRetries = conf.getInt("bridge.replica.clients.monitor.client.retryPolicy.maxRetries"),
+        delayMultiplier = conf.getInt("bridge.replica.clients.monitor.client.retryPolicy.delayMultiplier")
+      )
+    )
+
     (for {
       _                  <- IO(Security.addProvider(new BouncyCastleProvider()))
       pegInKm            <- loadKeyPegin(params)

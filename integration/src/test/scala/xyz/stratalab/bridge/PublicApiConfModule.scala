@@ -34,6 +34,16 @@ trait PublicApiConfModule extends CommonSetupModule {
 ${replicasConfString(replicaCount)}
 |      }
 |    }
+|    # in seconds
+|    primaryResponseWait = 10 
+|    # in seconds
+|    otherReplicasResponseWait = 10 
+|    retryPolicy = {
+|     # in seconds
+|     initialDelay = 1
+|     maxRetries = 3
+|     delayMultiplier = 2
+|    }
 |  }
 |}
   """.trim().stripMargin
