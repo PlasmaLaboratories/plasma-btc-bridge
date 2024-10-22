@@ -79,7 +79,7 @@ jobs:
           ./cs setup --yes
           shopt -s expand_aliases
           mkdir ${{ github.workspace }}/data
-          alias plasma-cli="./cs launch -r https://s01.oss.sonatype.org/content/repositories/staging org.plasmalabs:plasma-cli_2.13:0.0.0+202-ce7d41d5-SNAPSHOT -- "
+          alias plasma-cli="./cs launch -r https://s01.oss.sonatype.org/content/repositories/staging org.plasmalabs:plasma-cli_2.13:0.0.0+203-7426795f-SNAPSHOT -- "
           plasma-cli node-query mint-block --nb-blocks 1 -h localhost  --port 9084 -s false
           export STRATA_WALLET_DB=${{ github.workspace }}/data/strata-wallet.db
           export STRATA_WALLET_JSON=${{ github.workspace }}/data/strata-wallet.json

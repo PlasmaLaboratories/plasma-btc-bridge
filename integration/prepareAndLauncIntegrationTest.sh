@@ -80,7 +80,7 @@ sleep 15
 # Prepare the environment
 echo "Preparing the environment"
 shopt -s expand_aliases
-alias plasma-cli="cs launch -r https://s01.oss.sonatype.org/content/repositories/staging org.plasmalabs:plasma-cli_2.13:0.0.0+202-ce7d41d5-SNAPSHOT -- "
+alias plasma-cli="cs launch -r https://s01.oss.sonatype.org/content/repositories/staging org.plasmalabs:plasma-cli_2.13:0.0.0+203-7426795f-SNAPSHOT -- "
 export BTC_USER=bitcoin
 export BTC_PASSWORD=password
 export STRATA_WALLET_DB=strata-wallet.db
