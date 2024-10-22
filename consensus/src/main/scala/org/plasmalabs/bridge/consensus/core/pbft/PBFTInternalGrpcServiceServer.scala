@@ -33,7 +33,7 @@ object PBFTInternalGrpcServiceServer {
     replicaCount:      ReplicaCount
   ) = new PBFTInternalServiceFs2Grpc[F, Metadata] {
 
-    override def newView(request: NewViewRequest, ctx: Metadata): F[Empty] = ???
+    override def newView(request: NewViewRequest, ctx: Metadata): F[Empty] = pbftReqProcessor.preProcessRequest(request) >> Empty().pure[F]
 
     override def viewChange(
       request: ViewChangeRequest,

@@ -15,6 +15,8 @@ import org.plasmalabs.bridge.shared.ReplicaCount
 import org.typelevel.log4cats.Logger
 
 import java.security.PublicKey
+import org.plasmalabs.bridge.consensus.pbft.NewViewRequest
+import org.plasmalabs.bridge.consensus.core.pbft.activities.NewViewActivity
 
 trait PBFTRequestPreProcessor[F[_]] {
 
@@ -22,7 +24,7 @@ trait PBFTRequestPreProcessor[F[_]] {
   def preProcessRequest(request: PrepareRequest): F[Unit]
   def preProcessRequest(request: CommitRequest): F[Unit]
   def preProcessRequest(request: ViewChangeRequest): F[Unit]
-
+  def preProcessRequest(request: NewViewRequest): F[Unit]
 }
 
 object PBFTRequestPreProcessorImpl {
@@ -92,6 +94,9 @@ object PBFTRequestPreProcessorImpl {
 
     override def preProcessRequest(request: ViewChangeRequest): F[Unit] =
       ViewChangeActivity(request, replicaKeysMap)
+
+    override def preProcessRequest(request: NewViewRequest): F[Unit] =
+      NewViewActivity(request)(replicaKeysMap)
 
   }
 }
