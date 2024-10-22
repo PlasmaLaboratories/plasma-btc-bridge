@@ -133,78 +133,83 @@ class PBFTInternalGrpcServiceServerSpec extends CatsEffectSuite with PBFTInterna
       )
     ]("server") {
       def apply() = {
-      Security.addProvider(new BouncyCastleProvider());
-      implicit val storageApiStub = new BaseStorageApi() {
-        override def getPrePrepareMessage(
-        viewNumber:     Long,
-        sequenceNumber: Long
-      ): IO[Option[PrePrepareRequest]] =
-          IO.pure(
-            Some(
-              PrePrepareRequest(
-                sequenceNumber = 0L,
-                digest = ByteString.EMPTY,
-                viewNumber = 0L,
-                signature = ByteString.EMPTY
+        Security.addProvider(new BouncyCastleProvider());
+        implicit val storageApiStub = new BaseStorageApi() {
+
+          override def getPrePrepareMessage(
+            viewNumber:     Long,
+            sequenceNumber: Long
+          ): IO[Option[PrePrepareRequest]] =
+            IO.pure(
+              Some(
+                PrePrepareRequest(
+                  sequenceNumber = 0L,
+                  digest = ByteString.EMPTY,
+                  viewNumber = 0L,
+                  signature = ByteString.EMPTY
+                )
               )
             )
-          )
-           override def insertPrePrepareMessage(
-    prePrepare: PrePrepareRequest
-  ): IO[Boolean] = IO(true)
-        override def getCheckpointMessage(
-          sequenceNumber: Long,
-          replicaId:      Int
-        ): IO[Option[CheckpointRequest]] =
-          IO.pure(
-            Some(
-              CheckpointRequest(
-                sequenceNumber = 0L,
-                digest = ByteString.EMPTY,
-                replicaId = 1,
-                signature = ByteString.EMPTY
+
+          override def insertPrePrepareMessage(
+            prePrepare: PrePrepareRequest
+          ): IO[Boolean] = IO(true)
+
+          override def getCheckpointMessage(
+            sequenceNumber: Long,
+            replicaId:      Int
+          ): IO[Option[CheckpointRequest]] =
+            IO.pure(
+              Some(
+                CheckpointRequest(
+                  sequenceNumber = 0L,
+                  digest = ByteString.EMPTY,
+                  replicaId = 1,
+                  signature = ByteString.EMPTY
+                )
               )
             )
+        }
+        val keyPair = BridgeCryptoUtils.getKeyPair[IO](privateKeyFile).use(IO.pure).unsafeRunSync()
+        val temp = new PublicApiClientGrpc[IO] {
+
+          def replyStartPegin(
+            timestamp:       Long,
+            currentView:     Long,
+            startSessionRes: StateMachineReply.Result
+          ): IO[Empty] = IO(Empty())
+        }
+        implicit val publicApiClientGrpcMap = new PublicApiClientGrpcMap[IO](
+          Map(
+            ClientId(0) -> (temp, keyPair.getPublic())
           )
-      }
-      val keyPair = BridgeCryptoUtils.getKeyPair[IO](privateKeyFile).use(IO.pure).unsafeRunSync()
-      val temp = new PublicApiClientGrpc[IO] {
-            def replyStartPegin(
-    timestamp:       Long,
-    currentView:     Long,
-    startSessionRes: StateMachineReply.Result
-  ): IO[Empty] = IO(Empty())
-          }
-      implicit val publicApiClientGrpcMap = new PublicApiClientGrpcMap[IO](
-        Map(
-          ClientId(0) -> (temp, keyPair.getPublic())
         )
-      )
-      import cats.implicits._
+        import cats.implicits._
 
-      (for {
-        loggedError   <- Ref.of[IO, List[String]](List.empty).toResource
-        loggedWarning <- Ref.of[IO, List[String]](List.empty).toResource
-      } yield {
-        implicit val logger: Logger[IO] =
-          new BaseLogger() {
+        (for {
+          loggedError   <- Ref.of[IO, List[String]](List.empty).toResource
+          loggedWarning <- Ref.of[IO, List[String]](List.empty).toResource
+        } yield {
+          implicit val logger: Logger[IO] =
+            new BaseLogger() {
 
-            override def error(message: => String): IO[Unit] =
-              loggedError.update(_ :+ message)
+              override def error(message: => String): IO[Unit] =
+                loggedError.update(_ :+ message)
 
-            override def warn(message: => String): IO[Unit] =
-              loggedWarning.update(_ :+ message)
-          }
-        for {
-          serverUnderTest <- createSimpleInternalServer()
-        } yield (serverUnderTest, loggedError, loggedWarning)
-      }).flatten.use(IO.pure).unsafeRunSync()
+              override def warn(message: => String): IO[Unit] =
+                loggedWarning.update(_ :+ message)
+            }
+          for {
+            serverUnderTest <- createSimpleInternalServer()
+          } yield (serverUnderTest, loggedError, loggedWarning)
+        }).flatten.use(IO.pure).unsafeRunSync()
       }
     }
   override def munitFixtures = List(setupServer)
+
   test(
     "checkpoint should throw exception and log error on invalid signature"
-  ) { 
+  ) {
     val (server, errorChecker, _) = setupServer()
     assertIO(
       for {
@@ -223,7 +228,7 @@ class PBFTInternalGrpcServiceServerSpec extends CatsEffectSuite with PBFTInterna
       true
     )
   }
-  
+
   test(
     "checkpoint should throw exception and log error on invalid signature (invalid digest)"
   ) {
@@ -244,9 +249,11 @@ class PBFTInternalGrpcServiceServerSpec extends CatsEffectSuite with PBFTInterna
           checkpointRequest.signableBytes
         )
         _ <- server.checkpoint(
-          checkpointRequest.withSignature(
-            ByteString.copyFrom(signedBytes)
-          ).withDigest(ByteString.EMPTY),
+          checkpointRequest
+            .withSignature(
+              ByteString.copyFrom(signedBytes)
+            )
+            .withDigest(ByteString.EMPTY),
           new Metadata()
         )
         errorMessage <- errorChecker.get
@@ -322,6 +329,7 @@ class PBFTInternalGrpcServiceServerSpec extends CatsEffectSuite with PBFTInterna
       true
     )
   }
+
   test(
     "prePrepare should throw exception and log error on invalid signature"
   ) {
@@ -345,7 +353,7 @@ class PBFTInternalGrpcServiceServerSpec extends CatsEffectSuite with PBFTInterna
     )
   }
 
-    test(
+  test(
     "prePrepare should throw exception and log error on invalid signature (invalid digest)"
   ) {
     val (server, errorChecker, _) = setupServer()
@@ -365,9 +373,11 @@ class PBFTInternalGrpcServiceServerSpec extends CatsEffectSuite with PBFTInterna
           preprepareReq.signableBytes
         )
         _ <- server.prePrepare(
-          preprepareReq.withSignature(
-            ByteString.copyFrom(signedBytes)
-          ).withDigest(ByteString.EMPTY),
+          preprepareReq
+            .withSignature(
+              ByteString.copyFrom(signedBytes)
+            )
+            .withDigest(ByteString.EMPTY),
           new Metadata()
         )
         errorMessage <- errorChecker.get
