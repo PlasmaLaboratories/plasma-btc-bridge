@@ -1,4 +1,4 @@
-FROM ghcr.io/plasmalaboratories/strata-node:0.0.0-8202-06ff79d9
+FROM ghcr.io/plasmalaboratories/plasma-node:0.0.0-8215-792f55b2
 USER root
 RUN curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz" | gzip -d > cs
 RUN chmod +x cs
