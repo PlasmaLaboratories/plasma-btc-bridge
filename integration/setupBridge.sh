@@ -1,7 +1,7 @@
 #!/bin/bash
 
 shopt -s expand_aliases
-alias plasma-cli="cs launch -r https://s01.oss.sonatype.org/content/repositories/staging org.plasmalabs:plasma-cli_2.13:0.0.0+203-7426795f-SNAPSHOT -- "
+alias plasma-cli="cs launch -r https://s01.oss.sonatype.org/content/repositories/staging org.plasmalabs:plasma-cli_2.13:0.0.0+204-3feec2e9-SNAPSHOT -- "
 export BTC_USER=bitcoin
 export BTC_PASSWORD=password
 export TOPL_WALLET_DB=topl-wallet.db
