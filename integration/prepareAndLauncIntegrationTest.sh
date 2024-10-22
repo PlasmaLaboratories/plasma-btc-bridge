@@ -68,10 +68,10 @@ node:
     stakes: [10000, 10000]
 "
 
-export CONTAINER_ID=`docker run --rm -d --name node01 -p 9085:9085 -p 9084:9084 -p 9091:9091 -v $(pwd)/node01:/staking:rw stratalab/plasma-node-tooling:0.0.0-8215-792f55b --  --config  /staking/config.yaml --regtest`
+export CONTAINER_ID=`docker run --rm -d --name node01 -p 9085:9085 -p 9084:9084 -p 9091:9091 -v $(pwd)/node01:/staking:rw stratalab/plasma-node-tooling:0.0.0-8215-792f55b2b --  --config  /staking/config.yaml --regtest`
 export IP_CONTAINER=`docker network inspect bridge | jq  ".[0].Containers.\"$CONTAINER_ID\".IPv4Address" | sed  's:"::g' | sed -n 's:\(.*\)/.*:\1:p'`
 echo "IP_CONTAINER: $IP_CONTAINER"
-docker run --rm -d --name node02 -e NODE_P2P_KNOWN_PEERS=$IP_CONTAINER:9085 -p 9087:9085 -p 9086:9084 -p 9092:9091 -v $(pwd)/node02:/staking:rw stratalab/plasma-node-tooling:0.0.0-8215-792f55b --  --config  /staking/config.yaml --regtest
+docker run --rm -d --name node02 -e NODE_P2P_KNOWN_PEERS=$IP_CONTAINER:9085 -p 9087:9085 -p 9086:9084 -p 9092:9091 -v $(pwd)/node02:/staking:rw stratalab/plasma-node-tooling:0.0.0-8215-792f55b2b --  --config  /staking/config.yaml --regtest
 
 echo "Waiting for node to start"
 # Wait for node to start
