@@ -62,7 +62,7 @@ trait ProcessOps {
   def mintBlockDockerSeq(node: Int, nbBlocks: Int) = Seq(
     "exec",
     "node" + f"${node}%02d",
-    "strata-cli",
+    "plasma-cli",
     "node-query",
     "mint-block",
     "--nb-blocks",
@@ -205,7 +205,7 @@ trait ProcessOps {
     )
     .spawn[IO]
 
-  // strata-cli fellowships add --walletdb user-wallet.db --fellowship-name bridge
+  // plasma-cli fellowships add --walletdb user-wallet.db --fellowship-name bridge
   def addFellowshipP(id: Int) = process
     .ProcessBuilder(
       CS_CMD,

@@ -403,7 +403,7 @@ package object bridge extends ProcessOps {
 
   val vkFile = "key.txt"
 
-  // strata-cli wallet init --network private --password password --newwalletdb user-wallet.db --mnemonicfile user-wallet-mnemonic.txt --output user-wallet.json
+  // plasma-cli wallet init --network private --password password --newwalletdb user-wallet.db --mnemonicfile user-wallet-mnemonic.txt --output user-wallet.json
 
   def getCurrentUtxosFromAddressP(id: Int, address: String) = process
     .ProcessBuilder(
@@ -461,7 +461,7 @@ package object bridge extends ProcessOps {
     2 -> "2d537c332fe62c45bfe38aea3ea7239163d49fa67b7c46031749eb982b2f6024"
   )
 
-  // strata-cli templates add --walletdb user-wallet.db --template-name redeemBridge --lock-template
+  // plasma-cli templates add --walletdb user-wallet.db --template-name redeemBridge --lock-template
   def addTemplateP(id: Int, sha256: String, min: Long, max: Long) = process
     .ProcessBuilder(
       CS_CMD,
@@ -478,7 +478,7 @@ package object bridge extends ProcessOps {
     )
     .spawn[IO]
 
-  // strata-cli wallet import-vks --walletdb user-wallet.db --input-vks key.txt --fellowship-name bridge --template-name redeemBridge -w password -k user-wallet.json
+  // plasma-cli wallet import-vks --walletdb user-wallet.db --input-vks key.txt --fellowship-name bridge --template-name redeemBridge -w password -k user-wallet.json
   def importVksP(id: Int) = process
     .ProcessBuilder(
       CS_CMD,
@@ -501,7 +501,7 @@ package object bridge extends ProcessOps {
     )
     .spawn[IO]
 
-  // strata-cli wallet current-address --walletdb user-wallet.db
+  // plasma-cli wallet current-address --walletdb user-wallet.db
   def currentAddressP(id: Int) = process
     .ProcessBuilder(
       CS_CMD,
@@ -526,7 +526,7 @@ package object bridge extends ProcessOps {
     )
     .spawn[IO]
 
-  // strata-cli simple-transaction create --from-fellowship nofellowship --from-template genesis --from-interaction 1 -t ptetP7jshHTzLLp81RbPkeHKWFJWeE3ijH94TAmiBRPTUTj2htC31NyEWU8p -w password -o genesisTx.pbuf -n private -a 10 -h  localhost --port 9084  --keyfile user-keyfile.json --walletdb user-wallet.db --fee 10 --transfer-token lvl
+  // plasma-cli simple-transaction create --from-fellowship nofellowship --from-template genesis --from-interaction 1 -t ptetP7jshHTzLLp81RbPkeHKWFJWeE3ijH94TAmiBRPTUTj2htC31NyEWU8p -w password -o genesisTx.pbuf -n private -a 10 -h  localhost --port 9084  --keyfile user-keyfile.json --walletdb user-wallet.db --fee 10 --transfer-token lvl
   def fundRedeemAddressTxP(id: Int, redeemAddress: String) = process
     .ProcessBuilder(
       CS_CMD,
@@ -571,7 +571,7 @@ package object bridge extends ProcessOps {
     )
     .spawn[IO]
 
-  // strata-cli simple-transaction create --from-fellowship bridge --from-template redeemBridge -t ptetP7jshHTzLLp81RbPkeHKWFJWeE3ijH94TAmiBRPTUTj2htC31NyEWU8p -w password -o redeemTx.pbuf -n private -a 10 -h  localhost --port 9084  --keyfile user-keyfile.json --walletdb user-wallet.db --fee 10 --transfer-token asset
+  // plasma-cli simple-transaction create --from-fellowship bridge --from-template redeemBridge -t ptetP7jshHTzLLp81RbPkeHKWFJWeE3ijH94TAmiBRPTUTj2htC31NyEWU8p -w password -o redeemTx.pbuf -n private -a 10 -h  localhost --port 9084  --keyfile user-keyfile.json --walletdb user-wallet.db --fee 10 --transfer-token asset
   def redeemAddressTxP(
     id:            Int,
     redeemAddress: String,
@@ -618,7 +618,7 @@ package object bridge extends ProcessOps {
     )
     .spawn[IO]
 
-  // strata-cli tx prove -i fundRedeemTx.pbuf --walletdb user-wallet.db --keyfile user-keyfile.json -w password -o fundRedeemTxProved.pbuf
+  // plasma-cli tx prove -i fundRedeemTx.pbuf --walletdb user-wallet.db --keyfile user-keyfile.json -w password -o fundRedeemTxProved.pbuf
   def proveFundRedeemAddressTxP(
     id:          Int,
     fileToProve: String,
@@ -644,7 +644,7 @@ package object bridge extends ProcessOps {
       )
       .spawn[IO]
 
-  // strata-cli tx broadcast -i fundRedeemTxProved.pbuf -h localhost --port 9084
+  // plasma-cli tx broadcast -i fundRedeemTxProved.pbuf -h localhost --port 9084
   def broadcastFundRedeemAddressTxP(txFile: String) = process
     .ProcessBuilder(
       CS_CMD,
