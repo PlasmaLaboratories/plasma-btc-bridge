@@ -13,7 +13,7 @@ import scala.util.Try
 
 trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with PublicApiConfModule {
 
-  override val munitIOTimeout = Duration(250, "s")
+  override val munitIOTimeout = Duration(180, "s")
 
   implicit val logger: Logger[IO] =
     org.typelevel.log4cats.slf4j.Slf4jLogger
