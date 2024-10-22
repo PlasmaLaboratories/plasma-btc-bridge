@@ -85,8 +85,8 @@ object PBFTInternalGrpcServiceClientImpl {
         maxRetries:    Int,
         operationName: String,
         defaultValue:  => A
-      )(implicit F: Temporal[F]): F[A] =
-        operation.handleErrorWith { error =>
+      )(implicit F: Temporal[F]): F[A] = for {
+        result <- operation.handleErrorWith { error =>
           if (maxRetries > 0) {
             F.sleep(initialDelay) >> {
               trace"Retrying $operationName. Retries left: $maxRetries, Next delay: ${initialDelay * pbftInternalConfig.retryPolicy.delayMultiplier}" >>
@@ -103,6 +103,7 @@ object PBFTInternalGrpcServiceClientImpl {
             F.pure(defaultValue)
           }
         }
+      } yield result
 
       override def viewChange(request: ViewChangeRequest): F[Empty] =
         for {
