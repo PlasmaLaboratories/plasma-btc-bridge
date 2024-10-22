@@ -20,6 +20,10 @@ import org.plasmalabs.bridge.shared.ClientId
 import org.plasmalabs.bridge.shared.Empty
 import org.plasmalabs.bridge.consensus.core.PublicApiClientGrpc
 import org.plasmalabs.bridge.consensus.service.StateMachineReply
+import org.plasmalabs.bridge.consensus.pbft.PrepareRequest
+import org.plasmalabs.bridge.consensus.pbft.CommitRequest
+import org.plasmalabs.bridge.consensus.pbft.ViewChangeRequest
+import org.plasmalabs.bridge.consensus.pbft.NewViewRequest
 
 class PBFTInternalGrpcServiceServerSpec extends CatsEffectSuite with PBFTInternalGrpcServiceServerSpecAux {
 
@@ -135,25 +139,6 @@ class PBFTInternalGrpcServiceServerSpec extends CatsEffectSuite with PBFTInterna
       def apply() = {
         Security.addProvider(new BouncyCastleProvider());
         implicit val storageApiStub = new BaseStorageApi() {
-
-          override def getPrePrepareMessage(
-            viewNumber:     Long,
-            sequenceNumber: Long
-          ): IO[Option[PrePrepareRequest]] =
-            IO.pure(
-              Some(
-                PrePrepareRequest(
-                  sequenceNumber = 0L,
-                  digest = ByteString.EMPTY,
-                  viewNumber = 0L,
-                  signature = ByteString.EMPTY
-                )
-              )
-            )
-
-          override def insertPrePrepareMessage(
-            prePrepare: PrePrepareRequest
-          ): IO[Boolean] = IO(true)
 
           override def getCheckpointMessage(
             sequenceNumber: Long,
@@ -353,7 +338,7 @@ class PBFTInternalGrpcServiceServerSpec extends CatsEffectSuite with PBFTInterna
     )
   }
   
-    test(
+  test(
     "prePrepare should throw exception and log error on invalid pre-prepare payload signature"
   ) {
     val (server, errorChecker, _) = setupServer()
@@ -380,6 +365,80 @@ class PBFTInternalGrpcServiceServerSpec extends CatsEffectSuite with PBFTInterna
         )
         errorMessage <- errorChecker.get
       } yield errorMessage.head.contains("Invalid pre-prepare signature"),
+      true
+    )
+  }
+  test(
+    "prepare should throw exception and log error on invalid request signature"
+  ) {
+    val (server, errorChecker, _) = setupServer()
+    val prepareReq = PrepareRequest(
+      sequenceNumber = 0L,
+      digest = ByteString.EMPTY,
+      viewNumber = 0L,
+      signature = ByteString.EMPTY
+    )
+    assertIO(
+      for {
+        _ <- server.prepare(
+          prepareReq,
+          new Metadata()
+        )
+        errorMessage <- errorChecker.get
+      } yield errorMessage.head.contains("Invalid Prepare signature"),
+      true
+    )
+  }
+  test(
+    "commit should throw exception and log error on invalid request signature"
+  ) {
+    val (server, errorChecker, _) = setupServer()
+    val commitReq = CommitRequest(
+      sequenceNumber = 0L,
+      digest = ByteString.EMPTY,
+      viewNumber = 0L,
+      signature = ByteString.EMPTY
+    )
+    assertIO(
+      for {
+        _ <- server.commit(
+          commitReq,
+          new Metadata()
+        )
+        errorMessage <- errorChecker.get
+      } yield errorMessage.head.contains("Invalid commit signature"),
+      true
+    )
+  }
+  test(
+    "viewChange should throw exception and log error on invalid request signature"
+  ) {
+    val (server, errorChecker, _) = setupServer()
+    val vcReq = ViewChangeRequest()
+    assertIO(
+      for {
+        _ <- server.viewChange(
+          vcReq,
+          new Metadata()
+        )
+        errorMessage <- errorChecker.get
+      } yield errorMessage.head.contains("View Change: An invalid signature was found in the view change request"),
+      true
+    )
+  }
+  test(
+    "newView should throw exception and log error on invalid request signature"
+  ) {
+    val (server, errorChecker, _) = setupServer()
+    val nvReq = NewViewRequest()
+    assertIO(
+      for {
+        _ <- server.newView(
+          nvReq,
+          new Metadata()
+        )
+        errorMessage <- errorChecker.get
+      } yield errorMessage.head.contains("NewViewActivity: NewView signature validation failed"),
       true
     )
   }
