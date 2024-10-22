@@ -391,7 +391,7 @@ package object bridge extends ProcessOps {
     "launch",
     "-r",
     "https://s01.oss.sonatype.org/content/repositories/staging",
-    "org.plasmalabs:strata-cli_2.13:0.0.0+196-15bc1892-SNAPSHOT",
+    "org.plasmalabs:plasma-cli_2.13:0.0.0+202-ce7d41d5-SNAPSHOT",
     "--"
   )
 
