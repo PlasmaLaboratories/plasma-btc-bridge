@@ -3,7 +3,6 @@ on:
   workflow_call:
 
 jobs:
-
   unit-test:
     name: Run Unit Tests
     runs-on: ubuntu-20.04
@@ -169,4 +168,3 @@ jobs:
         with:
           recreate: true
           path: code-coverage-results.md
- 

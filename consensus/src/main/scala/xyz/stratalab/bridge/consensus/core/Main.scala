@@ -26,7 +26,7 @@ import xyz.stratalab.bridge.consensus.service.StateMachineServiceFs2Grpc
 import xyz.stratalab.bridge.consensus.shared.BTCRetryThreshold
 import xyz.stratalab.bridge.consensus.shared.persistence.{StorageApi, StorageApiImpl}
 import xyz.stratalab.bridge.consensus.shared.utils.ConfUtils._
-import xyz.stratalab.bridge.consensus.subsystems.monitor.{BlockProcessor, SessionEvent}
+import xyz.stratalab.bridge.consensus.subsystems.monitor.{BitcoinMonitor, BlockProcessor, NodeMonitor, SessionEvent}
 import xyz.stratalab.bridge.shared.{
   BridgeCryptoUtils,
   BridgeError,
@@ -44,7 +44,6 @@ import xyz.stratalab.bridge.shared.{
 import xyz.stratalab.consensus.core.{PBFTInternalGrpcServiceClient, PBFTInternalGrpcServiceClientImpl}
 import xyz.stratalab.sdk.dataApi.NodeQueryAlgebra
 import xyz.stratalab.sdk.models.{GroupId, SeriesId}
-import xyz.stratalab.sdk.monitoring.{BitcoinMonitor, NodeMonitor}
 import xyz.stratalab.sdk.utils.Encoding
 
 import java.net.InetSocketAddress
