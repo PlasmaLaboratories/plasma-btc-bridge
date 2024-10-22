@@ -41,7 +41,7 @@ ${replicasConfString(replicaCount)}
 |    retryPolicy = {
 |     # in seconds
 |     initialDelay = 1
-|     maxRetries = 3
+|     maxRetries = 1
 |     delayMultiplier = 2
 |    }
 |  }
