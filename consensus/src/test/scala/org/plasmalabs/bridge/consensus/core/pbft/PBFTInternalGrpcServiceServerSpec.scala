@@ -331,7 +331,7 @@ class PBFTInternalGrpcServiceServerSpec extends CatsEffectSuite with PBFTInterna
   }
 
   test(
-    "prePrepare should throw exception and log error on invalid signature"
+    "prePrepare should throw exception and log error on invalid request signature"
   ) {
     val (server, errorChecker, _) = setupServer()
     val preprepareReq = PrePrepareRequest(
@@ -352,17 +352,19 @@ class PBFTInternalGrpcServiceServerSpec extends CatsEffectSuite with PBFTInterna
       true
     )
   }
-
-  test(
-    "prePrepare should throw exception and log error on invalid signature (invalid digest)"
+  
+    test(
+    "prePrepare should throw exception and log error on invalid pre-prepare payload signature"
   ) {
     val (server, errorChecker, _) = setupServer()
     import org.plasmalabs.bridge.shared.implicits._
     val preprepareReq = PrePrepareRequest(
-      sequenceNumber = -1L,
-      digest = ByteString.copyFrom(stateDigest(Map.empty)),
-      payload = Some(StateMachineRequest())
+      sequenceNumber = 0L,
+      digest = ByteString.EMPTY,
+      signature = ByteString.EMPTY,
+      viewNumber = 0L
     )
+    val payload = StateMachineRequest()
     assertIO(
       for {
         replicaKeyPair <- BridgeCryptoUtils
@@ -370,20 +372,15 @@ class PBFTInternalGrpcServiceServerSpec extends CatsEffectSuite with PBFTInterna
           .use(IO.pure)
         signedBytes <- BridgeCryptoUtils.signBytes[IO](
           replicaKeyPair.getPrivate(),
-          preprepareReq.signableBytes
+          payload.signableBytes
         )
         _ <- server.prePrepare(
-          preprepareReq
-            .withSignature(
-              ByteString.copyFrom(signedBytes)
-            )
-            .withDigest(ByteString.EMPTY),
+          preprepareReq.withPayload(payload.withSignature(ByteString.copyFrom(signedBytes))),
           new Metadata()
         )
         errorMessage <- errorChecker.get
-      } yield errorMessage.head.contains("Invalid request signature"),
+      } yield errorMessage.head.contains("Invalid pre-prepare signature"),
       true
     )
   }
-
 }
