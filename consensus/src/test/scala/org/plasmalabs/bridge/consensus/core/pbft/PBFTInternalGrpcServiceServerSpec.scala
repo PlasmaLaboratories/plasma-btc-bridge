@@ -14,6 +14,12 @@ import org.plasmalabs.bridge.stubs.{BaseLogger, BaseStorageApi}
 import org.typelevel.log4cats.Logger
 
 import java.security.Security
+import org.plasmalabs.bridge.consensus.pbft.PrePrepareRequest
+import org.plasmalabs.bridge.shared.StateMachineRequest
+import org.plasmalabs.bridge.shared.ClientId
+import org.plasmalabs.bridge.shared.Empty
+import org.plasmalabs.bridge.consensus.core.PublicApiClientGrpc
+import org.plasmalabs.bridge.consensus.service.StateMachineReply
 
 class PBFTInternalGrpcServiceServerSpec extends CatsEffectSuite with PBFTInternalGrpcServiceServerSpecAux {
 
@@ -119,16 +125,33 @@ class PBFTInternalGrpcServiceServerSpec extends CatsEffectSuite with PBFTInterna
   }
 
   val setupServer =
-    ResourceFunFixture[
+    new Fixture[
       (
         PBFTInternalServiceFs2Grpc[IO, Metadata],
         Ref[IO, List[String]],
         Ref[IO, List[String]]
       )
-    ] {
+    ]("server") {
+      def apply() = {
       Security.addProvider(new BouncyCastleProvider());
       implicit val storageApiStub = new BaseStorageApi() {
-
+        override def getPrePrepareMessage(
+        viewNumber:     Long,
+        sequenceNumber: Long
+      ): IO[Option[PrePrepareRequest]] =
+          IO.pure(
+            Some(
+              PrePrepareRequest(
+                sequenceNumber = 0L,
+                digest = ByteString.EMPTY,
+                viewNumber = 0L,
+                signature = ByteString.EMPTY
+              )
+            )
+          )
+           override def insertPrePrepareMessage(
+    prePrepare: PrePrepareRequest
+  ): IO[Boolean] = IO(true)
         override def getCheckpointMessage(
           sequenceNumber: Long,
           replicaId:      Int
@@ -144,8 +167,18 @@ class PBFTInternalGrpcServiceServerSpec extends CatsEffectSuite with PBFTInterna
             )
           )
       }
+      val keyPair = BridgeCryptoUtils.getKeyPair[IO](privateKeyFile).use(IO.pure).unsafeRunSync()
+      val temp = new PublicApiClientGrpc[IO] {
+            def replyStartPegin(
+    timestamp:       Long,
+    currentView:     Long,
+    startSessionRes: StateMachineReply.Result
+  ): IO[Empty] = IO(Empty())
+          }
       implicit val publicApiClientGrpcMap = new PublicApiClientGrpcMap[IO](
-        Map.empty
+        Map(
+          ClientId(0) -> (temp, keyPair.getPublic())
+        )
       )
       import cats.implicits._
 
@@ -165,13 +198,14 @@ class PBFTInternalGrpcServiceServerSpec extends CatsEffectSuite with PBFTInterna
         for {
           serverUnderTest <- createSimpleInternalServer()
         } yield (serverUnderTest, loggedError, loggedWarning)
-      }).flatten
+      }).flatten.use(IO.pure).unsafeRunSync()
+      }
     }
-
-  setupServer.test(
+  override def munitFixtures = List(setupServer)
+  test(
     "checkpoint should throw exception and log error on invalid signature"
-  ) { serverAndLogChecker =>
-    val (server, errorChecker, _) = serverAndLogChecker
+  ) { 
+    val (server, errorChecker, _) = setupServer()
     assertIO(
       for {
 
@@ -189,11 +223,42 @@ class PBFTInternalGrpcServiceServerSpec extends CatsEffectSuite with PBFTInterna
       true
     )
   }
+  
+  test(
+    "checkpoint should throw exception and log error on invalid signature (invalid digest)"
+  ) {
+    val (server, errorChecker, _) = setupServer()
+    import org.plasmalabs.bridge.shared.implicits._
+    val checkpointRequest = CheckpointRequest(
+      sequenceNumber = -1L,
+      digest = ByteString.copyFrom(stateDigest(Map.empty)),
+      replicaId = 1
+    )
+    assertIO(
+      for {
+        replicaKeyPair <- BridgeCryptoUtils
+          .getKeyPair[IO](privateKeyFile)
+          .use(IO.pure)
+        signedBytes <- BridgeCryptoUtils.signBytes[IO](
+          replicaKeyPair.getPrivate(),
+          checkpointRequest.signableBytes
+        )
+        _ <- server.checkpoint(
+          checkpointRequest.withSignature(
+            ByteString.copyFrom(signedBytes)
+          ).withDigest(ByteString.EMPTY),
+          new Metadata()
+        )
+        errorMessage <- errorChecker.get
+      } yield errorMessage.head.contains("Signature verification failed"),
+      true
+    )
+  }
 
-  setupServer.test(
+  test(
     "checkpoint should ignore message and log warning on old message"
-  ) { serverAndLogChecker =>
-    val (server, _, warningChecker) = serverAndLogChecker
+  ) {
+    val (server, _, warningChecker) = setupServer()
 
     import org.plasmalabs.bridge.shared.implicits._
     val checkpointRequest = CheckpointRequest(
@@ -224,10 +289,10 @@ class PBFTInternalGrpcServiceServerSpec extends CatsEffectSuite with PBFTInterna
     )
   }
 
-  setupServer.test(
+  test(
     "checkpoint should ignore message if it already exists in the log"
-  ) { serverAndLogChecker =>
-    val (server, _, warningChecker) = serverAndLogChecker
+  ) {
+    val (server, _, warningChecker) = setupServer()
 
     import org.plasmalabs.bridge.shared.implicits._
     val checkpointRequest = CheckpointRequest(
@@ -254,6 +319,59 @@ class PBFTInternalGrpcServiceServerSpec extends CatsEffectSuite with PBFTInterna
       } yield errorMessage.head.contains(
         "The log is already present"
       ),
+      true
+    )
+  }
+  test(
+    "prePrepare should throw exception and log error on invalid signature"
+  ) {
+    val (server, errorChecker, _) = setupServer()
+    val preprepareReq = PrePrepareRequest(
+      sequenceNumber = 0L,
+      digest = ByteString.EMPTY,
+      viewNumber = 0L,
+      signature = ByteString.EMPTY,
+      payload = Some(StateMachineRequest())
+    )
+    assertIO(
+      for {
+        _ <- server.prePrepare(
+          preprepareReq,
+          new Metadata()
+        )
+        errorMessage <- errorChecker.get
+      } yield errorMessage.head.contains("Invalid request signature"),
+      true
+    )
+  }
+
+    test(
+    "prePrepare should throw exception and log error on invalid signature (invalid digest)"
+  ) {
+    val (server, errorChecker, _) = setupServer()
+    import org.plasmalabs.bridge.shared.implicits._
+    val preprepareReq = PrePrepareRequest(
+      sequenceNumber = -1L,
+      digest = ByteString.copyFrom(stateDigest(Map.empty)),
+      payload = Some(StateMachineRequest())
+    )
+    assertIO(
+      for {
+        replicaKeyPair <- BridgeCryptoUtils
+          .getKeyPair[IO](privateKeyFile)
+          .use(IO.pure)
+        signedBytes <- BridgeCryptoUtils.signBytes[IO](
+          replicaKeyPair.getPrivate(),
+          preprepareReq.signableBytes
+        )
+        _ <- server.prePrepare(
+          preprepareReq.withSignature(
+            ByteString.copyFrom(signedBytes)
+          ).withDigest(ByteString.EMPTY),
+          new Metadata()
+        )
+        errorMessage <- errorChecker.get
+      } yield errorMessage.head.contains("Invalid request signature"),
       true
     )
   }
