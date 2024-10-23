@@ -285,6 +285,7 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
           _ <- killFiber(3)
         } yield ()
       }
+      case _: String => IO.pure(())
     }
   }
 
