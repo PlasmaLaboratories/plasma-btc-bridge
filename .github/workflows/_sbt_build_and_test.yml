@@ -134,7 +134,7 @@ jobs:
           export IP_CONTAINER=`docker network inspect $BRIDGE | jq  ".[0].Containers.\"$NODE_01\".IPv4Address" | sed  's:"::g' | sed -n 's:\(.*\)/.*:\1:p'`
           echo "IP_CONTAINER: $IP_CONTAINER"
           export NODE_02=`docker run --rm -d  --network=$BRIDGE --name node02 -e NODE_P2P_KNOWN_PEERS=$IP_CONTAINER:9085 -p 9087:9085 -p 9086:9084 -p 9092:9091 -v $(pwd)/node02:/staking:rw docker.io/stratalab/strata-node-tooling:0.0.0-8202-06ff79d9 --  --config  /staking/config.yaml --regtest`
-          sbt coverage integration/test coverageReport
+          sbt -Dtest.timeout=180s "set IntegrationTest / parallelExecution := false" coverage integration/test coverageReport
           docker stop $NODE_01
           docker stop $NODE_02
         env:
