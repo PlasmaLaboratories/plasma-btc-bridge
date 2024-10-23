@@ -8,7 +8,15 @@ import io.grpc.Metadata
 import munit.CatsEffectSuite
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.plasmalabs.bridge.consensus.core.{PublicApiClientGrpc, PublicApiClientGrpcMap, stateDigest}
-import org.plasmalabs.bridge.consensus.pbft.{CheckpointRequest, CommitRequest, NewViewRequest, PBFTInternalServiceFs2Grpc, PrePrepareRequest, PrepareRequest, ViewChangeRequest}
+import org.plasmalabs.bridge.consensus.pbft.{
+  CheckpointRequest,
+  CommitRequest,
+  NewViewRequest,
+  PBFTInternalServiceFs2Grpc,
+  PrePrepareRequest,
+  PrepareRequest,
+  ViewChangeRequest
+}
 import org.plasmalabs.bridge.consensus.service.StateMachineReply
 import org.plasmalabs.bridge.shared.{BridgeCryptoUtils, ClientId, Empty, StateMachineRequest}
 import org.plasmalabs.bridge.stubs.{BaseLogger, BaseStorageApi}
@@ -127,6 +135,7 @@ class PBFTInternalGrpcServiceServerSpec extends CatsEffectSuite with PBFTInterna
         Ref[IO, List[String]]
       )
     ]("server") {
+
       def apply() = {
         Security.addProvider(new BouncyCastleProvider());
         implicit val storageApiStub = new BaseStorageApi() {
@@ -328,7 +337,7 @@ class PBFTInternalGrpcServiceServerSpec extends CatsEffectSuite with PBFTInterna
       true
     )
   }
-  
+
   test(
     "prePrepare should throw exception and log error on invalid pre-prepare payload signature"
   ) {
@@ -359,6 +368,7 @@ class PBFTInternalGrpcServiceServerSpec extends CatsEffectSuite with PBFTInterna
       true
     )
   }
+
   test(
     "prepare should throw exception and log error on invalid request signature"
   ) {
@@ -380,6 +390,7 @@ class PBFTInternalGrpcServiceServerSpec extends CatsEffectSuite with PBFTInterna
       true
     )
   }
+
   test(
     "commit should throw exception and log error on invalid request signature"
   ) {
@@ -401,6 +412,7 @@ class PBFTInternalGrpcServiceServerSpec extends CatsEffectSuite with PBFTInterna
       true
     )
   }
+
   test(
     "viewChange should throw exception and log error on invalid request signature"
   ) {
@@ -417,6 +429,7 @@ class PBFTInternalGrpcServiceServerSpec extends CatsEffectSuite with PBFTInterna
       true
     )
   }
+
   test(
     "newView should throw exception and log error on invalid request signature"
   ) {
