@@ -83,6 +83,7 @@ sleep 15
 echo "Preparing the environment"
 shopt -s expand_aliases
 # alias strata-cli="cs launch -r https://s01.oss.sonatype.org/content/repositories/staging xyz.stratalab:strata-cli_2.13:0.0.0+196-15bc1892-SNAPSHOT -- "
+
 alias strata-cli="cs launch -r https://s01.oss.sonatype.org/content/repositories/staging xyz.stratalab:strata-cli_2.13:0.0.0+196-15bc1892-SNAPSHOT -- "
 export BTC_USER=bitcoin
 export BTC_PASSWORD=password

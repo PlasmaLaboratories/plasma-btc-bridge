@@ -23,6 +23,11 @@ class BridgeIntegrationSpec
   cleanupDir.test("Bridge should correctly peg-in BTC") { _ =>
     info"Bridge should correctly peg-in BTC" >> successfulPegin()
   }
+
+  cleanupDir.test("Bridge should correctly peg-in BTC if non-primaries replica fails") { _ =>
+    info"Bridge should correctly peg-in BTC if non-primaries replica fails" >> successfulPeginWithNonPrimaryFailure() 
+  }
+
   cleanupDir.test("Bridge should fail when user does not send BTC") {
     _ =>
       info"Bridge should fail when user does not send BTC" >> failedPeginNoDeposit()
@@ -52,19 +57,13 @@ class BridgeIntegrationSpec
     info"Bridge should correctly retry if claim does not succeed" >> successfulPeginWithClaimErrorRetry()
   }
 
-
   cleanupDir.test(
     "Bridge should correctly go back to minting if there is a reorg"
   ) { _ =>
     info"Bridge should correctly go back to minting if there is a reorg" >> failedMintingReorgModule()
   }
 
-   cleanupDir.test("Bridge should correctly peg-in BTC if non-primaries replica fails") { _ =>
-    info"Bridge should correctly peg-in BTC if non-primaries replica fails" >> successfulPeginWithNonPrimaryFailure() 
-  }
-
   cleanupDir.test("Bridge should fail peg-in BTC if more than f non-primaries replicas fail") { _ =>
     info"Bridge should fail peg-in BTC if more than f non-primaries replicas fail" >> failedPeginNonPrimaryFailure() 
   }
-
 }
