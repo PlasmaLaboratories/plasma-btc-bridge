@@ -9,9 +9,11 @@ trait FailedPeginNonPrimaryFailureModule { self: BridgeIntegrationSpec =>
   def failedPeginNonPrimaryFailure(): IO[Unit] = {
     assertIO(
       (for {
-        _ <- killFiber(1)
-        _ <- killFiber(2)
-        _ <- killFiber(3)
+        bridge <- IO(startServer.apply()) // Get the bridge fixture
+
+        _ <- bridge.killFiber(1)
+        _ <- bridge.killFiber(2)
+        _ <- bridge.killFiber(3)
         _ <- getNewAddress
         startSessionResponse <- startSession(1).handleErrorWith {
           case _: TimeoutError => IO.pure(Left(TimeoutError(errorMessage)))

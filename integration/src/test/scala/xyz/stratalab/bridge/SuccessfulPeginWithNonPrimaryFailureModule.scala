@@ -14,8 +14,11 @@ trait SuccessfulPeginWithNonPrimaryFailureModule {
 
     assertIO(
       for {
-        _ <- killFiber(1) // primary is 0 
-        _ <- killFiber(2)
+        bridge <- IO(startServer.apply()) // Get the bridge fixture
+
+        _ <- bridge.killFiber(1)
+        _ <- bridge.killFiber(2)
+        _ <- bridge.killFiber(3)
         _ <- pwd
         _ <- mintStrataBlock(
           1,
