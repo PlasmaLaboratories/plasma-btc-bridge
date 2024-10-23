@@ -7,12 +7,11 @@ import cats.implicits._
 
 trait SuccessfulPeginWithNonPrimaryFailureModule { self: BridgeIntegrationSpec =>
   def successfulPeginWithNonPrimaryFailure(): IO[Unit] = {
-    val bridgeFixture = startServer.apply()
 
     (for {
       // Kill replicas before test
-      _ <- bridgeFixture.killFiber(1)
-      _ <- bridgeFixture.killFiber(2)
+      _ <- killFiber(1)
+      _ <- killFiber(2)
 
       // Run test
       _ <- pwd
@@ -96,8 +95,8 @@ trait SuccessfulPeginWithNonPrimaryFailureModule { self: BridgeIntegrationSpec =
     } yield ())
       .guarantee(
         // Restore replicas after test
-        bridgeFixture.restoreFiber(1) >>
-        bridgeFixture.restoreFiber(2)
+        restoreFiber(1) >>
+        restoreFiber(2)
       )
       .map(_ => ())
   }

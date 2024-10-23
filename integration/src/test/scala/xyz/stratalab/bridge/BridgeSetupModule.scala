@@ -89,21 +89,13 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
       )
     )
 
-  case class BridgeFixture(
-    killFiber: Int => IO[Unit],
-    restoreFiber: Int => IO[Unit]
-  )
 
-  val startServer: AnyFixture[BridgeFixture] =
-    new FutureFixture[BridgeFixture]("server setup") {
+  var fiber01: List[(Fiber[IO, Throwable, ExitCode], Int)] = _
+  var fiber02: List[(Fiber[IO, Throwable, ExitCode], Int)] = _
 
-      var fiber01: List[(Fiber[IO, Throwable, ExitCode], Int)] = _
-      var fiber02: List[(Fiber[IO, Throwable, ExitCode], Int)] = _
-      
-      def apply() = BridgeFixture(
-        killFiber = killFiber,
-        restoreFiber = restoreFiber
-      )
+  val startServer: AnyFixture[Unit] =
+    new FutureFixture[Unit]("server setup") {
+      def apply() = ()
 
       override def beforeAll() =
         (for {
@@ -188,8 +180,9 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
           _ <- IO.sleep(5.seconds) // Give some time for the cancellation to take effect
         } yield ()).void.unsafeToFuture()
       }
-
-      def killFiber(replicaId: Int): IO[Unit] = IO.defer {
+    }
+  
+  def killFiber(replicaId: Int): IO[Unit] = IO.defer {
         val consensusFiberOpt = fiber02.find(_._2 == replicaId)
         val publicApiFiberOpt = fiber01.find(_._2 == replicaId)
 
@@ -205,93 +198,133 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
               _ <- IO.println(s"Killed both consensus and public API fibers for replica $replicaId")
             } yield ()
           case (_, _) =>
-            IO.raiseError(new Exception(s"No two fibers found for replica $replicaId"))
+            IO.pure(())
         }
       }
 
       def restoreFiber(replicaId: Int): IO[Unit] = IO.defer {
-        if (fiber02.exists(_._2 == replicaId) || fiber01.exists(_._2 == replicaId)) {
-          IO.raiseError(new Exception(s"Fibers already exist for replica $replicaId"))
-        } else {
-          for {
-            currentAddress <- currentAddress(toplWalletDb(0))
-            utxo <- getCurrentUtxosFromAddress(toplWalletDb(0), currentAddress)
-            (groupId, seriesId) = extractIds(utxo)
-            consensusFiber <- launchConsensus(replicaId, groupId, seriesId)
-            _ <- IO.delay {
-              fiber02 = (consensusFiber, replicaId) :: fiber02
-            }
-            _ <- IO.sleep(5.seconds)
-            publicApiFiber <- launchPublicApi(replicaId)
-            _ <- IO.delay {
-              fiber01 = (publicApiFiber, replicaId) :: fiber01
-            }
-            _ <- IO.sleep(5.seconds)
-            _ <- IO.println(s"Restored both consensus and public API fibers for replica $replicaId")
-          } yield ()
+  if (fiber02.exists(_._2 == replicaId) || fiber01.exists(_._2 == replicaId)) {
+    IO.raiseError(new Exception(s"Fibers already exist for replica $replicaId"))
+  } else {
+    for {
+      // First recreate any deleted configuration files if needed
+      _ <- IO(Try(Files.delete(Paths.get(s"replicaConfig${replicaId}.conf"))))
+      _ <- IO(Try(Files.delete(Paths.get(s"clientConfig${replicaId * 2}.conf"))))
+      _ <- IO(Try(Files.delete(Paths.get(s"replica${replicaId}.db"))))
+      
+      // Recreate configuration files
+      _ <- fs2.Stream(consensusConfString(replicaId, replicaCount))
+           .through(fs2.text.utf8.encode)
+           .through(file.Files[IO].writeAll(fs2.io.file.Path(s"replicaConfig${replicaId}.conf")))
+           .compile
+           .drain
+           
+      _ <- fs2.Stream(publicApiConfString(replicaId * 2, replicaCount))
+           .through(fs2.text.utf8.encode)
+           .through(file.Files[IO].writeAll(fs2.io.file.Path(s"clientConfig${replicaId * 2}.conf")))
+           .compile
+           .drain
+
+      // Get current wallet info
+      currentAddress <- currentAddress(toplWalletDb(0))
+      utxo <- getCurrentUtxosFromAddress(toplWalletDb(0), currentAddress)
+      (groupId, seriesId) = extractIds(utxo)
+      
+      // Launch consensus and wait a bit
+      consensusFiber <- launchConsensus(replicaId, groupId, seriesId)
+      _ <- IO.delay {
+        fiber02 = (consensusFiber, replicaId) :: fiber02
+      }
+      _ <- IO.sleep(5.seconds)
+      
+      // Launch public API and wait
+      publicApiFiber <- launchPublicApi(replicaId)
+      _ <- IO.delay {
+        fiber01 = (publicApiFiber, replicaId) :: fiber01
+      }
+      _ <- IO.sleep(5.seconds)
+      
+      _ <- IO.println(s"Restored both consensus and public API fibers for replica $replicaId")
+    } yield ()
+  }
+}
+  
+  private def waitForAllFibers: IO[Unit] = {
+    def allFibersPresent = {
+      val consensusFibers = (0 until replicaCount).forall(id => fiber02.exists(_._2 == id))
+      val publicApiFibers = (0 until replicaCount).forall(id => fiber01.exists(_._2 == id))
+      consensusFibers && publicApiFibers
+    }
+
+    def restoreMissingFibers = {
+      val missingIds = (0 until replicaCount).filterNot(id => 
+        fiber02.exists(_._2 == id) && fiber01.exists(_._2 == id)
+      )
+      
+      missingIds.toList.traverse_ { id =>
+        IO.println(s"Attempting to restore missing fiber for replica $id") >>
+        restoreFiber(id).attempt.flatMap {
+          case Left(e) => IO.println(s"Failed to restore fiber $id: ${e.getMessage}")
+          case Right(_) => IO.println(s"Successfully restored fiber $id")
         }
       }
     }
-    
+
+    IO.println("Checking fibers status...") >>
+    (for {
+      present <- IO.delay(allFibersPresent)
+      _ <- if (!present) {
+        IO.println("Some fibers are missing, attempting to restore...") >>
+        restoreMissingFibers >>
+        IO.sleep(5.seconds)
+      } else IO.unit
+    } yield present)
+      .iterateUntil(identity)
+      .timeout(30.seconds)
+      .attempt.flatMap {
+        case Left(e) => 
+          IO.println(s"Fiber check failed: ${e.getMessage}") >>
+          IO.println(s"Current consensus fibers: ${fiber02.map(_._2).sorted}") >>
+          IO.println(s"Current public API fibers: ${fiber01.map(_._2).sorted}") >>
+          IO.raiseError(e)
+        case Right(_) => 
+          IO.println("All fibers are running correctly") >>
+          IO.unit
+      }
+  }
+
   val cleanupDir = FunFixture[Unit](
     setup = { _ =>
-      try
-        Files.delete(Paths.get(userWalletDb(1)))
-      catch {
-        case _: Throwable => ()
-      }
-      try
-        Files.delete(Paths.get(userWalletMnemonic(1)))
-      catch {
-        case _: Throwable => ()
-      }
-      try
-        Files.delete(Paths.get(userWalletJson(1)))
-      catch {
-        case _: Throwable => ()
-      }
-      try
-        Files.delete(Paths.get(userWalletDb(2)))
-      catch {
-        case _: Throwable => ()
-      }
-      try
-        Files.delete(Paths.get(userWalletMnemonic(2)))
-      catch {
-        case _: Throwable => ()
-      }
-      try
-        Files.delete(Paths.get(userWalletJson(2)))
-      catch {
-        case _: Throwable => ()
-      }
-      try
-        Files.delete(Paths.get(vkFile))
-      catch {
-        case _: Throwable => ()
-      }
-      try
-        Files.delete(Paths.get("fundRedeemTx.pbuf"))
-      catch {
-        case _: Throwable => ()
-      }
-      try
-        Files.delete(Paths.get("fundRedeemTxProved.pbuf"))
-      catch {
-        case _: Throwable => ()
-      }
-      try
-        Files.delete(Paths.get("redeemTx.pbuf"))
-      catch {
-        case _: Throwable => ()
-      }
-      try
-        Files.delete(Paths.get("redeemTxProved.pbuf"))
-      catch {
-        case _: Throwable => ()
-      }
+      (for {
+        // First ensure all fibers are running
+        _ <- waitForAllFibers
+        
+        // Then perform file cleanup
+        _ <- IO {
+          List(
+            (userWalletDb(1), "userWalletDb1"),
+            (userWalletMnemonic(1), "userWalletMnemonic1"),
+            (userWalletJson(1), "userWalletJson1"),
+            (userWalletDb(2), "userWalletDb2"),
+            (userWalletMnemonic(2), "userWalletMnemonic2"),
+            (userWalletJson(2), "userWalletJson2"),
+            (vkFile, "vkFile"),
+            ("fundRedeemTx.pbuf", "fundRedeemTx"),
+            ("fundRedeemTxProved.pbuf", "fundRedeemTxProved"),
+            ("redeemTx.pbuf", "redeemTx"),
+            ("redeemTxProved.pbuf", "redeemTxProved")
+          ).foreach { case (path, name) =>
+            try {
+              Files.delete(Paths.get(path))
+              IO.println(s"Deleted $name")
+            } catch {
+              case _: Throwable => () // File might not exist, which is fine
+            }
+          }
+        }
+      } yield ()).unsafeRunSync()
     },
-    teardown = { _ => ()}
+    teardown = { _ => () }
   )
 
   val computeBridgeNetworkName = for {

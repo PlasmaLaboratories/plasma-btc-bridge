@@ -7,13 +7,12 @@ trait FailedPeginNonPrimaryFailureModule { self: BridgeIntegrationSpec =>
   val errorMessage = "Timeout occurred!"
 
   def failedPeginNonPrimaryFailure(): IO[Unit] = {
-    val  bridgeFixture = startServer.apply() 
 
     (for {
       // Kill replicas before test
-      _ <- bridgeFixture.killFiber(1)
-      _ <- bridgeFixture.killFiber(2)
-      _ <- bridgeFixture.killFiber(3)
+      _ <- killFiber(1)
+      _ <- killFiber(2)
+      _ <- killFiber(3)
 
       // Run test
       result <- (for {
@@ -33,9 +32,9 @@ trait FailedPeginNonPrimaryFailureModule { self: BridgeIntegrationSpec =>
     } yield ())
       .guarantee(
         // Restore replicas after test
-        bridgeFixture.restoreFiber(1) >>
-        bridgeFixture.restoreFiber(2) >>
-        bridgeFixture.restoreFiber(3)
+        restoreFiber(1) >>
+        restoreFiber(2) >>
+        restoreFiber(3)
       )
   }
 }
