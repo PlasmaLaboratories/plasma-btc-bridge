@@ -93,7 +93,8 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
   // var fiber02: List[(Fiber[IO, Throwable, ExitCode], Int)] = _
 
   case class BridgeFixture(
-    killFiber: Int => IO[Unit]
+    killFiber: Int => IO[Unit],
+    restoreFiber: Int => IO[Unit]
   )
 
 
@@ -137,6 +138,30 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
               } yield ()
             case (None, None) =>
               IO.raiseError(new Exception(s"No fibers found for replica $replicaId"))
+          }
+        }, 
+        restoreFiber = (replicaId: Int) => IO.defer {
+          if (fiber02.exists(_._2 == replicaId) || fiber01.exists(_._2 == replicaId)) {
+            IO.raiseError(new Exception(s"Fibers already exist for replica $replicaId"))
+          } else {
+
+            for {
+              currentAddress <- currentAddress(toplWalletDb(0))
+              utxo           <- getCurrentUtxosFromAddress(toplWalletDb(0), currentAddress)
+              (groupId, seriesId) = extractIds(utxo)
+
+              consensusFiber <- launchConsensus(replicaId, groupId, seriesId)
+              _ <- IO.delay {
+                fiber02 = (consensusFiber, replicaId) :: fiber02
+              }
+              _ <- IO.sleep(5.seconds) // Give consensus time to start up
+              publicApiFiber <- launchPublicApi(replicaId)
+              _ <- IO.delay {
+                fiber01 = (publicApiFiber, replicaId) :: fiber01
+              }
+              _ <- IO.sleep(5.seconds) // Give public API time to start up
+              _ <- IO.println(s"Restored both consensus and public API fibers for replica $replicaId")
+            } yield ()
           }
         }
       )
@@ -216,8 +241,13 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
         } yield ()).unsafeToFuture()
 
       override def afterAll() = {
-        fiber01.map(_._1.cancel).sequence.unsafeToFuture()
-        fiber02.map(_._1.cancel).sequence.void.unsafeToFuture()
+        (for {
+          _ <- IO.race(
+            fiber01.parTraverse(_._1.cancel),
+            fiber02.parTraverse(_._1.cancel)
+          )
+          _ <- IO.sleep(1.seconds) // Give some time for the cancellation to take effect
+        } yield ()).void.unsafeToFuture()
       }
     }
 

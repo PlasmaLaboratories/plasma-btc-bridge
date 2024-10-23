@@ -291,7 +291,7 @@ object StateMachineServiceGrpcClientImpl {
         maxRetries: Int
       )(implicit F: Temporal[F]): F[Empty] = {
         for {
-          _ <- info"trying to execute request for another replica, request: ${request.timestamp}"
+          _ <- info"Trying to execute request on another replica, request: ${request.timestamp}"
           response <- replica.executeRequest(request, new Metadata()).handleErrorWith { _ =>
           if (maxRetries > 0)
             F.sleep(initialDelay) >> retryWithBackoff(replica, request, initialDelay * stateMachineConf.retryPolicy.delayMultiplier, maxRetries - 1)
