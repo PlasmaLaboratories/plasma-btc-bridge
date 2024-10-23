@@ -23,15 +23,15 @@ class BridgeIntegrationSpec
   cleanupDir.test("Bridge should correctly peg-in BTC") { _ =>
     info"Bridge should correctly peg-in BTC" >> successfulPegin()
   }
-  cleanupDir.test("Bridge should fail correctly when user does not send BTC") {
+  cleanupDir.test("Bridge should fail when user does not send BTC") {
     _ =>
-      info"Bridge should fail correctly when user does not send BTC" >> failedPeginNoDeposit()
+      info"Bridge should fail when user does not send BTC" >> failedPeginNoDeposit()
   }
-  cleanupDir.test("Bridge should fail correctly when tBTC not minted") { _ =>
-    info"Bridge should fail correctly when tBTC not minted" >> failedPeginNoMint()
+  cleanupDir.test("Bridge should fail when tBTC not minted") { _ =>
+    info"Bridge should fail when tBTC not minted" >> failedPeginNoMint()
   }
-  cleanupDir.test("Bridge should fail correctly when tBTC not redeemed") { _ =>
-    info"Bridge should fail correctly when tBTC not redeemed" >> failedRedemption()
+  cleanupDir.test("Bridge should fail when tBTC not redeemed") { _ =>
+    info"Bridge should fail when tBTC not redeemed" >> failedRedemption()
   }
 
   cleanupDir.test(
@@ -63,8 +63,8 @@ class BridgeIntegrationSpec
     info"Bridge should correctly peg-in BTC if non-primaries replica fails" >> successfulPeginWithNonPrimaryFailure() 
   }
 
-  cleanupDir.test("Bridge should fail correctly peg-in BTC if more than f non-primaries replicas fail") { _ =>
-    info"Bridge should fail correctly peg-in BTC if more than f non-primaries replicas fail" >> failedPeginNonPrimaryFailure() 
+  cleanupDir.test("Bridge should fail peg-in BTC if more than f non-primaries replicas fail") { _ =>
+    info"Bridge should fail peg-in BTC if more than f non-primaries replicas fail" >> failedPeginNonPrimaryFailure() 
   }
 
 }

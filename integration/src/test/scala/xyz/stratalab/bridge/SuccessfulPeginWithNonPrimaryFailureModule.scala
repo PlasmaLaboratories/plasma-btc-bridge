@@ -18,7 +18,6 @@ trait SuccessfulPeginWithNonPrimaryFailureModule {
 
         _ <- bridge.killFiber(1)
         _ <- bridge.killFiber(2)
-        _ <- bridge.killFiber(3)
         _ <- pwd
         _ <- mintStrataBlock(
           1,
