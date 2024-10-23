@@ -13,7 +13,7 @@ import scala.util.Try
 
 trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with PublicApiConfModule {
 
-  override val munitIOTimeout = Duration(250, "s")
+  override val munitIOTimeout = Duration(180, "s")
 
   implicit val logger: Logger[IO] =
     org.typelevel.log4cats.slf4j.Slf4jLogger
@@ -89,81 +89,20 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
       )
     )
 
-  // var fiber01: List[(Fiber[IO, Throwable, ExitCode], Int)] = _
-  // var fiber02: List[(Fiber[IO, Throwable, ExitCode], Int)] = _
-
   case class BridgeFixture(
     killFiber: Int => IO[Unit],
     restoreFiber: Int => IO[Unit]
   )
 
-
   val startServer: AnyFixture[BridgeFixture] =
     new FutureFixture[BridgeFixture]("server setup") {
 
-      private var fiber01: List[(Fiber[IO, Throwable, ExitCode], Int)] = _
-      private var fiber02: List[(Fiber[IO, Throwable, ExitCode], Int)] = _
+      var fiber01: List[(Fiber[IO, Throwable, ExitCode], Int)] = _
+      var fiber02: List[(Fiber[IO, Throwable, ExitCode], Int)] = _
       
       def apply() = BridgeFixture(
-        killFiber = (replicaId: Int) => IO.defer {
-          val consensusFiberOpt = fiber02.find(_._2 == replicaId)
-          val publicApiFiberOpt = fiber01.find(_._2 == replicaId)
-
-          (consensusFiberOpt, publicApiFiberOpt) match {
-            case (Some((consensusFiber, _)), Some((publicApiFiber, _))) =>
-              for {
-                _ <- consensusFiber.cancel
-                _ <- publicApiFiber.cancel
-                _ <- IO.delay {
-                  fiber02 = fiber02.filter(_._2 != replicaId)
-                  fiber01 = fiber01.filter(_._2 != replicaId)
-                }
-                _ <- IO.println(s"Killed both consensus and public API fibers for replica $replicaId")
-              } yield ()
-            case (Some((consensusFiber, _)), None) =>
-              for {
-                _ <- consensusFiber.cancel
-                _ <- IO.delay {
-                  fiber02 = fiber02.filter(_._2 != replicaId)
-                }
-                _ <- IO.println(s"Killed consensus fiber for replica $replicaId (consensus fiber not found)")
-              } yield ()
-            case (None, Some((publicApiFiber, _))) =>
-              for {
-                _ <- publicApiFiber.cancel
-                _ <- IO.delay {
-                  fiber01 = fiber01.filter(_._2 != replicaId)
-                }
-                _ <- IO.println(s"Killed public API fiber for replica $replicaId (public API fiber not found)")
-              } yield ()
-            case (None, None) =>
-              IO.raiseError(new Exception(s"No fibers found for replica $replicaId"))
-          }
-        }, 
-        restoreFiber = (replicaId: Int) => IO.defer {
-          if (fiber02.exists(_._2 == replicaId) || fiber01.exists(_._2 == replicaId)) {
-            IO.raiseError(new Exception(s"Fibers already exist for replica $replicaId"))
-          } else {
-
-            for {
-              currentAddress <- currentAddress(toplWalletDb(0))
-              utxo           <- getCurrentUtxosFromAddress(toplWalletDb(0), currentAddress)
-              (groupId, seriesId) = extractIds(utxo)
-
-              consensusFiber <- launchConsensus(replicaId, groupId, seriesId)
-              _ <- IO.delay {
-                fiber02 = (consensusFiber, replicaId) :: fiber02
-              }
-              _ <- IO.sleep(5.seconds) // Give consensus time to start up
-              publicApiFiber <- launchPublicApi(replicaId)
-              _ <- IO.delay {
-                fiber01 = (publicApiFiber, replicaId) :: fiber01
-              }
-              _ <- IO.sleep(5.seconds) // Give public API time to start up
-              _ <- IO.println(s"Restored both consensus and public API fibers for replica $replicaId")
-            } yield ()
-          }
-        }
+        killFiber = killFiber,
+        restoreFiber = restoreFiber
       )
 
       override def beforeAll() =
@@ -243,14 +182,56 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
       override def afterAll() = {
         (for {
           _ <- IO.race(
-            fiber01.parTraverse(_._1.cancel),
-            fiber02.parTraverse(_._1.cancel)
+            fiber01.traverse(_._1.cancel),
+            fiber02.traverse(_._1.cancel)
           )
-          _ <- IO.sleep(1.seconds) // Give some time for the cancellation to take effect
+          _ <- IO.sleep(5.seconds) // Give some time for the cancellation to take effect
         } yield ()).void.unsafeToFuture()
       }
-    }
 
+      def killFiber(replicaId: Int): IO[Unit] = IO.defer {
+        val consensusFiberOpt = fiber02.find(_._2 == replicaId)
+        val publicApiFiberOpt = fiber01.find(_._2 == replicaId)
+
+        (consensusFiberOpt, publicApiFiberOpt) match {
+          case (Some((consensusFiber, _)), Some((publicApiFiber, _))) =>
+            for {
+              _ <- consensusFiber.cancel
+              _ <- publicApiFiber.cancel
+              _ <- IO.delay {
+                fiber02 = fiber02.filter(_._2 != replicaId)
+                fiber01 = fiber01.filter(_._2 != replicaId)
+              }
+              _ <- IO.println(s"Killed both consensus and public API fibers for replica $replicaId")
+            } yield ()
+          case (_, _) =>
+            IO.raiseError(new Exception(s"No two fibers found for replica $replicaId"))
+        }
+      }
+
+      def restoreFiber(replicaId: Int): IO[Unit] = IO.defer {
+        if (fiber02.exists(_._2 == replicaId) || fiber01.exists(_._2 == replicaId)) {
+          IO.raiseError(new Exception(s"Fibers already exist for replica $replicaId"))
+        } else {
+          for {
+            currentAddress <- currentAddress(toplWalletDb(0))
+            utxo <- getCurrentUtxosFromAddress(toplWalletDb(0), currentAddress)
+            (groupId, seriesId) = extractIds(utxo)
+            consensusFiber <- launchConsensus(replicaId, groupId, seriesId)
+            _ <- IO.delay {
+              fiber02 = (consensusFiber, replicaId) :: fiber02
+            }
+            _ <- IO.sleep(5.seconds)
+            publicApiFiber <- launchPublicApi(replicaId)
+            _ <- IO.delay {
+              fiber01 = (publicApiFiber, replicaId) :: fiber01
+            }
+            _ <- IO.sleep(5.seconds)
+            _ <- IO.println(s"Restored both consensus and public API fibers for replica $replicaId")
+          } yield ()
+        }
+      }
+    }
     
   val cleanupDir = FunFixture[Unit](
     setup = { _ =>
@@ -309,11 +290,8 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
       catch {
         case _: Throwable => ()
       }
-
     },
-    teardown = { _ =>
-      ()
-    }
+    teardown = { _ => ()}
   )
 
   val computeBridgeNetworkName = for {

@@ -1,21 +1,20 @@
 package xyz.stratalab.bridge
+
 import cats.effect.IO
 import org.typelevel.log4cats.syntax._
 import scala.concurrent.duration._
-import cats.syntax.all._
+import cats.implicits._
 
-trait SuccessfulPeginWithNonPrimaryFailureModule {
-  self: BridgeIntegrationSpec =>
-
+trait SuccessfulPeginWithNonPrimaryFailureModule { self: BridgeIntegrationSpec =>
   def successfulPeginWithNonPrimaryFailure(): IO[Unit] = {
-    val bridge = startServer.apply()
+    val bridgeFixture = startServer.apply()
 
     (for {
-      // Kill fibers
-      _ <- bridge.killFiber(1)
-      _ <- bridge.killFiber(2)
-      
-      // Original test logic
+      // Kill replicas before test
+      _ <- bridgeFixture.killFiber(1)
+      _ <- bridgeFixture.killFiber(2)
+
+      // Run test
       _ <- pwd
       _ <- mintStrataBlock(1, 1)
       _ <- initStrataWallet(1)
@@ -95,21 +94,11 @@ trait SuccessfulPeginWithNonPrimaryFailureModule {
         )
       _ <- info"Session ${startSessionResponse.sessionID} was successfully removed"
     } yield ())
-      .guarantee( // Ensure fibers are restored regardless of test outcome
-        (for {
-          _ <- info"Restoring killed fibers..."
-          _ <- List(1, 2).traverse_(id => 
-            bridge.restoreFiber(id).handleErrorWith { error =>
-              warn"Failed to restore fiber $id: ${error.getMessage}" >> 
-              IO.sleep(5.seconds) >> // Add delay between retries
-              bridge.restoreFiber(id).handleErrorWith { retryError =>
-                error"Failed to restore fiber $id after retry: ${retryError.getMessage}"
-              }
-            }
-          )
-          _ <- info"Fiber restoration completed"
-        } yield ())
+      .guarantee(
+        // Restore replicas after test
+        bridgeFixture.restoreFiber(1) >>
+        bridgeFixture.restoreFiber(2)
       )
-      .flatMap(_ => assertIO(IO.pure(()), ()))
+      .map(_ => ())
   }
 }
