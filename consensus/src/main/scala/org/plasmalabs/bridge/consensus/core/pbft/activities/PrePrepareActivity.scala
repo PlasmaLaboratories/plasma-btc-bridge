@@ -75,7 +75,7 @@ object PrePrepareActivity {
   ): F[Option[PBFTInternalEvent]] = {
     import org.typelevel.log4cats.syntax._
     (for {
-      _ <- trace"Received pre-prepare request"
+      // _ <- trace"Received pre-prepare request"
       _ <- checkRequestSignatures(request) >>= (
         Async[F].raiseUnless(_)(
           InvalidRequestSignature
