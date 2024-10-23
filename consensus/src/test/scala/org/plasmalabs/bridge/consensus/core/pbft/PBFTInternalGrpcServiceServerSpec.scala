@@ -7,23 +7,14 @@ import fs2.io.process
 import io.grpc.Metadata
 import munit.CatsEffectSuite
 import org.bouncycastle.jce.provider.BouncyCastleProvider
-import org.plasmalabs.bridge.consensus.core.{PublicApiClientGrpcMap, stateDigest}
-import org.plasmalabs.bridge.consensus.pbft.{CheckpointRequest, PBFTInternalServiceFs2Grpc}
-import org.plasmalabs.bridge.shared.BridgeCryptoUtils
+import org.plasmalabs.bridge.consensus.core.{PublicApiClientGrpc, PublicApiClientGrpcMap, stateDigest}
+import org.plasmalabs.bridge.consensus.pbft.{CheckpointRequest, CommitRequest, NewViewRequest, PBFTInternalServiceFs2Grpc, PrePrepareRequest, PrepareRequest, ViewChangeRequest}
+import org.plasmalabs.bridge.consensus.service.StateMachineReply
+import org.plasmalabs.bridge.shared.{BridgeCryptoUtils, ClientId, Empty, StateMachineRequest}
 import org.plasmalabs.bridge.stubs.{BaseLogger, BaseStorageApi}
 import org.typelevel.log4cats.Logger
 
 import java.security.Security
-import org.plasmalabs.bridge.consensus.pbft.PrePrepareRequest
-import org.plasmalabs.bridge.shared.StateMachineRequest
-import org.plasmalabs.bridge.shared.ClientId
-import org.plasmalabs.bridge.shared.Empty
-import org.plasmalabs.bridge.consensus.core.PublicApiClientGrpc
-import org.plasmalabs.bridge.consensus.service.StateMachineReply
-import org.plasmalabs.bridge.consensus.pbft.PrepareRequest
-import org.plasmalabs.bridge.consensus.pbft.CommitRequest
-import org.plasmalabs.bridge.consensus.pbft.ViewChangeRequest
-import org.plasmalabs.bridge.consensus.pbft.NewViewRequest
 
 class PBFTInternalGrpcServiceServerSpec extends CatsEffectSuite with PBFTInternalGrpcServiceServerSpecAux {
 

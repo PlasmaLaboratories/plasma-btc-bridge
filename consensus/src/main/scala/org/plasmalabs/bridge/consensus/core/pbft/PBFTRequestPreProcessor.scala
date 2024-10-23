@@ -3,20 +3,13 @@ package org.plasmalabs.bridge.consensus.core.pbft
 import cats.effect.kernel.Async
 import cats.effect.std.Queue
 import org.plasmalabs.bridge.consensus.core.PublicApiClientGrpcMap
-import org.plasmalabs.bridge.consensus.core.pbft.activities.{
-  CommitActivity,
-  PrePrepareActivity,
-  PrepareActivity,
-  ViewChangeActivity
-}
-import org.plasmalabs.bridge.consensus.pbft.{CommitRequest, PrePrepareRequest, PrepareRequest, ViewChangeRequest}
+import org.plasmalabs.bridge.consensus.core.pbft.activities.{CommitActivity, NewViewActivity, PrePrepareActivity, PrepareActivity, ViewChangeActivity}
+import org.plasmalabs.bridge.consensus.pbft.{CommitRequest, NewViewRequest, PrePrepareRequest, PrepareRequest, ViewChangeRequest}
 import org.plasmalabs.bridge.consensus.shared.persistence.StorageApi
 import org.plasmalabs.bridge.shared.ReplicaCount
 import org.typelevel.log4cats.Logger
 
 import java.security.PublicKey
-import org.plasmalabs.bridge.consensus.pbft.NewViewRequest
-import org.plasmalabs.bridge.consensus.core.pbft.activities.NewViewActivity
 
 trait PBFTRequestPreProcessor[F[_]] {
 
