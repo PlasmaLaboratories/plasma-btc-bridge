@@ -6,14 +6,7 @@ import scala.concurrent.duration._
 import cats.implicits._
 
 trait SuccessfulPeginWithNonPrimaryFailureModule { self: BridgeIntegrationSpec =>
-  def successfulPeginWithNonPrimaryFailure(): IO[Unit] = {
-
-    (for {
-      // Kill replicas before test
-      _ <- killFiber(1)
-      _ <- killFiber(2)
-
-      // Run test
+  def successfulPeginWithNonPrimaryFailure(): IO[Unit] = for {
       _ <- pwd
       _ <- mintStrataBlock(1, 1)
       _ <- initStrataWallet(1)
@@ -92,12 +85,5 @@ trait SuccessfulPeginWithNonPrimaryFailureModule { self: BridgeIntegrationSpec =
           _.mintingStatus == "PeginSessionStateSuccessfulPegin"
         )
       _ <- info"Session ${startSessionResponse.sessionID} was successfully removed"
-    } yield ())
-      .guarantee(
-        // Restore replicas after test
-        restoreFiber(1) >>
-        restoreFiber(2)
-      )
-      .map(_ => ())
+    } yield ()
   }
-}

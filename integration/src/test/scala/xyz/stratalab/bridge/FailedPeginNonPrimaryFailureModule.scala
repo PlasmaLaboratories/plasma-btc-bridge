@@ -9,11 +9,6 @@ trait FailedPeginNonPrimaryFailureModule { self: BridgeIntegrationSpec =>
   def failedPeginNonPrimaryFailure(): IO[Unit] = {
 
     (for {
-      // Kill replicas before test
-      _ <- killFiber(1)
-      _ <- killFiber(2)
-      _ <- killFiber(3)
-
       // Run test
       result <- (for {
         _ <- getNewAddress
@@ -30,11 +25,5 @@ trait FailedPeginNonPrimaryFailureModule { self: BridgeIntegrationSpec =>
       // Assert result
       _ <- assertIO(IO.pure(result), errorMessage)
     } yield ())
-      .guarantee(
-        // Restore replicas after test
-        restoreFiber(1) >>
-        restoreFiber(2) >>
-        restoreFiber(3)
-      )
   }
 }

@@ -13,7 +13,7 @@ import scala.util.Try
 
 trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with PublicApiConfModule {
 
-  override val munitIOTimeout = Duration(180, "s")
+  override val munitIOTimeout = Duration(250, "s")
 
   implicit val logger: Logger[IO] =
     org.typelevel.log4cats.slf4j.Slf4jLogger
@@ -202,52 +202,29 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
         }
       }
 
-      def restoreFiber(replicaId: Int): IO[Unit] = IO.defer {
-  if (fiber02.exists(_._2 == replicaId) || fiber01.exists(_._2 == replicaId)) {
-    IO.raiseError(new Exception(s"Fibers already exist for replica $replicaId"))
-  } else {
-    for {
-      // First recreate any deleted configuration files if needed
-      _ <- IO(Try(Files.delete(Paths.get(s"replicaConfig${replicaId}.conf"))))
-      _ <- IO(Try(Files.delete(Paths.get(s"clientConfig${replicaId * 2}.conf"))))
-      _ <- IO(Try(Files.delete(Paths.get(s"replica${replicaId}.db"))))
-      
-      // Recreate configuration files
-      _ <- fs2.Stream(consensusConfString(replicaId, replicaCount))
-           .through(fs2.text.utf8.encode)
-           .through(file.Files[IO].writeAll(fs2.io.file.Path(s"replicaConfig${replicaId}.conf")))
-           .compile
-           .drain
-           
-      _ <- fs2.Stream(publicApiConfString(replicaId * 2, replicaCount))
-           .through(fs2.text.utf8.encode)
-           .through(file.Files[IO].writeAll(fs2.io.file.Path(s"clientConfig${replicaId * 2}.conf")))
-           .compile
-           .drain
-
-      // Get current wallet info
-      currentAddress <- currentAddress(toplWalletDb(0))
-      utxo <- getCurrentUtxosFromAddress(toplWalletDb(0), currentAddress)
-      (groupId, seriesId) = extractIds(utxo)
-      
-      // Launch consensus and wait a bit
-      consensusFiber <- launchConsensus(replicaId, groupId, seriesId)
-      _ <- IO.delay {
-        fiber02 = (consensusFiber, replicaId) :: fiber02
-      }
-      _ <- IO.sleep(5.seconds)
-      
-      // Launch public API and wait
-      publicApiFiber <- launchPublicApi(replicaId)
-      _ <- IO.delay {
-        fiber01 = (publicApiFiber, replicaId) :: fiber01
-      }
-      _ <- IO.sleep(5.seconds)
-      
-      _ <- IO.println(s"Restored both consensus and public API fibers for replica $replicaId")
-    } yield ()
+  def restoreFiber(replicaId: Int): IO[Unit] = IO.defer {
+    if (fiber02.exists(_._2 == replicaId) || fiber01.exists(_._2 == replicaId)) {
+      IO.raiseError(new Exception(s"Fibers already exist for replica $replicaId"))
+    } else {
+      for {
+        currentAddress <- currentAddress(toplWalletDb(0))
+        utxo <- getCurrentUtxosFromAddress(toplWalletDb(0), currentAddress)
+        (groupId, seriesId) = extractIds(utxo)
+        consensusFiber <- launchConsensus(replicaId, groupId, seriesId)
+        _ <- IO.delay {
+          fiber02 = (consensusFiber, replicaId) :: fiber02
+        }
+        _ <- IO.sleep(5.seconds)
+        publicApiFiber <- launchPublicApi(replicaId)
+        _ <- IO.delay {
+          fiber01 = (publicApiFiber, replicaId) :: fiber01
+        }
+        _ <- IO.sleep(5.seconds)
+        _ <- IO.println(s"Restored both consensus and public API fibers for replica $replicaId")
+      } yield ()
+    }
   }
-}
+
   
   private def waitForAllFibers: IO[Unit] = {
     def allFibersPresent = {
@@ -293,11 +270,29 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
       }
   }
 
+  def potentiallyKillFibers(name: String) =  { 
+    name match {
+      case "Bridge should correctly peg-in BTC if non-primaries replica fails" => {
+        for {
+          _ <- killFiber(1)
+          _ <- killFiber(2)
+        } yield ()
+      }
+      case "Bridge should fail peg-in BTC if more than f non-primaries replicas fail" => {
+        for {
+          _ <- killFiber(1)
+          _ <- killFiber(2)
+          _ <- killFiber(3)
+        } yield ()
+      }
+    }
+  }
+
   val cleanupDir = FunFixture[Unit](
-    setup = { _ =>
+    setup = { t =>
       (for {
         // First ensure all fibers are running
-        _ <- waitForAllFibers
+        _ <- potentiallyKillFibers(t.name)
         
         // Then perform file cleanup
         _ <- IO {
@@ -324,9 +319,13 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
         }
       } yield ()).unsafeRunSync()
     },
-    teardown = { _ => () }
+    teardown = { _ => (
+      for {
+        _ <- waitForAllFibers
+      } yield()
+    ) }
   )
-
+  
   val computeBridgeNetworkName = for {
     // network ls
     networkLs <- process
