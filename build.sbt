@@ -3,8 +3,8 @@ import scala.sys.process.Process
 
 inThisBuild(
   List(
-    organization := "xyz.stratalab",
-    homepage := Some(url("https://github.com/StrataLab/strata-btc-bridge")),
+    organization := "org.plasmalabs",
+    homepage := Some(url("https://github.com/StrataLab/plasma-btc-bridge")),
     licenses := Seq("MPL2.0" -> url("https://www.mozilla.org/en-US/MPL/2.0/")),
     scalaVersion := "2.13.12"
   )
@@ -54,15 +54,15 @@ lazy val commonDockerSettings = List(
   dockerAliases := dockerAliases.value.flatMap { alias =>
     if (sys.env.get("RELEASE_PUBLISH").getOrElse("false").toBoolean)
       Seq(
-        alias.withRegistryHost(Some("ghcr.io/stratalab")),
+        alias.withRegistryHost(Some("ghcr.io/plasmalaboratories")),
         alias.withRegistryHost(Some("docker.io/stratalab"))
       )
     else
       Seq(
-        alias.withRegistryHost(Some("ghcr.io/stratalab"))
+        alias.withRegistryHost(Some("ghcr.io/plasmalaboratories"))
       )
   },
-  dockerBaseImage := "adoptopenjdk/openjdk11:jdk-11.0.16.1_1-ubuntu",
+  dockerBaseImage := "eclipse-temurin:21-jre",
   dockerExposedVolumes := Seq("/data"),
   dockerChmodType := DockerChmodType.UserGroupWriteExecute,
   dockerUpdateLatest := true
@@ -70,12 +70,12 @@ lazy val commonDockerSettings = List(
 
 lazy val dockerPublishSettingsConsensus = List(
   dockerExposedPorts ++= Seq(4000),
-  Docker / packageName := "strata-btc-bridge-consensus"
+  Docker / packageName := "plasma-btc-bridge-consensus"
 ) ++ commonDockerSettings
 
 lazy val dockerPublishSettingsPublicApi = List(
   dockerExposedPorts ++= Seq(5000),
-  Docker / packageName := "strata-btc-bridge-public-api"
+  Docker / packageName := "plasma-btc-bridge-public-api"
 ) ++ commonDockerSettings
 
 def versionFmt(out: sbtdynver.GitDescribeOutput): String = {
@@ -90,10 +90,10 @@ def fallbackVersion(d: java.util.Date): String =
   s"HEAD-${sbtdynver.DynVer timestamp d}"
 
 lazy val mavenPublishSettings = List(
-  organization := "xyz.stratalab",
+  organization := "org.plasmalabs",
   version := dynverGitDescribeOutput.value
     .mkVersion(versionFmt, fallbackVersion(dynverCurrentDate.value)),
-  homepage := Some(url("https://github.com/StrataLab/strata-btc-bridge")),
+  homepage := Some(url("https://github.com/StrataLab/plasma-btc-bridge")),
   licenses := List("MPL2.0" -> url("https://www.mozilla.org/en-US/MPL/2.0/")),
   ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org",
   sonatypeRepository := "https://s01.oss.sonatype.org/service/local",
@@ -124,11 +124,11 @@ lazy val shared = (project in file("shared"))
   )
   .settings(
     commonSettings,
-    name := "strata-btc-bridge-shared",
+    name := "plasma-btc-bridge-shared",
     scalapbCodeGeneratorOptions += CodeGeneratorOption.FlatPackage,
     libraryDependencies ++=
-      Dependencies.strataBtcBridge.shared ++
-        Dependencies.strataBtcBridge.test
+      Dependencies.plasmaBtcBridge.shared ++
+        Dependencies.plasmaBtcBridge.test
   )
   .enablePlugins(Fs2Grpc)
 
@@ -138,10 +138,10 @@ lazy val consensus = (project in file("consensus"))
       dockerPublishSettingsConsensus
     else mavenPublishSettings,
     commonSettings,
-    name := "strata-btc-bridge-consensus",
+    name := "plasma-btc-bridge-consensus",
     libraryDependencies ++=
-      Dependencies.strataBtcBridge.consensus ++
-        Dependencies.strataBtcBridge.test
+      Dependencies.plasmaBtcBridge.consensus ++
+        Dependencies.plasmaBtcBridge.test
   )
   .enablePlugins(DockerPlugin, JavaAppPackaging)
   .dependsOn(shared)
@@ -153,10 +153,10 @@ lazy val publicApi =
         dockerPublishSettingsPublicApi
       else mavenPublishSettings,
       commonSettings,
-      name := "strata-btc-bridge-public-api",
+      name := "plasma-btc-bridge-public-api",
       libraryDependencies ++=
-        Dependencies.strataBtcBridge.publicApi ++
-          Dependencies.strataBtcBridge.test
+        Dependencies.plasmaBtcBridge.publicApi ++
+          Dependencies.plasmaBtcBridge.test
     )
     .enablePlugins(DockerPlugin, JavaAppPackaging)
     .dependsOn(shared)
@@ -193,34 +193,34 @@ buildClient := {
   )
 }
 
-lazy val strataBtcCli = (project in file("strata-btc-cli"))
+lazy val plasmaBtcCli = (project in file("plasma-btc-cli"))
   .settings(mavenPublishSettings)
   .settings(
     commonSettings,
-    name := "strata-btc-cli",
+    name := "plasma-btc-cli",
     libraryDependencies ++=
-      Dependencies.strataBtcBridge.consensus ++
-        Dependencies.strataBtcBridge.test
+      Dependencies.plasmaBtcBridge.consensus ++
+        Dependencies.plasmaBtcBridge.test
   )
   .enablePlugins(JavaAppPackaging)
   .dependsOn(shared)
 
 lazy val integration = (project in file("integration"))
-  .dependsOn(consensus, publicApi, strataBtcCli) // your current subproject
+  .dependsOn(consensus, publicApi, plasmaBtcCli) // your current subproject
   .settings(
     publish / skip := true,
     commonSettings,
-    libraryDependencies ++= Dependencies.strataBtcBridge.consensus ++ Dependencies.strataBtcBridge.publicApi ++ Dependencies.strataBtcBridge.shared ++ Dependencies.strataBtcBridge.test
+    libraryDependencies ++= Dependencies.plasmaBtcBridge.consensus ++ Dependencies.plasmaBtcBridge.publicApi ++ Dependencies.plasmaBtcBridge.shared ++ Dependencies.plasmaBtcBridge.test
   )
 
 lazy val root = project
   .in(file("."))
   .settings(
-    organization := "xyz.stratalab",
-    name := "strata-btc-bridge-umbrella"
+    organization := "org.plasmalabs",
+    name := "plasma-btc-bridge-umbrella"
   )
   .settings(noPublish)
-  .aggregate(consensus, publicApi, strataBtcCli)
+  .aggregate(consensus, publicApi, plasmaBtcCli)
 
 addCommandAlias("checkFormat", s"; scalafixAll --check; scalafmtCheckAll")
 addCommandAlias("format", s"; scalafmtAll; scalafixAll; ")

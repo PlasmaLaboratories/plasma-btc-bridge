@@ -30,17 +30,17 @@ object Dependencies {
     "org.bouncycastle" % "bcpkix-jdk15on" % "1.68"
   )
 
-  lazy val strataOrg = "xyz.stratalab"
+  lazy val plasmaOrg = "org.plasmalabs"
 
-  lazy val strataVersion = "0.0.0+253-9a3a528c-SNAPSHOT"
+  lazy val plasmaVersion = "0.1.0"
 
-  val strataSdk = strataOrg %% "strata-sdk" % strataVersion
+  val plasmaSdk = plasmaOrg %% "plasma-sdk" % plasmaVersion
 
-  val strataCrypto = strataOrg %% "crypto" % strataVersion
+  val plasmaCrypto = plasmaOrg %% "crypto" % plasmaVersion
 
-  val strataServiceKit = strataOrg %% "service-kit" % strataVersion
+  val plasmaServiceKit = plasmaOrg %% "service-kit" % plasmaVersion
 
-  val strata: Seq[ModuleID] = Seq(strataSdk, strataCrypto, strataServiceKit)
+  val plasma: Seq[ModuleID] = Seq(plasmaSdk, plasmaCrypto, plasmaServiceKit)
 
   lazy val bitcoinsVersion = "1.9.9"
 
@@ -114,10 +114,10 @@ object Dependencies {
     "com.typesafe" % "config" % "1.4.3"
   )
 
-  object strataBtcBridge {
+  object plasmaBtcBridge {
 
     lazy val consensus: Seq[ModuleID] =
-      strata ++
+      plasma ++
       scopt ++
       cats ++
       log4cats ++
@@ -158,10 +158,10 @@ object Dependencies {
         .map(_ % Test)
   }
 
-  object strataBtcCli {
+  object plasmaBtcCli {
 
     lazy val main: Seq[ModuleID] =
-      strata ++
+      plasma ++
       scopt ++
       cats ++
       log4cats ++

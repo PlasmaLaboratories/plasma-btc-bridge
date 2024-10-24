@@ -26,7 +26,7 @@
     {
       devShells = forEachSupportedSystem ({ pkgs }: {
         default = pkgs.mkShell {
-          packages = with pkgs; [ jdk scala sbt coursier scalafmt scalafix node2nix nodejs pnpm yarn protobuf ];
+          packages = with pkgs; [ jdk scala sbt coursier scalafmt scalafix node2nix nodejs pnpm yarn protobuf openssl ];
         };
       });
     };
