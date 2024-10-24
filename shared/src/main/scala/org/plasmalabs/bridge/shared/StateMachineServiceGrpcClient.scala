@@ -1,14 +1,14 @@
-package xyz.stratalab.bridge.shared
+package org.plasmalabs.bridge.shared
 
-import cats.effect.kernel.{Async, Ref, Sync}
+import cats.effect.kernel.{Async, Ref, Sync, Temporal}
 import cats.effect.std.Mutex
 import com.google.protobuf.ByteString
 import fs2.grpc.syntax.all._
 import io.grpc.{ManagedChannelBuilder, Metadata}
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
-import xyz.stratalab.bridge.consensus.service.{MintingStatusReply, StateMachineServiceFs2Grpc}
-import xyz.stratalab.bridge.shared.{
+import org.plasmalabs.bridge.consensus.service.{MintingStatusReply, StateMachineServiceFs2Grpc}
+import org.plasmalabs.bridge.shared.{
   BridgeCryptoUtils,
   BridgeError,
   BridgeResponse,
@@ -79,7 +79,7 @@ trait StateMachineServiceGrpcClient[F[_]] {
 object StateMachineServiceGrpcClientImpl {
 
   import cats.implicits._
-  import xyz.stratalab.bridge.shared.implicits._
+  import org.plasmalabs.bridge.shared.implicits._
   import scala.concurrent.duration._
 
 
@@ -296,7 +296,7 @@ object StateMachineServiceGrpcClientImpl {
             maxRetries match {
               case 0 => for {
                 _ <- error"Max retries reached for request ${request.timestamp}"
-                someResponse <- Empty().pure [F]
+                someResponse <- Empty().pure[F]
               } yield someResponse
               case _ => for {
                 _ <- Async[F].sleep(delay)

@@ -48,8 +48,8 @@ mkdir -p node02
 chmod 777 node01
 chmod 777 node02
 # sed -i  -e 's/public/private/' staking/config.yaml
-export TIMESTAMP=`date --date="+10 seconds" +%s%N | cut -b1-13`
-# export TIMESTAMP=$(date -v+10S +%s000)
+# export TIMESTAMP=`date --date="+10 seconds" +%s%N | cut -b1-13`
+export TIMESTAMP=$(date -v+10S +%s000)
 
 echo > node01/config.yaml "\
 node:
@@ -70,20 +70,20 @@ node:
     stakes: [10000, 10000]
 "
 
-export CONTAINER_ID=`docker run --rm -d --name node01 -p 9085:9085 -p 9084:9084 -p 9091:9091 -v $(pwd)/node01:/staking:rw stratalab/strata-node-tooling:0.0.0-8202-06ff79d9 --  --config  /staking/config.yaml --regtest`
+export CONTAINER_ID=`docker run --rm -d --name node01 -p 9085:9085 -p 9084:9084 -p 9091:9091 -v $(pwd)/node01:/staking:rw stratalab/plasma-node-tooling:0.1.0 --  --config  /staking/config.yaml --regtest`
 export IP_CONTAINER=`docker network inspect bridge | jq  ".[0].Containers.\"$CONTAINER_ID\".IPv4Address" | sed  's:"::g' | sed -n 's:\(.*\)/.*:\1:p'`
 echo "IP_CONTAINER: $IP_CONTAINER"
-docker run --rm -d --name node02 -e NODE_P2P_KNOWN_PEERS=$IP_CONTAINER:9085 -p 9087:9085 -p 9086:9084 -p 9092:9091 -v $(pwd)/node02:/staking:rw stratalab/strata-node-tooling:0.0.0-8202-06ff79d9 --  --config  /staking/config.yaml --regtest
+docker run --rm -d --name node02 -e NODE_P2P_KNOWN_PEERS=$IP_CONTAINER:9085 -p 9087:9085 -p 9086:9084 -p 9092:9091 -v $(pwd)/node02:/staking:rw stratalab/plasma-node-tooling:0.1.0 --  --config  /staking/config.yaml --regtest
 
 echo "Waiting for node to start"
 # Wait for node to start
-sleep 15
+sleep 25
 
 # Prepare the environment
 echo "Preparing the environment"
 shopt -s expand_aliases
 # alias strata-cli="cs launch -r https://s01.oss.sonatype.org/content/repositories/staging xyz.stratalab:strata-cli_2.13:0.0.0+196-15bc1892-SNAPSHOT -- "
-alias strata-cli="cs launch -r https://s01.oss.sonatype.org/content/repositories/staging xyz.stratalab:strata-cli_2.13:0.0.0+196-15bc1892-SNAPSHOT -- "
+alias strata-cli="cs launch -r https://s01.oss.sonatype.org/content/repositories/releases org.plasmalabs:plasma-cli_2.13:0.1.0 -- "
 
 export BTC_USER=bitcoin
 export BTC_PASSWORD=password
