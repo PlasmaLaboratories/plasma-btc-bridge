@@ -32,7 +32,7 @@ object Dependencies {
 
   lazy val plasmaOrg = "org.plasmalabs"
 
-  lazy val plasmaVersion = "0.0.0+253-793b1397-SNAPSHOT"
+  lazy val plasmaVersion = "0.1.0"
 
   val plasmaSdk = plasmaOrg %% "plasma-sdk" % plasmaVersion
 

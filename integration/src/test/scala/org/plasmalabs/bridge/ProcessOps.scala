@@ -213,7 +213,7 @@ trait ProcessOps {
         "launch",
         "-r",
         "https://s01.oss.sonatype.org/content/repositories/staging",
-        "org.plasmalabs:plasma-cli_2.13:0.0.0+204-3feec2e9-SNAPSHOT",
+        "org.plasmalabs:plasma-cli_2.13:0.1.0",
         "--",
         "fellowships",
         "add",
