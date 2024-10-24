@@ -390,7 +390,7 @@ package object bridge extends ProcessOps {
   val csParams = Seq(
     "launch",
     "-r",
-    "https://s01.oss.sonatype.org/content/repositories/staging",
+    "https://s01.oss.sonatype.org/content/repositories/releases",
     "org.plasmalabs:plasma-cli_2.13:0.1.0",
     "--"
   )
