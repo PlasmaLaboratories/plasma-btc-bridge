@@ -22,6 +22,7 @@ import org.plasmalabs.bridge.shared.{
 }
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
+import org.plasmalabs.bridge.shared.TimeoutError
 
 object PublicApiHttpServiceServer {
 
@@ -114,10 +115,11 @@ object PublicApiHttpServiceServer {
               e match {
                 case _: SessionNotFoundError =>
                   NotFound(e)
+                case _: TimeoutError =>
+                  RequestTimeout(e)
                 case _ =>
                   BadRequest(e)
               }
-              BadRequest(e)
             case Left(_) =>
               InternalServerError()
             case Right(response) =>
