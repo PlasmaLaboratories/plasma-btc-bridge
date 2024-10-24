@@ -90,7 +90,7 @@ object PBFTInternalGrpcServiceClientImpl {
           maxRetries match {
             case 0 =>
               for {
-                _            <- error"Max retries reached for $operationName. Error: ${error.getMessage}"
+                _            <- error"Max retries reached for $operationName"
                 someResponse <- F.pure(defaultValue)
               } yield someResponse
             case _ =>
