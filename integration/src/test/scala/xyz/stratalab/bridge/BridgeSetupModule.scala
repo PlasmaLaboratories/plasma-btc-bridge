@@ -236,32 +236,13 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
     }
   } yield ()
 
-  def potentiallyKillFibers(name: String) =  { 
-    name match {
-      case "Bridge should correctly peg-in BTC if non-primaries replica fails" => {
-        for {
-          _ <- killFiber(1)
-          _ <- killFiber(2)
-        } yield ()
-      }
-      case "Bridge should fail peg-in BTC if more than f non-primaries replicas fail" => {
-        for {
-          _ <- killFiber(1)
-          _ <- killFiber(2)
-          _ <- killFiber(3)
-        } yield ()
-      }
-      case _: String => IO.pure(())
-    }
-  }
+
 
 
   val cleanupDir = FunFixture[Unit](
-    setup = { t =>
+    setup = { _ =>
       (for {
-      _ <- IO.delay(restoreMissingFibers.unsafeRunSync())
-      _ <- IO.delay(potentiallyKillFibers(t.name).unsafeRunSync())
-        
+        _ <- restoreMissingFibers
         _ <- IO {
           List(
             userWalletDb(1),

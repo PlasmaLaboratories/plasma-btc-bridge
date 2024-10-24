@@ -7,6 +7,8 @@ import cats.implicits._
 
 trait SuccessfulPeginWithNonPrimaryFailureModule { self: BridgeIntegrationSpec =>
   def successfulPeginWithNonPrimaryFailure(): IO[Unit] = for {
+      _ <- killFiber(1)
+      _ <- killFiber(2)
       _ <- pwd
       _ <- mintStrataBlock(1, 1)
       _ <- initStrataWallet(1)

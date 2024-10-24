@@ -10,6 +10,9 @@ trait FailedPeginNonPrimaryFailureModule { self: BridgeIntegrationSpec =>
 
     (for {
       // Run test
+      _ <- killFiber(1)
+      _ <- killFiber(2)
+      _ <- killFiber(3)
       result <- (for {
         _ <- getNewAddress
         startSessionResponse <- startSession(1).handleErrorWith {
