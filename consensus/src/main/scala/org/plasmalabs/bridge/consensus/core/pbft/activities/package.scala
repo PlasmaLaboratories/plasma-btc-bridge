@@ -43,7 +43,7 @@ package object activities {
             x.digest.toByteArray
               .sameElements(prePrepareMessage.digest.toByteArray())
           )
-          .size > replicaCount.maxFailures)
+          .size > 2 * replicaCount.maxFailures)
       )
       .getOrElse(false)
   }
@@ -70,7 +70,7 @@ package object activities {
             x.digest.toByteArray
               .sameElements(prePrepareMessage.digest.toByteArray())
           )
-          .size > replicaCount.maxFailures)
+          .size > 2 * replicaCount.maxFailures)
       )
       .getOrElse(false)
   }
