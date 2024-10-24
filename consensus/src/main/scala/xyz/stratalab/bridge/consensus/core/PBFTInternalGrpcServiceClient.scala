@@ -86,7 +86,7 @@ object PBFTInternalGrpcServiceClientImpl {
         operationName: String,
         defaultValue:  => A
       )(implicit F: Temporal[F]): F[A] = for {
-        result <- operation.handleErrorWith { error =>
+        result <- operation.handleErrorWith { _ =>
           maxRetries match {
             case 0 =>
               for {
