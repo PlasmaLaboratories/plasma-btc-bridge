@@ -14,7 +14,12 @@ import org.plasmalabs.bridge.consensus.pbft.{
   PrepareRequest,
   ViewChangeRequest
 }
-import org.plasmalabs.bridge.shared.{BridgeCryptoUtils, Empty, PBFTInternalGrpcServiceClientRetryConfigImpl, ReplicaNode}
+import org.plasmalabs.bridge.shared.{
+  BridgeCryptoUtils,
+  Empty,
+  PBFTInternalGrpcServiceClientRetryConfigImpl,
+  ReplicaNode
+}
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
 

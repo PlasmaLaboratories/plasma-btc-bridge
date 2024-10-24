@@ -24,7 +24,23 @@ import org.plasmalabs.bridge.consensus.shared.BTCRetryThreshold
 import org.plasmalabs.bridge.consensus.shared.persistence.{StorageApi, StorageApiImpl}
 import org.plasmalabs.bridge.consensus.shared.utils.ConfUtils._
 import org.plasmalabs.bridge.consensus.subsystems.monitor.{BlockProcessor, SessionEvent}
-import org.plasmalabs.bridge.shared.{BridgeCryptoUtils, BridgeError, BridgeResponse, ClientCount, ClientId, ConsensusClientMessageId, PBFTInternalGrpcServiceClientRetryConfigImpl, ReplicaCount, ReplicaId, ReplicaNode, ResponseGrpcServiceServer, RetryPolicy, StateMachineServiceGrpcClient, StateMachineServiceGrpcClientImpl, StateMachineServiceGrpcClientRetryConfigImpl}
+import org.plasmalabs.bridge.shared.{
+  BridgeCryptoUtils,
+  BridgeError,
+  BridgeResponse,
+  ClientCount,
+  ClientId,
+  ConsensusClientMessageId,
+  PBFTInternalGrpcServiceClientRetryConfigImpl,
+  ReplicaCount,
+  ReplicaId,
+  ReplicaNode,
+  ResponseGrpcServiceServer,
+  RetryPolicy,
+  StateMachineServiceGrpcClient,
+  StateMachineServiceGrpcClientImpl,
+  StateMachineServiceGrpcClientRetryConfigImpl
+}
 import org.plasmalabs.consensus.core.{PBFTInternalGrpcServiceClient, PBFTInternalGrpcServiceClientImpl}
 import org.plasmalabs.sdk.dataApi.NodeQueryAlgebra
 import org.plasmalabs.sdk.models.{GroupId, SeriesId}
