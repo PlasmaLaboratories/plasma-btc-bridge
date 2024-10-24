@@ -1,8 +1,7 @@
 package org.plasmalabs.consensus.core
 
-import cats.effect.kernel.Async
 import cats.Parallel
-import cats.effect.kernel._
+import cats.effect.kernel.Async
 import com.google.protobuf.ByteString
 import fs2.grpc.syntax.all._
 import io.grpc.{ManagedChannelBuilder, Metadata}
@@ -15,7 +14,7 @@ import org.plasmalabs.bridge.consensus.pbft.{
   PrepareRequest,
   ViewChangeRequest
 }
-import org.plasmalabs.bridge.shared.{BridgeCryptoUtils, Empty, ReplicaNode, PBFTInternalGrpcServiceClientRetryConfigImpl}
+import org.plasmalabs.bridge.shared.{BridgeCryptoUtils, Empty, PBFTInternalGrpcServiceClientRetryConfigImpl, ReplicaNode}
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
 
@@ -116,7 +115,7 @@ object PBFTInternalGrpcServiceClientImpl {
             keyPair.getPrivate(),
             request.signableBytes
           )
-           _ <- backupMap.toList.parTraverse { case (_, backup) =>
+          _ <- backupMap.toList.parTraverse { case (_, backup) =>
             retryWithBackoff(
               backup.viewChange(
                 request.withSignature(
@@ -204,17 +203,17 @@ object PBFTInternalGrpcServiceClientImpl {
       ): F[Empty] = for {
         _ <- trace"Sending Checkpoint to all replicas"
         _ <- backupMap.toList.parTraverse { case (_, backup) =>
-            retryWithBackoff(
-              backup.checkpoint(
-                request,
-                new Metadata()
-              ),
-              pbftInternalConfig.retryPolicy.initialDelay,
-              pbftInternalConfig.retryPolicy.maxRetries,
-              "Checkpoint",
-              Empty()
-            )
-          }
+          retryWithBackoff(
+            backup.checkpoint(
+              request,
+              new Metadata()
+            ),
+            pbftInternalConfig.retryPolicy.initialDelay,
+            pbftInternalConfig.retryPolicy.maxRetries,
+            "Checkpoint",
+            Empty()
+          )
+        }
       } yield Empty()
 
       override def newView(
@@ -226,19 +225,19 @@ object PBFTInternalGrpcServiceClientImpl {
           request.signableBytes
         )
         _ <- backupMap.toList.parTraverse { case (_, backup) =>
-            retryWithBackoff(
-              backup.newView(
-                request.withSignature(
-                  ByteString.copyFrom(signedBytes)
-                ),
-                new Metadata()
+          retryWithBackoff(
+            backup.newView(
+              request.withSignature(
+                ByteString.copyFrom(signedBytes)
               ),
-              pbftInternalConfig.retryPolicy.initialDelay,
-              pbftInternalConfig.retryPolicy.maxRetries,
-              "New View",
-              Empty()
-            )
-          }
+              new Metadata()
+            ),
+            pbftInternalConfig.retryPolicy.initialDelay,
+            pbftInternalConfig.retryPolicy.maxRetries,
+            "New View",
+            Empty()
+          )
+        }
       } yield Empty()
 
     }

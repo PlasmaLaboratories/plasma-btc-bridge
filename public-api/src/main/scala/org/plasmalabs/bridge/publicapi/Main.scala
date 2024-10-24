@@ -14,9 +14,6 @@ import org.http4s.ember.server.EmberServerBuilder
 import org.http4s.server.Router
 import org.http4s.server.middleware.CORS
 import org.http4s.server.staticcontent.resourceServiceBuilder
-import org.typelevel.log4cats.Logger
-import org.typelevel.log4cats.syntax._
-import scopt.OParser
 import org.plasmalabs.bridge.shared.{
   BridgeCryptoUtils,
   BridgeError,
@@ -31,6 +28,9 @@ import org.plasmalabs.bridge.shared.{
   StateMachineServiceGrpcClientImpl,
   StateMachineServiceGrpcClientRetryConfigImpl
 }
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.syntax._
+import scopt.OParser
 
 import java.net.InetSocketAddress
 import java.security.{PublicKey, Security}

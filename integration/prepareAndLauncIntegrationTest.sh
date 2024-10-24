@@ -47,6 +47,7 @@ chmod 777 node01
 chmod 777 node02
 # sed -i  -e 's/public/private/' staking/config.yaml
 export TIMESTAMP=`date --date="+10 seconds" +%s%N | cut -b1-13`
+
 echo > node01/config.yaml "\
 node:
   big-bang:

@@ -6,23 +6,9 @@ import io.circe.generic.auto._
 import org.http4s.circe._
 import org.http4s.headers.`Content-Type`
 import org.http4s.{HttpRoutes, _}
-import org.plasmalabs.bridge.shared.{
-  BridgeContants,
-  BridgeError,
-  BridgeResponse,
-  ClientId,
-  MintingStatusOperation,
-  MintingStatusRequest,
-  MintingStatusResponse,
-  SessionNotFoundError,
-  StartPeginSessionRequest,
-  StartPeginSessionResponse,
-  StartSessionOperation,
-  StateMachineServiceGrpcClient
-}
+import org.plasmalabs.bridge.shared.{BridgeContants, BridgeError, BridgeResponse, ClientId, MintingStatusOperation, MintingStatusRequest, MintingStatusResponse, SessionNotFoundError, StartPeginSessionRequest, StartPeginSessionResponse, StartSessionOperation, StateMachineServiceGrpcClient, TimeoutError}
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
-import org.plasmalabs.bridge.shared.TimeoutError
 
 object PublicApiHttpServiceServer {
 
