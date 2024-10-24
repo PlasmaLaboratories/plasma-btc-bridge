@@ -81,26 +81,27 @@ object PBFTInternalGrpcServiceClientImpl {
 
       def retryWithBackoff[A](
         operation:     => F[A],
-        initialDelay:  FiniteDuration,
+        delay:  FiniteDuration,
         maxRetries:    Int,
         operationName: String,
         defaultValue:  => A
       )(implicit F: Temporal[F]): F[A] = for {
-        result <- operation.handleErrorWith { error =>
-          if (maxRetries > 0) {
-            F.sleep(initialDelay) >> {
-              trace"Retrying $operationName. Retries left: $maxRetries, Next delay: ${initialDelay * pbftInternalConfig.retryPolicy.delayMultiplier}" >>
-              retryWithBackoff(
+        result <- operation.handleErrorWith { error => 
+          maxRetries match {
+            case 0 => for {
+              _ <- error"Max retries reached for $operationName. Error: ${error.getMessage}" 
+              someResponse <- F.pure(defaultValue) 
+            } yield someResponse
+            case _ => for {
+              _ <- F.sleep(delay)
+              someResponse <- retryWithBackoff(
                 operation,
-                initialDelay * pbftInternalConfig.retryPolicy.delayMultiplier,
+                delay * pbftInternalConfig.retryPolicy.delayMultiplier,
                 maxRetries - 1,
                 operationName,
                 defaultValue
               )
-            }
-          } else {
-            trace"Max retries reached for $operationName. Error: ${error.getMessage}" >>
-            F.pure(defaultValue)
+            } yield someResponse
           }
         }
       } yield result
@@ -233,7 +234,7 @@ object PBFTInternalGrpcServiceClientImpl {
               ),
               pbftInternalConfig.retryPolicy.initialDelay,
               pbftInternalConfig.retryPolicy.maxRetries,
-              "new View",
+              "New View",
               Empty()
             )
           }

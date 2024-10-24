@@ -13,7 +13,7 @@ import scala.util.Try
 
 trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with PublicApiConfModule {
 
-  override val munitIOTimeout = Duration(250, "s")
+  override val munitIOTimeout = Duration(180, "s")
 
   implicit val logger: Logger[IO] =
     org.typelevel.log4cats.slf4j.Slf4jLogger
@@ -195,7 +195,7 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
             fiber02 = fiber02.filter(_._2 != replicaId)
             fiber01 = fiber01.filter(_._2 != replicaId)
           }
-          _ <- IO.println(s"Killed both consensus and public API fibers for replica $replicaId")
+          _ <- logger.info(s"Killed both consensus and public API fibers for replica $replicaId")
         } yield ()
       case (_, _) => IO.pure(())
     }
@@ -229,10 +229,10 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
           IO.sleep(10.seconds)
         )
         
-        _ <- IO.println(s"Restored consensus and public api for ${missingReplicas}")
+        _ <- logger.info(s"Restored consensus and public api for ${missingReplicas}")
       } yield ()
     } else {
-      IO.println("All replicas are still running.")
+      logger.info("All replicas are still running.")
     }
   } yield ()
 
@@ -264,21 +264,20 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
         
         _ <- IO {
           List(
-            (userWalletDb(1), "userWalletDb1"),
-            (userWalletMnemonic(1), "userWalletMnemonic1"),
-            (userWalletJson(1), "userWalletJson1"),
-            (userWalletDb(2), "userWalletDb2"),
-            (userWalletMnemonic(2), "userWalletMnemonic2"),
-            (userWalletJson(2), "userWalletJson2"),
-            (vkFile, "vkFile"),
-            ("fundRedeemTx.pbuf", "fundRedeemTx"),
-            ("fundRedeemTxProved.pbuf", "fundRedeemTxProved"),
-            ("redeemTx.pbuf", "redeemTx"),
-            ("redeemTxProved.pbuf", "redeemTxProved")
-          ).foreach { case (path, name) =>
+            userWalletDb(1),
+            userWalletMnemonic(1),
+            userWalletJson(1),
+            userWalletDb(2), 
+            userWalletMnemonic(2), 
+            userWalletJson(2), 
+            vkFile, 
+            "fundRedeemTx.pbuf", 
+            "fundRedeemTxProved.pbuf", 
+            "redeemTx.pbuf",
+            "redeemTxProved.pbuf",
+          ).foreach { case (path) =>
             try {
               Files.delete(Paths.get(path))
-              IO.println(s"Deleted $name")
             } catch {
               case _: Throwable => ()
             }

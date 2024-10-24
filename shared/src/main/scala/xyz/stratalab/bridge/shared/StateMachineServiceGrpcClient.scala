@@ -287,18 +287,23 @@ object StateMachineServiceGrpcClientImpl {
       def retryWithBackoff(
         replica: StateMachineServiceFs2Grpc[F, Metadata],
         request: StateMachineRequest,
-        initialDelay: FiniteDuration,
+        delay: FiniteDuration,
         maxRetries: Int
       )(implicit F: Temporal[F]): F[Empty] = {
         for {
           _ <- info"Trying to execute request on another replica, request: ${request.timestamp}"
-          response <- replica.executeRequest(request, new Metadata()).handleErrorWith { _ =>
-          if (maxRetries > 0)
-            F.sleep(initialDelay) >> retryWithBackoff(replica, request, initialDelay * stateMachineConf.retryPolicy.delayMultiplier, maxRetries - 1)
-          else
-            error"Max retries reached for request ${request.timestamp}" >> F.pure(Empty())
-        }
-
+          response <- replica.executeRequest(request, new Metadata()).handleErrorWith { _ => 
+            maxRetries match {
+              case 0 => for {
+                _ <- error"Max retries reached for request ${request.timestamp}"
+                someResponse <- F.pure(Empty())
+              } yield someResponse
+              case _ => for {
+                _ <- F.sleep(delay)
+                someResponse <- retryWithBackoff(replica, request, delay * stateMachineConf.retryPolicy.delayMultiplier, maxRetries - 1)
+              } yield someResponse
+            }
+          }
         } yield response
       }
 
