@@ -99,7 +99,7 @@ object StateMachineServiceGrpcClientImpl {
         BridgeResponse
       ], LongAdder]
     ],
-  )(implicit replicaCount: ReplicaCount,stateMachineConf: StateMachineServiceGrpcClientRetryConfigImpl) = {
+  )(implicit replicaCount: ReplicaCount, stateMachineConf: StateMachineServiceGrpcClientRetryConfigImpl) = {
     for {
       idClientList <- (for {
         replicaNode <- replicaNodes
