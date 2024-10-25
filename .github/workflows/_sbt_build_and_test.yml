@@ -4,12 +4,12 @@ on:
     inputs:
       target-os:
         description: "List of operating systems to build on."
-        default: "ubuntu-latest"
+        default: '["ubuntu-latest"]'
         required: false
         type: string
       java-versions:
         description: "List of Java versions to target."
-        default: "11"
+        default: '["11"]'
         required: false
         type: string
 
@@ -38,10 +38,6 @@ jobs:
           path: consensus/target/test-reports/
   integration-test:
     name: Run Integration Tests
-    strategy:
-      matrix:
-        os: ${{fromJson(inputs.target-os)}}
-        java: ${{fromJson(inputs.java-versions)}}
     runs-on: ubuntu-latest
     needs: unit-test
     services:
