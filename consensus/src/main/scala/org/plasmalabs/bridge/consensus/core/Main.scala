@@ -23,7 +23,7 @@ import org.plasmalabs.bridge.consensus.service.StateMachineServiceFs2Grpc
 import org.plasmalabs.bridge.consensus.shared.BTCRetryThreshold
 import org.plasmalabs.bridge.consensus.shared.persistence.{StorageApi, StorageApiImpl}
 import org.plasmalabs.bridge.consensus.shared.utils.ConfUtils._
-import org.plasmalabs.bridge.consensus.subsystems.monitor.{BlockProcessor, SessionEvent}
+import org.plasmalabs.bridge.consensus.subsystems.monitor.{BitcoinMonitor, BlockProcessor, NodeMonitor, SessionEvent}
 import org.plasmalabs.bridge.shared.{
   BridgeCryptoUtils,
   BridgeError,
@@ -41,7 +41,6 @@ import org.plasmalabs.bridge.shared.{
 import org.plasmalabs.consensus.core.{PBFTInternalGrpcServiceClient, PBFTInternalGrpcServiceClientImpl}
 import org.plasmalabs.sdk.dataApi.NodeQueryAlgebra
 import org.plasmalabs.sdk.models.{GroupId, SeriesId}
-import org.plasmalabs.sdk.monitoring.{BitcoinMonitor, NodeMonitor}
 import org.plasmalabs.sdk.utils.Encoding
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._

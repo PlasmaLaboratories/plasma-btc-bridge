@@ -1,9 +1,8 @@
 package org.plasmalabs.bridge.consensus.subsystems.monitor
 
+import org.plasmalabs.bridge.consensus.subsystems.monitor.{BitcoinBlockSync, NodeBlockSync}
 import org.plasmalabs.sdk.codecs.AddressCodecs
 import org.plasmalabs.sdk.models.box.Attestation
-import org.plasmalabs.sdk.monitoring.BitcoinMonitor.BitcoinBlockSync
-import org.plasmalabs.sdk.monitoring.NodeMonitor
 import org.plasmalabs.sdk.utils.Encoding
 
 import scala.util.Try
@@ -22,7 +21,7 @@ object BlockProcessor {
   def process[F[_]](
     initialBTCHeight:    Int,
     initialStrataHeight: Long
-  ): Either[BitcoinBlockSync, NodeMonitor.NodeBlockSync] => fs2.Stream[
+  ): Either[BitcoinBlockSync, NodeBlockSync] => fs2.Stream[
     F,
     BlockchainEvent
   ] = {
@@ -32,7 +31,7 @@ object BlockProcessor {
     var btcAscending = false
     var toplAscending = false
     def processAux[F[_]](
-      block: Either[BitcoinBlockSync, NodeMonitor.NodeBlockSync]
+      block: Either[BitcoinBlockSync, NodeBlockSync]
     ): fs2.Stream[F, BlockchainEvent] = block match {
       case Left(b) =>
         val allTransactions = fs2.Stream(
