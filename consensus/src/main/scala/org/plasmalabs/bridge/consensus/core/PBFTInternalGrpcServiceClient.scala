@@ -14,17 +14,13 @@ import org.plasmalabs.bridge.consensus.pbft.{
   PrepareRequest,
   ViewChangeRequest
 }
-import org.plasmalabs.bridge.shared.{
-  BridgeCryptoUtils,
-  Empty,
-  PBFTInternalGrpcServiceClientRetryConfigImpl,
-  ReplicaNode
-}
+import org.plasmalabs.bridge.shared.{BridgeCryptoUtils, Empty, ReplicaNode}
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
 
 import java.security.KeyPair
 import scala.concurrent.duration.FiniteDuration
+import org.plasmalabs.bridge.shared.RetryPolicy
 
 trait PBFTInternalGrpcServiceClient[F[_]] {
 
@@ -61,7 +57,7 @@ object PBFTInternalGrpcServiceClientImpl {
   def make[F[_]: Parallel: Async: Logger](
     keyPair:      KeyPair,
     replicaNodes: List[ReplicaNode[F]]
-  )(implicit pbftInternalConfig: PBFTInternalGrpcServiceClientRetryConfigImpl) =
+  )(implicit pbftInternalConfig: RetryPolicy) =
     for {
       idBackupMap <- (for {
         replicaNode <- replicaNodes
@@ -103,7 +99,7 @@ object PBFTInternalGrpcServiceClientImpl {
                 _ <- Async[F].sleep(delay)
                 someResponse <- retryWithBackoff(
                   operation,
-                  delay * pbftInternalConfig.retryPolicy.delayMultiplier,
+                  delay * pbftInternalConfig.delayMultiplier,
                   maxRetries - 1,
                   operationName,
                   defaultValue
@@ -128,8 +124,8 @@ object PBFTInternalGrpcServiceClientImpl {
                 ),
                 new Metadata()
               ),
-              pbftInternalConfig.retryPolicy.initialDelay,
-              pbftInternalConfig.retryPolicy.maxRetries,
+              pbftInternalConfig.initialDelay,
+              pbftInternalConfig.maxRetries,
               "View Change",
               Empty()
             )
@@ -151,8 +147,8 @@ object PBFTInternalGrpcServiceClientImpl {
                 ),
                 new Metadata()
               ),
-              pbftInternalConfig.retryPolicy.initialDelay,
-              pbftInternalConfig.retryPolicy.maxRetries,
+              pbftInternalConfig.initialDelay,
+              pbftInternalConfig.maxRetries,
               "Commit",
               Empty()
             ).handleErrorWith { _ =>
@@ -170,8 +166,8 @@ object PBFTInternalGrpcServiceClientImpl {
                 request,
                 new Metadata()
               ),
-              pbftInternalConfig.retryPolicy.initialDelay,
-              pbftInternalConfig.retryPolicy.maxRetries,
+              pbftInternalConfig.initialDelay,
+              pbftInternalConfig.maxRetries,
               "Pre Prepare",
               Empty()
             )
@@ -195,8 +191,8 @@ object PBFTInternalGrpcServiceClientImpl {
                 ),
                 new Metadata()
               ),
-              pbftInternalConfig.retryPolicy.initialDelay,
-              pbftInternalConfig.retryPolicy.maxRetries,
+              pbftInternalConfig.initialDelay,
+              pbftInternalConfig.maxRetries,
               "Prepare",
               Empty()
             )
@@ -213,8 +209,8 @@ object PBFTInternalGrpcServiceClientImpl {
               request,
               new Metadata()
             ),
-            pbftInternalConfig.retryPolicy.initialDelay,
-            pbftInternalConfig.retryPolicy.maxRetries,
+            pbftInternalConfig.initialDelay,
+            pbftInternalConfig.maxRetries,
             "Checkpoint",
             Empty()
           )
@@ -237,8 +233,8 @@ object PBFTInternalGrpcServiceClientImpl {
               ),
               new Metadata()
             ),
-            pbftInternalConfig.retryPolicy.initialDelay,
-            pbftInternalConfig.retryPolicy.maxRetries,
+            pbftInternalConfig.initialDelay,
+            pbftInternalConfig.maxRetries,
             "New View",
             Empty()
           )

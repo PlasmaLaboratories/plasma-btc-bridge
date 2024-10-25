@@ -186,19 +186,17 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
     val consensusFiberOpt = fiber02.find(_._2 == replicaId)
     val publicApiFiberOpt = fiber01.find(_._2 == replicaId)
 
-    (consensusFiberOpt, publicApiFiberOpt) match {
-      case (Some((consensusFiber, _)), Some((publicApiFiber, _))) =>
-        for {
-          _ <- consensusFiber.cancel
-          _ <- publicApiFiber.cancel
-          _ <- IO.delay {
-            fiber02 = fiber02.filter(_._2 != replicaId)
-            fiber01 = fiber01.filter(_._2 != replicaId)
-          }
-          _ <- logger.info(s"Killed both consensus and public API fibers for replica $replicaId")
-        } yield ()
-      case (_, _) => IO.pure(())
-    }
+    (consensusFiberOpt, publicApiFiberOpt).mapN((consensusFiber, publicApiFiber) =>
+      for {
+        _ <- consensusFiber._1.cancel
+        _ <- publicApiFiber._1.cancel
+        _ <- IO.delay {
+          fiber02 = fiber02.filter(_._2 != replicaId)
+          fiber01 = fiber01.filter(_._2 != replicaId)
+        }
+        _ <- logger.info(s"Killed both consensus and public API fibers for replica $replicaId")
+      } yield ()
+    ).sequence[IO, Unit].void
   }
 
 

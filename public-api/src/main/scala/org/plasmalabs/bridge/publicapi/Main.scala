@@ -26,7 +26,7 @@ import org.plasmalabs.bridge.shared.{
   RetryPolicy,
   StateMachineServiceGrpcClient,
   StateMachineServiceGrpcClientImpl,
-  StateMachineServiceGrpcClientRetryConfigImpl
+  StateMachineServiceGrpcClientRetryConfig
 }
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
@@ -99,7 +99,7 @@ object Main extends IOApp with PublicApiParamsDescriptor {
     replicaCount:     ReplicaCount,
     clientNumber:     ClientId,
     logger:           Logger[IO],
-    stateMachineConf: StateMachineServiceGrpcClientRetryConfigImpl
+    stateMachineConf: StateMachineServiceGrpcClientRetryConfig
   ) = {
     val messageResponseMap =
       new ConcurrentHashMap[ConsensusClientMessageId, ConcurrentHashMap[Either[
@@ -207,7 +207,7 @@ object Main extends IOApp with PublicApiParamsDescriptor {
           org.typelevel.log4cats.slf4j.Slf4jLogger
             .getLoggerFromName[IO]("public-api-" + f"${client.id}%02d")
 
-        implicit val stateMachineConf = StateMachineServiceGrpcClientRetryConfigImpl(
+        implicit val stateMachineConf = StateMachineServiceGrpcClientRetryConfig(
           primaryResponseWait = FiniteDuration.apply(conf.getInt("bridge.client.primaryResponseWait"), "second"),
           otherReplicasResponseWait =
             FiniteDuration.apply(conf.getInt("bridge.client.otherReplicasResponseWait"), "second"),

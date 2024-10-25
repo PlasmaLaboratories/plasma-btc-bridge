@@ -23,7 +23,7 @@ import org.plasmalabs.bridge.shared.{
   TimeoutDepositBTCOperation,
   TimeoutError,
   TimeoutTBTCMintOperation,
-  StateMachineServiceGrpcClientRetryConfigImpl
+  StateMachineServiceGrpcClientRetryConfig
 }
 
 import java.security.KeyPair
@@ -99,7 +99,7 @@ object StateMachineServiceGrpcClientImpl {
         BridgeResponse
       ], LongAdder]
     ],
-  )(implicit replicaCount: ReplicaCount, stateMachineConf: StateMachineServiceGrpcClientRetryConfigImpl) = {
+  )(implicit replicaCount: ReplicaCount, stateMachineConf: StateMachineServiceGrpcClientRetryConfig) = {
     for {
       idClientList <- (for {
         replicaNode <- replicaNodes

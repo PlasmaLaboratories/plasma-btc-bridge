@@ -31,7 +31,6 @@ import org.plasmalabs.bridge.shared.{
   ClientCount,
   ClientId,
   ConsensusClientMessageId,
-  PBFTInternalGrpcServiceClientRetryConfigImpl,
   ReplicaCount,
   ReplicaId,
   ReplicaNode,
@@ -39,7 +38,7 @@ import org.plasmalabs.bridge.shared.{
   RetryPolicy,
   StateMachineServiceGrpcClient,
   StateMachineServiceGrpcClientImpl,
-  StateMachineServiceGrpcClientRetryConfigImpl
+  StateMachineServiceGrpcClientRetryConfig
 }
 import org.plasmalabs.consensus.core.{PBFTInternalGrpcServiceClient, PBFTInternalGrpcServiceClientImpl}
 import org.plasmalabs.sdk.dataApi.NodeQueryAlgebra
@@ -251,8 +250,8 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
     replicaId:          ReplicaId,
     clientCount:        ClientCount,
     replicaCount:       ReplicaCount,
-    pbftInternalConfig: PBFTInternalGrpcServiceClientRetryConfigImpl,
-    stateMachineConf:   StateMachineServiceGrpcClientRetryConfigImpl
+    pbftInternalConfig: RetryPolicy,
+    stateMachineConf:   StateMachineServiceGrpcClientRetryConfig
   ) = {
     import fs2.grpc.syntax.all._
     import scala.jdk.CollectionConverters._
@@ -496,16 +495,14 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
       org.typelevel.log4cats.slf4j.Slf4jLogger
         .getLoggerFromName[IO]("consensus-" + f"${replicaId.id}%02d")
 
-    implicit val pbftInternalConfig = PBFTInternalGrpcServiceClientRetryConfigImpl(
-      retryPolicy = RetryPolicy(
-        initialDelay =
-          FiniteDuration.apply(conf.getInt("bridge.replica.clients.pbftInternal.retryPolicy.initialDelay"), "second"),
-        maxRetries = conf.getInt("bridge.replica.clients.pbftInternal.retryPolicy.maxRetries"),
-        delayMultiplier = conf.getInt("bridge.replica.clients.pbftInternal.retryPolicy.delayMultiplier")
-      )
+    implicit val pbftInternalConfig = RetryPolicy(
+      initialDelay =
+        FiniteDuration.apply(conf.getInt("bridge.replica.clients.pbftInternal.retryPolicy.initialDelay"), "second"),
+      maxRetries = conf.getInt("bridge.replica.clients.pbftInternal.retryPolicy.maxRetries"),
+      delayMultiplier = conf.getInt("bridge.replica.clients.pbftInternal.retryPolicy.delayMultiplier")
     )
 
-    implicit val stateMachineConf = StateMachineServiceGrpcClientRetryConfigImpl(
+    implicit val stateMachineConf = StateMachineServiceGrpcClientRetryConfig(
       primaryResponseWait =
         FiniteDuration.apply(conf.getInt("bridge.replica.clients.monitor.client.primaryResponseWait"), "second"),
       otherReplicasResponseWait =

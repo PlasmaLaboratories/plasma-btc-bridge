@@ -46,7 +46,8 @@ mkdir -p node02
 chmod 777 node01
 chmod 777 node02
 # sed -i  -e 's/public/private/' staking/config.yaml
-export TIMESTAMP=`date --date="+10 seconds" +%s%N | cut -b1-13`
+# export TIMESTAMP=`date --date="+10 seconds" +%s%N | cut -b1-13`
+export TIMESTAMP=$(date -v+10S +%s000)
 
 echo > node01/config.yaml "\
 node:
