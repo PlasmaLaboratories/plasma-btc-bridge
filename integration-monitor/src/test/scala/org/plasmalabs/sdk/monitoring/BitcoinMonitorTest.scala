@@ -46,6 +46,8 @@ class BitcoinMonitorTest extends munit.CatsEffectSuite {
   override def munitFixtures = List(bitcoind)
 
   test("Monitor blocks with a reorg") {
+    import scala.language.reflectiveCalls
+
     val bitcoindInstance = bitcoind()
     val node2Instance = bitcoind.bitcoindInstance2
     assertIO(

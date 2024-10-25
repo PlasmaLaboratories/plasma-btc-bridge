@@ -190,7 +190,7 @@ jobs:
         os: ${{fromJson(inputs.target-os)}}
         java: ${{fromJson(inputs.java-versions)}}
     runs-on: ${{ matrix.os }}
-    needs: integration-test
+    needs: unit-test
     steps:
       - name: Echo docker version
         uses: docker://docker

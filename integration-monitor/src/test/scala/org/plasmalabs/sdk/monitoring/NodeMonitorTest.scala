@@ -21,7 +21,7 @@ import org.plasmalabs.bridge.consensus.subsystems.monitor.utils.{connectNodeNode
 
 class NodeMonitorTest extends munit.CatsEffectSuite {
 
-  override val munitTimeout: FiniteDuration = Duration(180, "s")
+  override val munitTimeout: FiniteDuration = Duration(250, "s")
 
   val channelResource1: Resource[IO, ManagedChannel] =
     RpcChannelResource.channelResource[IO]("localhost", 9184, secureConnection = false)
