@@ -14,13 +14,12 @@ import org.plasmalabs.bridge.consensus.pbft.{
   PrepareRequest,
   ViewChangeRequest
 }
-import org.plasmalabs.bridge.shared.{BridgeCryptoUtils, Empty, ReplicaNode}
+import org.plasmalabs.bridge.shared.{BridgeCryptoUtils, Empty, ReplicaNode, RetryPolicy}
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
 
 import java.security.KeyPair
 import scala.concurrent.duration.FiniteDuration
-import org.plasmalabs.bridge.shared.RetryPolicy
 
 trait PBFTInternalGrpcServiceClient[F[_]] {
 
