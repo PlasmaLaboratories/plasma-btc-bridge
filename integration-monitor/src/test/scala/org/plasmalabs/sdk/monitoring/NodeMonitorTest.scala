@@ -1,4 +1,4 @@
-package org.plasmalabs.bridge.consensus.subsystems.monitor
+package org.plasmalabs.sdk.monitoring
 
 import cats.effect.IO
 import cats.effect.kernel.Resource
@@ -11,15 +11,13 @@ import org.plasmalabs.sdk.common.ContainsSignable.instances.ioTransactionSignabl
 import org.plasmalabs.sdk.constants.NetworkConstants.{MAIN_LEDGER_ID, PRIVATE_NETWORK_ID}
 import org.plasmalabs.sdk.dataApi.{IndexerQueryAlgebra, NodeQueryAlgebra, RpcChannelResource}
 import org.plasmalabs.sdk.models.box.Attestation
-import org.plasmalabs.sdk.monitoring.NodeMonitor.{AppliedNodeBlock, UnappliedNodeBlock}
+import org.plasmalabs.bridge.consensus.subsystems.monitor.NodeMonitor.{AppliedNodeBlock, UnappliedNodeBlock}
 import org.plasmalabs.sdk.syntax.{ioTransactionAsTransactionSyntaxOps, LvlType}
 import io.grpc.ManagedChannel
 
 import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
 import org.plasmalabs.quivr.api.Prover
-import org.plasmalabs.bridge.consensus.subsystems.monitor.NodeMonitor
-import org.plasmalabs.bridge.consensus.subsystems.monitor.utils.disconnectNodeNodes
-import org.plasmalabs.bridge.consensus.subsystems.monitor.utils.connectNodeNodes
+import org.plasmalabs.bridge.consensus.subsystems.monitor.utils.{connectNodeNodes, disconnectNodeNodes}
 
 class NodeMonitorTest extends munit.CatsEffectSuite {
 

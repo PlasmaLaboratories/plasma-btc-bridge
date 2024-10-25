@@ -194,7 +194,7 @@ jobs:
         os: ${{fromJson(inputs.target-os)}}
         java: ${{fromJson(inputs.java-versions)}}
     runs-on: ${{ matrix.os }}
-    needs: unit-test
+    needs: integration-test
     steps:
       - name: Echo docker version
         uses: docker://docker
@@ -219,8 +219,8 @@ jobs:
           docker run -d --rm --name bitcoind2 --add-host host.docker.internal:host-gateway -p 12224:18444 -p 12223:18443 -p 12222:28332 ruimarinho/bitcoin-core -chain=regtest -zmqpubrawblock=tcp://0.0.0.0:28332 -rpcuser=test -rpcpassword=test -port=18444 -rpcport=18443 -rpcbind=:18443 -rpcallowip=0.0.0.0/0
           docker run -d --rm --name node -p 9084:9084 docker.io/stratalab/plasma-node:0.0.0-8215-792f55b2
           ls -lai
-          chmod 777 setupNodeRegtest.sh
-          ./setupNodeRegtest.sh
+          chmod 777 ./integration-monitor/setupNodeRegtest.sh
+          ./integration-monitor/setupNodeRegtest.sh
           sbt "integration / test"
           docker kill bitcoind
           docker kill bitcoind2
