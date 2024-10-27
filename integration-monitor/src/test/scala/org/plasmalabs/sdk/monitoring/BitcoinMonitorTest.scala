@@ -1,16 +1,17 @@
 package org.plasmalabs.bridge.consensus.subsystems.monitor
 
 import cats.effect.IO
+import org.plasmalabs.bridge.consensus.subsystems.monitor.BitcoinMonitor.AppliedBitcoinBlock
 import org.bitcoins.core.config.RegTest
 import org.bitcoins.crypto.DoubleSha256DigestBE
 import org.bitcoins.rpc.client.common.BitcoindRpcClient
 import org.bitcoins.rpc.config.BitcoindAuthCredentials
+import org.plasmalabs.bridge.consensus.subsystems.monitor.utils.connectBitcoinNodes
+
 
 import java.net.URI
 import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
-import org.plasmalabs.bridge.consensus.subsystems.monitor.{BitcoinMonitor}
-import org.plasmalabs.bridge.consensus.subsystems.monitor.utils.connectBitcoinNodes
 
 class BitcoinMonitorTest extends munit.CatsEffectSuite {
   val TestWallet = "test"
@@ -47,7 +48,7 @@ class BitcoinMonitorTest extends munit.CatsEffectSuite {
 
   test("Monitor blocks with a reorg") {
     import scala.language.reflectiveCalls
-
+    
     val bitcoindInstance = bitcoind()
     val node2Instance = bitcoind.bitcoindInstance2
     assertIO(
@@ -68,7 +69,7 @@ class BitcoinMonitorTest extends munit.CatsEffectSuite {
             BitcoinSyncLite(startingHeight + 1, node2MintBlocks(1), isApplied = true),
             BitcoinSyncLite(startingHeight + 2, additionalMintBlocks.head, isApplied = true),
           )
-          val testBlocks = blocks.map(b => BitcoinSyncLite(b.height, b.block.blockHeader.hashBE, b.isInstanceOf[BitcoinMonitor.AppliedBitcoinBlock]))
+          val testBlocks = blocks.map(b => BitcoinSyncLite(b.height, b.block.blockHeader.hashBE, b.isInstanceOf[AppliedBitcoinBlock]))
           expectedBlocks == testBlocks
         }
       }), true

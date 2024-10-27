@@ -1,4 +1,4 @@
-package org.plasmalabs.sdk.monitoring
+package org.plasmalabs.bridge.consensus.subsystems.monitor
 
 import cats.effect.IO
 import cats.effect.kernel.Resource
@@ -11,17 +11,16 @@ import org.plasmalabs.sdk.common.ContainsSignable.instances.ioTransactionSignabl
 import org.plasmalabs.sdk.constants.NetworkConstants.{MAIN_LEDGER_ID, PRIVATE_NETWORK_ID}
 import org.plasmalabs.sdk.dataApi.{IndexerQueryAlgebra, NodeQueryAlgebra, RpcChannelResource}
 import org.plasmalabs.sdk.models.box.Attestation
-import org.plasmalabs.bridge.consensus.subsystems.monitor.NodeMonitor.{AppliedNodeBlock, UnappliedNodeBlock}
 import org.plasmalabs.sdk.syntax.{ioTransactionAsTransactionSyntaxOps, LvlType}
 import io.grpc.ManagedChannel
+import org.plasmalabs.bridge.consensus.subsystems.monitor.utils.{connectNodeNodes, disconnectNodeNodes}
 
 import scala.concurrent.duration.{Duration, DurationInt, FiniteDuration}
 import org.plasmalabs.quivr.api.Prover
-import org.plasmalabs.bridge.consensus.subsystems.monitor.utils.{connectNodeNodes, disconnectNodeNodes}
 
 class NodeMonitorTest extends munit.CatsEffectSuite {
 
-  override val munitTimeout: FiniteDuration = Duration(250, "s")
+  override val munitIOTimeout: FiniteDuration = Duration(180, "s")
 
   val channelResource1: Resource[IO, ManagedChannel] =
     RpcChannelResource.channelResource[IO]("localhost", 9184, secureConnection = false)
@@ -61,10 +60,10 @@ class NodeMonitorTest extends munit.CatsEffectSuite {
         } yield ()) map { blocks =>
           println(s"blocks:  $blocks") // applied, unapplied, applied, applied
           blocks.length == 4 &&
-          blocks.head.isInstanceOf[AppliedNodeBlock] &&
-          blocks(1).isInstanceOf[UnappliedNodeBlock] &&
-          blocks(2).isInstanceOf[AppliedNodeBlock] &&
-          blocks(3).isInstanceOf[AppliedNodeBlock]
+          blocks.head.isInstanceOf[NodeMonitor.AppliedNodeBlock] &&
+          blocks(1).isInstanceOf[NodeMonitor.UnappliedNodeBlock] &&
+          blocks(2).isInstanceOf[NodeMonitor.AppliedNodeBlock] &&
+          blocks(3).isInstanceOf[NodeMonitor.AppliedNodeBlock]
         }
       },
       true
@@ -76,7 +75,7 @@ class NodeMonitorTest extends munit.CatsEffectSuite {
       NodeMonitor("localhost", 9184, secureConnection = false, NodeQuery1).use { blockStream =>
         (blockStream.interruptAfter(15.seconds).compile.toList <& NodeQuery1.makeBlocks(2)) map { blocks =>
           println(blocks)
-          blocks.count(_.isInstanceOf[AppliedNodeBlock]) == 2
+          blocks.count(_.isInstanceOf[NodeMonitor.AppliedNodeBlock]) == 2
         }
       },
       true
