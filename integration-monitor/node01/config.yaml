@@ -2,7 +2,7 @@ node:
   big-bang:
     staker-count: 2
     local-staker-index: 0
-    timestamp: 1729872485000
+    timestamp: 1730045255000
     regtest-enabled: true
     stakes: [10000, 10000]
 
