@@ -41,5 +41,8 @@ integration/redeemTxProved.pbuf
 integration/bridge.db
 integration/user-wallet.db
 
+integration-monitor/node01/
+integration-monitor/node02/
+
 .direnv
 /.idea/
