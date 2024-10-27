@@ -1,9 +1,5 @@
 #!/bin/bash
 
-curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz" | gzip -d > cs
-chmod +x cs
-./cs setup --yes
-
 rm -fr node01
 rm -fr node02
 mkdir -p node01
