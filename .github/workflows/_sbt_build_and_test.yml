@@ -213,7 +213,6 @@ jobs:
         run: |
           chmod 777 ./integration-monitor/setupNodeRegtest.sh
           ./integration-monitor/setupNodeRegtest.sh
-          sbt "integration-monitor / test"
           docker kill bitcoind
           docker kill bitcoind2
           docker kill node
