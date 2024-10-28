@@ -18,7 +18,8 @@ import org.plasmalabs.bridge.shared.{
   StartPeginSessionRequest,
   StartPeginSessionResponse,
   StartSessionOperation,
-  StateMachineServiceGrpcClient
+  StateMachineServiceGrpcClient,
+  TimeoutError
 }
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
@@ -114,10 +115,11 @@ object PublicApiHttpServiceServer {
               e match {
                 case _: SessionNotFoundError =>
                   NotFound(e)
+                case _: TimeoutError =>
+                  RequestTimeout(e)
                 case _ =>
                   BadRequest(e)
               }
-              BadRequest(e)
             case Left(_) =>
               InternalServerError()
             case Right(response) =>

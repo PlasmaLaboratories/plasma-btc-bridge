@@ -47,6 +47,7 @@ chmod 777 node01
 chmod 777 node02
 # sed -i  -e 's/public/private/' staking/config.yaml
 export TIMESTAMP=`date --date="+10 seconds" +%s%N | cut -b1-13`
+
 echo > node01/config.yaml "\
 node:
   big-bang:
@@ -73,7 +74,7 @@ docker run --rm -d --name node02 -e NODE_P2P_KNOWN_PEERS=$IP_CONTAINER:9085 -p 9
 
 echo "Waiting for node to start"
 # Wait for node to start
-sleep 15
+sleep 25
 
 # Prepare the environment
 echo "Preparing the environment"
