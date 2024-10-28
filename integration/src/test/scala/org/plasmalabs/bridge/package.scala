@@ -137,10 +137,10 @@ package object bridge extends ProcessOps {
   def importVks(id: Int)(implicit l: Logger[IO]) =
     withLogging(importVksP(id))
 
-  def fundRedeemAddressTx(id: Int, redeemAddress: String)(implicit
+  def fundRedeemAddressTx(id: Int, redeemAddress: String, outputFile: String = "fundRedeemTx.pbuf")(implicit
     l: Logger[IO]
   ) =
-    withLogging(fundRedeemAddressTxP(id, redeemAddress))
+    withLogging(fundRedeemAddressTxP(id, redeemAddress, outputFile))
 
   def proveFundRedeemAddressTx(
     id:          Int,
@@ -177,9 +177,10 @@ package object bridge extends ProcessOps {
     redeemAddress: String,
     amount:        Long,
     groupId:       String,
-    seriesId:      String
+    seriesId:      String, 
+    outputFile:    String = "redeemTx.pbuf"
   )(implicit l: Logger[IO]) =
-    withLogging(redeemAddressTxP(id, redeemAddress, amount, groupId, seriesId))
+    withLogging(redeemAddressTxP(id, redeemAddress, amount, groupId, seriesId, outputFile))
 
   def extractGroupId(utxo: String) =
     utxo
@@ -527,7 +528,7 @@ package object bridge extends ProcessOps {
     .spawn[IO]
 
   // plasma-cli simple-transaction create --from-fellowship nofellowship --from-template genesis --from-interaction 1 -t ptetP7jshHTzLLp81RbPkeHKWFJWeE3ijH94TAmiBRPTUTj2htC31NyEWU8p -w password -o genesisTx.pbuf -n private -a 10 -h  localhost --port 9084  --keyfile user-keyfile.json --walletdb user-wallet.db --fee 10 --transfer-token lvl
-  def fundRedeemAddressTxP(id: Int, redeemAddress: String) = process
+  def fundRedeemAddressTxP(id: Int, redeemAddress: String, outputFile: String = "fundRedeemTx.pbuf") = process
     .ProcessBuilder(
       CS_CMD,
       csParams ++ Seq(
@@ -550,7 +551,7 @@ package object bridge extends ProcessOps {
         "-w",
         "password",
         "-o",
-        "fundRedeemTx.pbuf",
+        outputFile,
         "-n",
         "private",
         "-a",
@@ -577,7 +578,8 @@ package object bridge extends ProcessOps {
     redeemAddress: String,
     amount:        Long,
     groupId:       String,
-    seriesId:      String
+    seriesId:      String, 
+    outputFile:    String = "redeemTx.pbuf"
   ) = process
     .ProcessBuilder(
       CS_CMD,
@@ -593,7 +595,7 @@ package object bridge extends ProcessOps {
         "-w",
         "password",
         "-o",
-        "redeemTx.pbuf",
+        outputFile,
         "-n",
         "private",
         "-a",

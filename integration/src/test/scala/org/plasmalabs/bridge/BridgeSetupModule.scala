@@ -13,7 +13,7 @@ import scala.util.Try
 
 trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with PublicApiConfModule {
 
-  override val munitIOTimeout = Duration(180, "s")
+  override val munitIOTimeout = Duration(250, "s")
 
   implicit val logger: Logger[IO] =
     org.typelevel.log4cats.slf4j.Slf4jLogger
@@ -219,6 +219,11 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
         case _: Throwable => ()
       }
       try
+        Files.delete(Paths.get("fundRedeemTx.pbuf"))
+      catch {
+        case _: Throwable => ()
+      }
+      try
         Files.delete(Paths.get("fundRedeemTxProved.pbuf"))
       catch {
         case _: Throwable => ()
@@ -239,6 +244,34 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
       ()
     }
   )
+
+   
+
+  def deletePbufFiles(numberOfSessions: Int): IO[Unit] = {
+    def fileNamesForId(id: Int) = {
+      val idFormatted = f"$id%02d"
+      List(
+        s"fundRedeemTx${idFormatted}",
+        s"fundRedeemTxProved${idFormatted}",
+        s"redeemTx${idFormatted}",
+        s"redeemTxProved${idFormatted}"
+      )
+    }
+
+    val deletionActions = (1 to numberOfSessions).toList.parTraverse { id =>
+      fileNamesForId(id).parTraverse { baseName =>
+        IO {
+          try {
+            Files.delete(Paths.get(s"${baseName}.pbuf"))
+          } catch {
+            case _: Throwable => ()
+          }
+        }
+      }
+    }
+
+    deletionActions.map(_ => ())
+  }
 
   val computeBridgeNetworkName = for {
     // network ls

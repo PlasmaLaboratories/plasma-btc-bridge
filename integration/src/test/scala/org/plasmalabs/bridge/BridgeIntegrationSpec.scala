@@ -13,7 +13,6 @@ class BridgeIntegrationSpec
     with SuccessfulPeginWithClaimReorgRetryModule
     with FailedMintingReorgModule
     with SuccessfulPeginWithConcurrentSessionsModule
-    with SuccessfulPeginWithConcurrentTransactionsModule
     with BridgeSetupModule {
 
   import org.typelevel.log4cats.syntax._
@@ -60,16 +59,10 @@ class BridgeIntegrationSpec
   //   info"Bridge should correctly go back to minting if there is a reorg" >> failedMintingReorgModule()
   // }
 
-  // cleanupDir.test(
-  //   "Bridge should correctly pegin if there are multiple concurrent sessions"
-  // ) { _ =>
-  //   info"Bridge should correctly pegin if there are multiple concurrent sessions" >> successfulPeginWithConcurrentSessions(1)
-  // }
-
   cleanupDir.test(
-    "Bridge should correctly pegin if there are multiple concurrent txs"
+    "Bridge should correctly pegin if there are multiple concurrent sessions"
   ) { _ =>
-    info"Bridge should correctly pegin if there are multiple concurrent txs" >> successfulPeginWithConcurrentTransactions(1)
+    info"Bridge should correctly pegin if there are multiple concurrent sessions" >> successfulPeginWithConcurrentSessions(2)
   }
 
 }

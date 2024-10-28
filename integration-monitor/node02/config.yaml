@@ -1,0 +1,10 @@
+node:
+  big-bang:
+    staker-count: 2
+    local-staker-index: 1
+    timestamp: 1730120243000
+    regtest-enabled: true
+    stakes: [10000, 10000]
+  p2p:
+    known-peers: 172.17.0.4:9085
+

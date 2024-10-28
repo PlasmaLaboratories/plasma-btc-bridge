@@ -15,12 +15,18 @@ trait SuccessfulPeginWithConcurrentSessionsModule {
 
     def successfulPeginForSession (id: Int) : IO[Unit] = {
       import cats.implicits._
+      val idFormatted = f"$id%02d"
+
       for {
         _ <- pwd
         _ <- mintStrataBlock(
           1,
           1
         ) // this will update the current topl height on the node, node should not work without this
+        _          <- initUserBitcoinWallet
+          newAddress <- getNewAddress
+          _          <- generateToAddress(1, 101, newAddress)
+          _          <- mintStrataBlock(1, 1)
         _                <- initStrataWallet(id)
         _                <- addFellowship(id)
         _                <- addSecret(id)
@@ -52,15 +58,15 @@ trait SuccessfulPeginWithConcurrentSessionsModule {
             _      <- IO.sleep(1.second)
           } yield status)
             .iterateUntil(_.mintingStatus == "PeginSessionStateMintingTBTC")
-        _ <- createVkFile(vkFile)
+        _ <- createVkFile(vkFile) // uses key.txt
         _ <- importVks(id)
-        _ <- fundRedeemAddressTx(id, mintingStatusResponse.address)
+        _ <- fundRedeemAddressTx(id, mintingStatusResponse.address, s"fundRedeemTx${idFormatted}.pbuf") // TODO: Validate that changed
         _ <- proveFundRedeemAddressTx(
           id,
-          s"fundRedeemTx${id}.pbuf",
-          s"fundRedeemTxProved${id}.pbuf"
+          s"fundRedeemTx${idFormatted}.pbuf",
+          s"fundRedeemTxProved${idFormatted}.pbuf",
         )
-        _ <- broadcastFundRedeemAddressTx(s"fundRedeemTxProved${id}.pbuf")
+        _ <- broadcastFundRedeemAddressTx(s"fundRedeemTxProved${idFormatted}.pbuf")
         _ <- mintStrataBlock(1, 1)
         utxo <- getCurrentUtxosFromAddress(id, mintingStatusResponse.address)
           .iterateUntil(_.contains("LVL"))
@@ -72,14 +78,15 @@ trait SuccessfulPeginWithConcurrentSessionsModule {
           currentAddress,
           btcAmountLong,
           groupId,
-          seriesId
+          seriesId,
+          s"redeemTx${idFormatted}.pbuf"
         )
         _ <- proveFundRedeemAddressTx(
           id,
-          s"redeemTx${id}.pbuf",
-          s"redeemTxProved${id}.pbuf"
+          s"redeemTx${idFormatted}.pbuf",
+          s"redeemTxProved${idFormatted}.pbuf"
         )
-        _ <- broadcastFundRedeemAddressTx(s"redeemTxProved${id}.pbuf")
+        _ <- broadcastFundRedeemAddressTx(s"redeemTxProved${idFormatted}.pbuf")
         _ <- List.fill(8)(mintStrataBlock(1, 1)).sequence
         _ <- getCurrentUtxosFromAddress(1, currentAddress)
           .iterateUntil(_.contains("Asset"))
@@ -104,6 +111,7 @@ trait SuccessfulPeginWithConcurrentSessionsModule {
 
     assertIO(
       for {
+        _ <- deletePbufFiles(numberOfSessions)
         _ <- (1 to numberOfSessions).toList.parTraverse {
         sessionId => successfulPeginForSession(sessionId)
       }} yield (),
