@@ -13,6 +13,10 @@ trait SuccessfulPeginWithConcurrentSessionsModule {
   def successfulPeginWithConcurrentSessions(numberOfSessions: Int): IO[Unit] = {
     import cats.implicits._
 
+    def initUserWallets() : IO[Unit] = {
+      IO.unit
+    }
+
     def successfulPeginForSession (id: Int) : IO[Unit] = {
       import cats.implicits._
       val idFormatted = f"$id%02d"
@@ -24,9 +28,9 @@ trait SuccessfulPeginWithConcurrentSessionsModule {
           1
         ) // this will update the current topl height on the node, node should not work without this
         _          <- initUserBitcoinWallet
-          newAddress <- getNewAddress
-          _          <- generateToAddress(1, 101, newAddress)
-          _          <- mintStrataBlock(1, 1)
+        newAddress <- getNewAddress
+        _          <- generateToAddress(1, 101, newAddress)
+        _          <- mintStrataBlock(1, 1)
         _                <- initStrataWallet(id)
         _                <- addFellowship(id)
         _                <- addSecret(id)
