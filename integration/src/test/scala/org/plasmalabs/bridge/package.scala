@@ -119,10 +119,16 @@ package object bridge extends ProcessOps {
     withLoggingReturn(createTxP(txId, address, amount))
 
   def initUserBitcoinWallet(implicit l: Logger[IO]) =
-    withLogging(initUserBitcoinWalletP)
+    withLogging(initUserBitcoinWalletP("testwallet"))
 
+  def initUserBitcoinWallet(walletName: String = "testwallet")(implicit l: Logger[IO]) =
+    withLogging(initUserBitcoinWalletP(walletName))
+  
   def getNewAddress(implicit l: Logger[IO]) =
-    withLoggingReturn(getNewaddressP)
+    withLoggingReturn(getNewaddressP("testwallet"))
+
+  def getNewAddress(walletName: String)(implicit l: Logger[IO]) =
+    withLoggingReturn(getNewaddressP(walletName))
 
   def generateToAddress(id: Int, amount: Int, address: String)(implicit
     l: Logger[IO]
@@ -136,6 +142,9 @@ package object bridge extends ProcessOps {
 
   def importVks(id: Int)(implicit l: Logger[IO]) =
     withLogging(importVksP(id))
+
+  def importVks(id: Int, fileName: String = "key.txt")(implicit l: Logger[IO]) =
+    withLogging(importVksP(id, fileName))
 
   def fundRedeemAddressTx(id: Int, redeemAddress: String, outputFile: String = "fundRedeemTx.pbuf")(implicit
     l: Logger[IO]
@@ -305,8 +314,8 @@ package object bridge extends ProcessOps {
         }
     })
 
-  def extractGetTxIdAndAmount(implicit l: Logger[IO]) = for {
-    unxpentTx <- withTracingReturn(extractGetTxIdP)
+  def extractGetTxIdAndAmount(walletName: String = "testwallet") (implicit l: Logger[IO]) = for {
+    unxpentTx <- withTracingReturn(extractGetTxIdP(walletName))
     txId <- IO.fromEither(
       parse(unxpentTx).map(x => (x \\ "txid").head.asString.get)
     )
@@ -480,7 +489,7 @@ package object bridge extends ProcessOps {
     .spawn[IO]
 
   // plasma-cli wallet import-vks --walletdb user-wallet.db --input-vks key.txt --fellowship-name bridge --template-name redeemBridge -w password -k user-wallet.json
-  def importVksP(id: Int) = process
+  def importVksP(id: Int, fileName: String = "key.txt") = process
     .ProcessBuilder(
       CS_CMD,
       csParams ++ Seq(
@@ -489,7 +498,7 @@ package object bridge extends ProcessOps {
         "--walletdb",
         userWalletDb(id),
         "--input-vks",
-        vkFile,
+        fileName,
         "--fellowship-name",
         "bridge",
         "--template-name",
@@ -722,13 +731,14 @@ package object bridge extends ProcessOps {
   ) =
     withLogging(connectBridgeP(networkName, containerName))
 
-  def sendTransactionSeq(signedTx: String) = Seq(
+  def sendTransactionSeq(signedTx: String, walletName: String) = Seq(
     "exec",
     "bitcoin01",
     "bitcoin-cli",
     "-regtest",
     "-rpcuser=bitcoin",
     "-rpcpassword=password",
+    s"-rpcwallet=${walletName}",
     "sendrawtransaction",
     signedTx
   )
@@ -759,15 +769,15 @@ package object bridge extends ProcessOps {
   def addFellowship(id: Int)(implicit l: Logger[IO]) =
     withLogging(addFellowshipP(id))
 
-  def signTransaction(tx: String)(implicit l: Logger[IO]) =
+  def signTransaction(tx: String, walletName: String = "testwallet")(implicit l: Logger[IO]) =
     for {
-      signedTx <- withLoggingReturn(signTransactionP(tx))
+      signedTx <- withLoggingReturn(signTransactionP(tx, walletName))
       signedTxHex <- IO.fromEither(
         parse(signedTx).map(x => (x \\ "hex").head.asString.get)
       )
     } yield signedTxHex
 
-  def sendTransaction(signedTx: String)(implicit l: Logger[IO]) =
-    withLoggingReturn(sendTransactionP(signedTx))
+  def sendTransaction(signedTx: String, walletName: String = "testwallet")(implicit l: Logger[IO]) =
+    withLoggingReturn(sendTransactionP(signedTx, walletName))
 
 }

@@ -14,7 +14,7 @@ trait FailedPeginNoDepositWithReorgModule {
       for {
         newAddress       <- getNewAddress
         _                <- generateToAddress(1, 1, newAddress)
-        txIdAndBTCAmount <- extractGetTxIdAndAmount
+        txIdAndBTCAmount <- extractGetTxIdAndAmount()
         (txId, btcAmount, btcAmountLong) = txIdAndBTCAmount
         startSessionResponse <- startSession(1)
         bridgeNetwork        <- computeBridgeNetworkName

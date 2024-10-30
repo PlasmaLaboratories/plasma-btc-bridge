@@ -15,7 +15,7 @@ trait FailedPeginNoMintModule {
         _                <- mintStrataBlock(1, 1)
         _                <- IO.sleep(1.second)
         newAddress       <- getNewAddress
-        txIdAndBTCAmount <- extractGetTxIdAndAmount
+        txIdAndBTCAmount <- extractGetTxIdAndAmount()
         (txId, btcAmount, btcAmountLong) = txIdAndBTCAmount
         startSessionResponse <- startSession(1)
         bitcoinTx <- createTx(

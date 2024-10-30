@@ -24,7 +24,7 @@ trait SuccessfulPeginModule {
         _                <- addFellowship(1)
         _                <- addSecret(1)
         newAddress       <- getNewAddress
-        txIdAndBTCAmount <- extractGetTxIdAndAmount
+        txIdAndBTCAmount <- extractGetTxIdAndAmount()
         (txId, btcAmount, btcAmountLong) = txIdAndBTCAmount
         startSessionResponse <- startSession(1)
         _ <- addTemplate(

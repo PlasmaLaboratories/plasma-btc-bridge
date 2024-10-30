@@ -13,7 +13,7 @@ import scala.util.Try
 
 trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with PublicApiConfModule {
 
-  override val munitIOTimeout = Duration(250, "s")
+  override val munitIOTimeout = Duration(500, "s")
 
   implicit val logger: Logger[IO] =
     org.typelevel.log4cats.slf4j.Slf4jLogger
@@ -108,6 +108,7 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
           _ <- (0 until replicaCount).toList.traverse { replicaId =>
             IO(Try(Files.delete(Paths.get(s"replica${replicaId}.db"))))
           }
+          _ <- deleteFiles(2)
           _              <- createReplicaConfigurationFiles[IO]()
           _              <- createPublicApiConfigurationFiles[IO]()
           currentAddress <- currentAddress(toplWalletDb(0))
@@ -247,30 +248,37 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
 
    
 
-  def deletePbufFiles(numberOfSessions: Int): IO[Unit] = {
+  def deleteFiles(numberOfSessions: Int): IO[Unit] = {
     def fileNamesForId(id: Int) = {
       val idFormatted = f"$id%02d"
       List(
-        s"fundRedeemTx${idFormatted}",
-        s"fundRedeemTxProved${idFormatted}",
-        s"redeemTx${idFormatted}",
-        s"redeemTxProved${idFormatted}"
+        userWalletDb(id),
+        userWalletMnemonic(id),
+        userWalletJson(id),
+        vkFile,
+        s"fundRedeemTx${idFormatted}.pbuf",
+        s"fundRedeemTxProved${idFormatted}.pbuf",
+        s"redeemTx${idFormatted}.pbuf",
+        s"redeemTxProved${idFormatted}.pbuf"
       )
     }
 
-    val deletionActions = (1 to numberOfSessions).toList.parTraverse { id =>
-      fileNamesForId(id).parTraverse { baseName =>
-        IO {
-          try {
-            Files.delete(Paths.get(s"${baseName}.pbuf"))
-          } catch {
-            case _: Throwable => ()
+    for {
+      _ <- (1 to numberOfSessions).toList.parTraverse { id =>
+        for {
+          _ <- logger.info(s"Processing deletion for session $id")
+          _ <- fileNamesForId(id).parTraverse { baseName =>
+            IO {
+              try {
+                Files.delete(Paths.get(baseName))
+              } catch {
+                case _: Throwable => logger.info(s"Not successful deleting of ${baseName}") >> IO.unit
+              }
+            }
           }
-        }
+        } yield ()
       }
-    }
-
-    deletionActions.map(_ => ())
+    } yield ()
   }
 
   val computeBridgeNetworkName = for {

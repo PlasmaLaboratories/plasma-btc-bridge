@@ -22,7 +22,7 @@ trait FailedMintingReorgModule {
         _                    <- addSecret(2)
         newAddress           <- getNewAddress
         _                    <- generateToAddress(1, 1, newAddress)
-        txIdAndBTCAmount     <- extractGetTxIdAndAmount
+        txIdAndBTCAmount     <- extractGetTxIdAndAmount()
         (txId, btcAmount, btcAmountLong) = txIdAndBTCAmount
         startSessionResponse <- startSession(2)
         _ <- addTemplate(

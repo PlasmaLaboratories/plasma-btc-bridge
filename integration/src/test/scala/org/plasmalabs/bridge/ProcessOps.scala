@@ -5,24 +5,24 @@ import fs2.io.process
 
 trait ProcessOps {
 
-  def signTransactionSeq(tx: String) = Seq(
+  def signTransactionSeq(tx: String, walletName: String) = Seq(
     "exec",
     "bitcoin01",
     "bitcoin-cli",
     "-regtest",
     "-rpcuser=bitcoin",
     "-rpcpassword=password",
-    "-rpcwallet=testwallet",
+    s"-rpcwallet=${walletName}",
     "signrawtransactionwithwallet",
     tx
   )
 
-  def signTransactionP(tx: String) = process
-    .ProcessBuilder(DOCKER_CMD, signTransactionSeq(tx): _*)
+  def signTransactionP(tx: String, walletName: String = "testwallet") = process
+    .ProcessBuilder(DOCKER_CMD, signTransactionSeq(tx, walletName): _*)
     .spawn[IO]
 
-  def sendTransactionP(signedTx: String) = process
-    .ProcessBuilder(DOCKER_CMD, sendTransactionSeq(signedTx): _*)
+  def sendTransactionP(signedTx: String, walletName: String) = process
+    .ProcessBuilder(DOCKER_CMD, sendTransactionSeq(signedTx, walletName): _*)
     .spawn[IO]
 
   def pwdP = process
@@ -120,7 +120,7 @@ trait ProcessOps {
     )
     .spawn[IO]
 
-  val createWalletSeq = Seq(
+  val createWalletSeqBase = Seq(
     "exec",
     "bitcoin01",
     "bitcoin-cli",
@@ -129,28 +129,32 @@ trait ProcessOps {
     "-rpcuser=bitcoin",
     "-rpcpassword=password",
     "createwallet",
-    "wallet_name=testwallet"
   )
 
-  val getNewaddressSeq = Seq(
+  val getNewaddressSeqBase = Seq(
     "exec",
     "bitcoin01",
     "bitcoin-cli",
     "-rpcuser=bitcoin",
     "-rpcpassword=password",
-    "-regtest",
-    "-rpcwallet=testwallet",
-    "getnewaddress"
+    "-regtest"
   )
 
-  def getNewaddressP = process
-    .ProcessBuilder(DOCKER_CMD, getNewaddressSeq: _*)
+  def getNewaddressP(walletName: String) = process
+    .ProcessBuilder(DOCKER_CMD, getNewaddressSeqBase ++ Seq(
+      s"-rpcwallet=${walletName}",
+      "getnewaddress"
+    ): _*)
     .spawn[IO]
 
-  def initUserBitcoinWalletP = process
-    .ProcessBuilder(DOCKER_CMD, createWalletSeq: _*)
+  def initUserBitcoinWalletP(walletName: String) = process
+    .ProcessBuilder(
+      DOCKER_CMD, 
+      createWalletSeqBase ++ Seq(
+      s"wallet_name=${walletName}"
+    ): _*)
     .spawn[IO]
-
+  
   def initUserWalletP(id: Int) = process
     .ProcessBuilder(
       CS_CMD,
@@ -190,12 +194,20 @@ trait ProcessOps {
     "-rpcuser=bitcoin",
     "-rpcpassword=password",
     "-regtest",
-    "-rpcwallet=testwallet",
-    "listunspent"
   )
 
   def extractGetTxIdP = process
-    .ProcessBuilder(DOCKER_CMD, extractGetTxIdSeq: _*)
+    .ProcessBuilder(DOCKER_CMD, extractGetTxIdSeq ++ Seq(
+      "-rpcwallet=testwallet",
+      "listunspent"
+    ): _*)
+    .spawn[IO]
+
+  def extractGetTxIdP(walletName: String) = process
+    .ProcessBuilder(DOCKER_CMD, extractGetTxIdSeq ++ Seq(
+      s"-rpcwallet=${walletName}",
+      "listunspent"
+    ): _*)
     .spawn[IO]
 
   def generateToAddressP(nodeId: Int, blocks: Int, address: String) = process
