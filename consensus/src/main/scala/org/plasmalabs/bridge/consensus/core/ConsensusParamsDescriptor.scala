@@ -51,7 +51,7 @@ trait ConsensusParamsDescriptor {
       opt[String]("strata-wallet-seed-file")
         .action((x, c) => c.copy(toplWalletSeedFile = x))
         .text(
-          "The path to the tolp wallet seed file. (default: strata-wallet.json)"
+          "The path to the tolp wallet seed file. (default: plasma-wallet.json)"
         ),
       opt[String]("strata-wallet-password")
         .action((x, c) => c.copy(toplWalletPassword = x))
@@ -61,7 +61,7 @@ trait ConsensusParamsDescriptor {
       opt[String]("strata-wallet-db")
         .action((x, c) => c.copy(toplWalletDb = x))
         .text(
-          "The topl wallet db. (default: strata-wallet.db)"
+          "The topl wallet db. (default: plasma-wallet.db)"
         ),
       opt[String]("btc-peg-in-seed-file")
         .action((x, c) => c.copy(btcPegInSeedFile = x))

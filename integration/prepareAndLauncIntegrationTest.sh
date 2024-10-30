@@ -15,8 +15,8 @@ done
 
 
 for i in {0..6}; do
-  rm strata-wallet$i.db
-  rm strata-wallet$i.json
+  rm plasma-wallet$i.db
+  rm plasma-wallet$i.json
 done
 
 # Create keys
@@ -82,9 +82,9 @@ shopt -s expand_aliases
 alias plasma-cli="cs launch -r https://s01.oss.sonatype.org/content/repositories/releases org.plasmalabs:plasma-cli_2.13:0.1.0 -- "
 export BTC_USER=bitcoin
 export BTC_PASSWORD=password
-export STRATA_WALLET_DB=strata-wallet.db
-export STRATA_WALLET_JSON=strata-wallet.json
-export STRATA_WALLET_MNEMONIC=strata-mnemonic.txt
+export STRATA_WALLET_DB=plasma-wallet.db
+export STRATA_WALLET_JSON=plasma-wallet.json
+export STRATA_WALLET_MNEMONIC=plasma-mnemonic.txt
 export STRATA_WALLET_PASSWORD=password
 rm -rf $STRATA_WALLET_DB $STRATA_WALLET_JSON $STRATA_WALLET_MNEMONIC 
 plasma-cli node-query mint-block --nb-blocks 1 -h 127.0.0.1  --port 9084 -s false
@@ -116,6 +116,6 @@ echo "ASSET_UTXO: $ASSET_UTXO"
 until plasma-cli indexer-query utxo-by-address --host localhost --port 9084 --secure false --walletdb $STRATA_WALLET_DB; do sleep 5; done
 
 for i in {0..6}; do
-  cp $STRATA_WALLET_DB strata-wallet$i.db
-  cp $STRATA_WALLET_JSON strata-wallet$i.json
+  cp $STRATA_WALLET_DB plasma-wallet$i.db
+  cp $STRATA_WALLET_JSON plasma-wallet$i.json
 done

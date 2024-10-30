@@ -20,10 +20,10 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
       .getLoggerFromName[IO]("it-test")
 
   def toplWalletDb(replicaId: Int) =
-    Option(System.getenv(s"STRATA_WALLET_DB_$replicaId")).getOrElse(s"strata-wallet$replicaId.db")
+    Option(System.getenv(s"STRATA_WALLET_DB_$replicaId")).getOrElse(s"plasma-wallet$replicaId.db")
 
   def toplWalletJson(replicaId: Int) =
-    Option(System.getenv(s"STRATA_WALLET_JSON_$replicaId")).getOrElse(s"strata-wallet$replicaId.json")
+    Option(System.getenv(s"STRATA_WALLET_JSON_$replicaId")).getOrElse(s"plasma-wallet$replicaId.json")
 
   import cats.implicits._
 
@@ -88,7 +88,6 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
         )
       )
     )
-
 
   var fiber01: List[(Fiber[IO, Throwable, ExitCode], Int)] = _
   var fiber02: List[(Fiber[IO, Throwable, ExitCode], Int)] = _
@@ -171,7 +170,7 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
           _          <- mintStrataBlock(1, 1)
         } yield ()).unsafeToFuture()
 
-      override def afterAll() = {
+      override def afterAll() =
         (for {
           _ <- IO.race(
             fiber01.parTraverse(_._1.cancel),
@@ -179,63 +178,60 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
           )
           _ <- IO.sleep(5.seconds)
         } yield ()).void.unsafeToFuture()
-      }
     }
-  
+
   def killFiber(replicaId: Int): IO[Unit] = {
     val consensusFiberOpt = fiber02.find(_._2 == replicaId)
     val publicApiFiberOpt = fiber01.find(_._2 == replicaId)
 
-    (consensusFiberOpt, publicApiFiberOpt).mapN((consensusFiber, publicApiFiber) =>
-      for {
-        _ <- consensusFiber._1.cancel
-        _ <- publicApiFiber._1.cancel
-        _ <- IO.delay {
-          fiber02 = fiber02.filter(_._2 != replicaId)
-          fiber01 = fiber01.filter(_._2 != replicaId)
-        }
-        _ <- logger.info(s"Killed both consensus and public API fibers for replica $replicaId")
-      } yield ()
-    ).sequence[IO, Unit].void
+    (consensusFiberOpt, publicApiFiberOpt)
+      .mapN((consensusFiber, publicApiFiber) =>
+        for {
+          _ <- consensusFiber._1.cancel
+          _ <- publicApiFiber._1.cancel
+          _ <- IO.delay {
+            fiber02 = fiber02.filter(_._2 != replicaId)
+            fiber01 = fiber01.filter(_._2 != replicaId)
+          }
+          _ <- logger.info(s"Killed both consensus and public API fibers for replica $replicaId")
+        } yield ()
+      )
+      .sequence[IO, Unit]
+      .void
   }
-
 
   def restoreMissingFibers: IO[Unit] = for {
     missingReplicas <- IO.delay {
-      (0 until replicaCount).filter(id => 
-        !fiber02.exists(_._2 == id) || !fiber01.exists(_._2 == id)
-      ).toList
+      (0 until replicaCount).filter(id => !fiber02.exists(_._2 == id) || !fiber01.exists(_._2 == id)).toList
     }
-    
-    _ <- if (missingReplicas.nonEmpty) {
-      for {
-        currentAddress <- currentAddress(toplWalletDb(0))
-        utxo <- getCurrentUtxosFromAddress(toplWalletDb(0), currentAddress)
-        (groupId, seriesId) = extractIds(utxo)
-        
-        _ <- IO.asyncForIO.both(
-          missingReplicas.map(launchConsensus(_, groupId, seriesId)).sequence.map { newFibers =>
-            fiber02 = fiber02 ++ newFibers.zip(missingReplicas)
-          },
-          IO.sleep(10.seconds)
-        )
-        
-        _ <- IO.asyncForIO.both(
-          missingReplicas.map(launchPublicApi(_)).sequence.map { newFibers =>
-            fiber01 = fiber01 ++ newFibers.zip(missingReplicas)
-          },
-          IO.sleep(10.seconds)
-        )
-        
-        _ <- logger.info(s"Restored consensus and public api for ${missingReplicas}")
-      } yield ()
-    } else {
-      logger.info("All replicas are still running.")
-    }
+
+    _ <-
+      if (missingReplicas.nonEmpty) {
+        for {
+          currentAddress <- currentAddress(toplWalletDb(0))
+          utxo           <- getCurrentUtxosFromAddress(toplWalletDb(0), currentAddress)
+          (groupId, seriesId) = extractIds(utxo)
+
+          _ <- IO.asyncForIO.both(
+            missingReplicas.map(launchConsensus(_, groupId, seriesId)).sequence.map { newFibers =>
+              fiber02 = fiber02 ++ newFibers.zip(missingReplicas)
+            },
+            IO.sleep(10.seconds)
+          )
+
+          _ <- IO.asyncForIO.both(
+            missingReplicas.map(launchPublicApi(_)).sequence.map { newFibers =>
+              fiber01 = fiber01 ++ newFibers.zip(missingReplicas)
+            },
+            IO.sleep(10.seconds)
+          )
+
+          _ <- logger.info(s"Restored consensus and public api for ${missingReplicas}")
+        } yield ()
+      } else {
+        logger.info("All replicas are still running.")
+      }
   } yield ()
-
-
-
 
   val cleanupDir = FunFixture[Unit](
     setup = { _ =>
@@ -246,27 +242,27 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
             userWalletDb(1),
             userWalletMnemonic(1),
             userWalletJson(1),
-            userWalletDb(2), 
-            userWalletMnemonic(2), 
-            userWalletJson(2), 
-            vkFile, 
-            "fundRedeemTx.pbuf", 
-            "fundRedeemTxProved.pbuf", 
+            userWalletDb(2),
+            userWalletMnemonic(2),
+            userWalletJson(2),
+            vkFile,
+            "fundRedeemTx.pbuf",
+            "fundRedeemTxProved.pbuf",
             "redeemTx.pbuf",
-            "redeemTxProved.pbuf",
+            "redeemTxProved.pbuf"
           ).foreach { case (path) =>
-            try {
+            try
               Files.delete(Paths.get(path))
-            } catch {
+            catch {
               case _: Throwable => ()
             }
           }
         }
       } yield ()).unsafeRunSync()
     },
-    teardown = { _ => ()}
+    teardown = { _ => () }
   )
-  
+
   val computeBridgeNetworkName = for {
     // network ls
     networkLs <- process

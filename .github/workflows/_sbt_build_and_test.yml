@@ -84,9 +84,9 @@ jobs:
         mkdir ${{ github.workspace }}/data
         alias plasma-cli="./cs launch -r https://s01.oss.sonatype.org/content/repositories/releases org.plasmalabs:plasma-cli_2.13:0.1.0 -- "
         plasma-cli node-query mint-block --nb-blocks 1 -h localhost  --port 9084 -s false
-        export STRATA_WALLET_DB=${{ github.workspace }}/data/strata-wallet.db
-        export STRATA_WALLET_JSON=${{ github.workspace }}/data/strata-wallet.json
-        export STRATA_WALLET_MNEMONIC=${{ github.workspace }}/data/strata-mnemonic.txt
+        export STRATA_WALLET_DB=${{ github.workspace }}/data/plasma-wallet.db
+        export STRATA_WALLET_JSON=${{ github.workspace }}/data/plasma-wallet.json
+        export STRATA_WALLET_MNEMONIC=${{ github.workspace }}/data/plasma-mnemonic.txt
         export STRATA_WALLET_PASSWORD=password
         plasma-cli wallet init --network private --password password --newwalletdb $STRATA_WALLET_DB --mnemonicfile $STRATA_WALLET_MNEMONIC --output $STRATA_WALLET_JSON
         export ADDRESS=$(plasma-cli wallet current-address --walletdb $STRATA_WALLET_DB)
@@ -122,8 +122,8 @@ jobs:
           openssl ec -in integration/clientPrivateKey$j.pem -pubout -out integration/clientPublicKey$j.pem
         done      
         for i in {0..6}; do
-          cp $STRATA_WALLET_DB integration/strata-wallet$i.db
-          cp $STRATA_WALLET_JSON integration/strata-wallet$i.json
+          cp $STRATA_WALLET_DB integration/plasma-wallet$i.db
+          cp $STRATA_WALLET_JSON integration/plasma-wallet$i.json
         done
     - name: Run integration tests
       run: |
@@ -142,8 +142,8 @@ jobs:
         docker stop $NODE_01
         docker stop $NODE_02
       env:
-        STRATA_WALLET_DB: ${{ github.workspace }}/data/strata-wallet.db
-        STRATA_WALLET_JSON: ${{ github.workspace }}/data/strata-wallet.json
+        STRATA_WALLET_DB: ${{ github.workspace }}/data/plasma-wallet.db
+        STRATA_WALLET_JSON: ${{ github.workspace }}/data/plasma-wallet.json
     - uses: actions/download-artifact@v3
       with:
         path: consensus/target/test-reports/

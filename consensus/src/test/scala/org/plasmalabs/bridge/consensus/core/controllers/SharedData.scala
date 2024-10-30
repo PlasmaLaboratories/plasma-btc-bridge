@@ -36,11 +36,11 @@ trait SharedData {
 
   val walletFile = "src/test/resources/wallet.json"
 
-  val toplWalletFile = "src/test/resources/strata-wallet.json"
+  val toplWalletFile = "src/test/resources/plasma-wallet.json"
 
-  val toplWalletDbInitial = "src/universal/strata-wallet.db"
+  val toplWalletDbInitial = "src/universal/plasma-wallet.db"
 
-  val toplWalletDb = "src/universal/strata-wallet-instance.db"
+  val toplWalletDb = "src/universal/plasma-wallet-instance.db"
 
   val testSecret = "secret"
 
