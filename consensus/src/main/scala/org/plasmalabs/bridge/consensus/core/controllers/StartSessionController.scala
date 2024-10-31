@@ -116,14 +116,14 @@ object StartSessionController {
     sessionId: String,
     req:       StartSessionOperation
   )(implicit
-    toplKeypair:              PlasmaKeypair,
+    plasmaKeypair:            PlasmaKeypair,
     btcNetwork:               BitcoinNetworkIdentifiers,
     currentPlasmaHeight:      CurrentPlasmaHeightRef[F],
     pegInWalletManager:       PeginWalletManager[F],
     bridgeWalletManager:      BridgeWalletManager[F],
     fellowshipStorageAlgebra: FellowshipStorageAlgebra[F],
     templateStorageAlgebra:   TemplateStorageAlgebra[F],
-    toplWaitExpirationTime:   PlasmaWaitExpirationTime,
+    plasmaWaitExpirationTime: PlasmaWaitExpirationTime,
     btcWaitExpirationTime:    BTCWaitExpirationTime,
     tba:                      TransactionBuilderApi[F],
     walletApi:                WalletApi[F],
@@ -146,11 +146,11 @@ object StartSessionController {
         if (minPlasmaHeight == 0)
           Sync[F].raiseError(new IllegalStateException("Plasma height is 0"))
         else Sync[F].unit
-      maxPlasmaHeight = minPlasmaHeight + toplWaitExpirationTime.underlying
+      maxPlasmaHeight = minPlasmaHeight + plasmaWaitExpirationTime.underlying
       someRedeemAdressAndKey <- setupBridgeWalletForMinting(
         fromFellowship,
         mintTemplateName,
-        toplKeypair.underlying,
+        plasmaKeypair.underlying,
         req.sha256,
         minPlasmaHeight,
         maxPlasmaHeight

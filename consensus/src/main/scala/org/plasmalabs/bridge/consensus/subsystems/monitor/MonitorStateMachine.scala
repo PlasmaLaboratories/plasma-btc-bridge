@@ -39,15 +39,15 @@ object MonitorStateMachine {
     currentBitcoinNetworkHeight: Ref[F, Int],
     currentPlasmaNetworkHeight:  Ref[F, Long]
   )(implicit
-    clientId:                  ClientId,
-    consensusClient:           StateMachineServiceGrpcClient[F],
-    btcWaitExpirationTime:     BTCWaitExpirationTime,
-    toplWaitExpirationTime:    PlasmaWaitExpirationTime,
-    btcRetryThreshold:         BTCRetryThreshold,
-    btcConfirmationThreshold:  BTCConfirmationThreshold,
-    toplConfirmationThreshold: PlasmaConfirmationThreshold,
-    groupIdIdentifier:         GroupId,
-    seriesIdIdentifier:        SeriesId
+    clientId:                    ClientId,
+    consensusClient:             StateMachineServiceGrpcClient[F],
+    btcWaitExpirationTime:       BTCWaitExpirationTime,
+    plasmaWaitExpirationTime:    PlasmaWaitExpirationTime,
+    btcRetryThreshold:           BTCRetryThreshold,
+    btcConfirmationThreshold:    BTCConfirmationThreshold,
+    plasmaConfirmationThreshold: PlasmaConfirmationThreshold,
+    groupIdIdentifier:           GroupId,
+    seriesIdIdentifier:          SeriesId
   ) =
     for {
       map <- Ref.of[F, Map[String, PeginStateMachineState]](Map.empty)
@@ -82,8 +82,8 @@ object MonitorStateMachine {
             fs2.Stream(
               for {
                 x <- currentPlasmaNetworkHeight.get
-                _ <- trace"current topl height is $x"
-                _ <- trace"Updating topl height to $height"
+                _ <- trace"current plasma height is $x"
+                _ <- trace"Updating plasma height to $height"
                 _ <-
                   if (height > x)
                     currentPlasmaNetworkHeight.set(height)

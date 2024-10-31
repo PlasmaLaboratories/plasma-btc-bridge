@@ -20,7 +20,7 @@ object ParamParser {
           )
       })
 
-  implicit val toplNetworkRead: scopt.Read[PlasmaNetworkIdentifiers] =
+  implicit val plasmaNetworkRead: scopt.Read[PlasmaNetworkIdentifiers] =
     scopt.Read
       .reads(PlasmaNetworkIdentifiers.fromString(_))
       .map(_ match {

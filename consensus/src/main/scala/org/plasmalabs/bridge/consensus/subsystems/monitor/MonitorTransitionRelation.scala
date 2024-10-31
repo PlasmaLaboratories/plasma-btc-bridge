@@ -24,13 +24,13 @@ object MonitorTransitionRelation
   )(
     t2E: (PeginStateMachineState, BlockchainEvent) => F[Unit]
   )(implicit
-    btcRetryThreshold:         BTCRetryThreshold,
-    btcWaitExpirationTime:     BTCWaitExpirationTime,
-    toplWaitExpirationTime:    PlasmaWaitExpirationTime,
-    btcConfirmationThreshold:  BTCConfirmationThreshold,
-    toplConfirmationThreshold: PlasmaConfirmationThreshold,
-    groupId:                   GroupId,
-    seriesId:                  SeriesId
+    btcRetryThreshold:           BTCRetryThreshold,
+    btcWaitExpirationTime:       BTCWaitExpirationTime,
+    plasmaWaitExpirationTime:    PlasmaWaitExpirationTime,
+    btcConfirmationThreshold:    BTCConfirmationThreshold,
+    plasmaConfirmationThreshold: PlasmaConfirmationThreshold,
+    groupId:                     GroupId,
+    seriesId:                    SeriesId
   ): Option[FSMTransition] =
     ((currentState, blockchainEvent) match {
       case (

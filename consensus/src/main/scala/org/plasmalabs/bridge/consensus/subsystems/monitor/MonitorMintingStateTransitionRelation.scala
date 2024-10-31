@@ -27,11 +27,11 @@ trait MonitorMintingStateTransitionRelation extends TransitionToEffect {
   )(
     t2E: (PeginStateMachineState, BlockchainEvent) => F[Unit]
   )(implicit
-    btcWaitExpirationTime:     BTCWaitExpirationTime,
-    toplWaitExpirationTime:    PlasmaWaitExpirationTime,
-    toplConfirmationThreshold: PlasmaConfirmationThreshold,
-    groupId:                   GroupId,
-    seriesId:                  SeriesId
+    btcWaitExpirationTime:       BTCWaitExpirationTime,
+    plasmaWaitExpirationTime:    PlasmaWaitExpirationTime,
+    plasmaConfirmationThreshold: PlasmaConfirmationThreshold,
+    groupId:                     GroupId,
+    seriesId:                    SeriesId
   ): Option[FSMTransition] =
     ((currentState, blockchainEvent) match {
       case (
@@ -145,7 +145,7 @@ trait MonitorMintingStateTransitionRelation extends TransitionToEffect {
             cs: MWaitingForRedemption,
             ev: NewPlasmaBlock
           ) =>
-        if (toplWaitExpirationTime.underlying < (ev.height - cs.currentTolpBlockHeight))
+        if (plasmaWaitExpirationTime.underlying < (ev.height - cs.currentTolpBlockHeight))
           Some(
             EndTransition[F](
               t2E(currentState, blockchainEvent)

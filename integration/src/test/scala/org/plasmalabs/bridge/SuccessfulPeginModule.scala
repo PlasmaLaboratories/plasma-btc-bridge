@@ -19,7 +19,7 @@ trait SuccessfulPeginModule {
         _ <- mintPlasmaBlock(
           1,
           1
-        ) // this will update the current topl height on the node, node should not work without this
+        ) // this will update the current plasma height on the node, node should not work without this
         _                <- initPlasmaWallet(1)
         _                <- addFellowship(1)
         _                <- addSecret(1)

@@ -34,7 +34,7 @@ trait ConsensusParamsDescriptor {
           "Network name: Possible values: mainnet, testnet, regtest. (mandatory)"
         ),
       opt[PlasmaNetworkIdentifiers]("plasma-network")
-        .action((x, c) => c.copy(toplNetwork = x))
+        .action((x, c) => c.copy(plasmaNetwork = x))
         .text(
           "Network name: Possible values: mainnet, testnet, private. (mandatory)"
         ),
@@ -44,24 +44,24 @@ trait ConsensusParamsDescriptor {
           "The number of blocks that the user needs to wait before they can reclaim their funds. (default: 100)"
         ),
       opt[Int]("plasma-blocks-to-recover")
-        .action((x, c) => c.copy(toplWaitExpirationTime = x))
+        .action((x, c) => c.copy(plasmaWaitExpirationTime = x))
         .text(
           "The number of blocks that the bridge needs to wait before it can burn the block. (default: 2000)"
         ),
       opt[String]("plasma-wallet-seed-file")
-        .action((x, c) => c.copy(toplWalletSeedFile = x))
+        .action((x, c) => c.copy(plasmaWalletSeedFile = x))
         .text(
           "The path to the tolp wallet seed file. (default: plasma-wallet.json)"
         ),
       opt[String]("plasma-wallet-password")
-        .action((x, c) => c.copy(toplWalletPassword = x))
+        .action((x, c) => c.copy(plasmaWalletPassword = x))
         .text(
-          "The password to the topl seed file. (default: password)"
+          "The password to the plasma seed file. (default: password)"
         ),
       opt[String]("plasma-wallet-db")
-        .action((x, c) => c.copy(toplWalletDb = x))
+        .action((x, c) => c.copy(plasmaWalletDb = x))
         .text(
-          "The topl wallet db. (default: plasma-wallet.db)"
+          "The plasma wallet db. (default: plasma-wallet.db)"
         ),
       opt[String]("btc-peg-in-seed-file")
         .action((x, c) => c.copy(btcPegInSeedFile = x))
@@ -84,7 +84,7 @@ trait ConsensusParamsDescriptor {
           "The password to the seed file. (default: password)"
         ),
       opt[String]("plasma-host")
-        .action((x, c) => c.copy(toplHost = x))
+        .action((x, c) => c.copy(plasmaHost = x))
         .text("The host of the Plasma node. (mandatory)")
         .validate(x =>
           if (x.trim().isEmpty) failure("Plasma node host may not be empty")
@@ -114,7 +114,7 @@ trait ConsensusParamsDescriptor {
           else success
         ),
       opt[Int]("plasma-port")
-        .action((x, c) => c.copy(toplPort = x))
+        .action((x, c) => c.copy(plasmaPort = x))
         .text("Port for Plasma node. (mandatory)")
         .validate(x =>
           if (x >= 0 && x <= 65536) success
@@ -135,7 +135,7 @@ trait ConsensusParamsDescriptor {
           else success
         ),
       opt[Boolean]("plasma-secure")
-        .action((x, c) => c.copy(toplSecureConnection = x))
+        .action((x, c) => c.copy(plasmaSecureConnection = x))
         .text("Enables the secure connection to the node. (optional)"),
       opt[Long]("minting-fee")
         .action((x, c) => c.copy(mintingFee = x))
@@ -166,7 +166,7 @@ trait ConsensusParamsDescriptor {
             else failure("Confirmation threshold must be a positive number")
         ),
       opt[Int]("plasma-confirmation-threshold")
-        .action((x, c) => c.copy(toplConfirmationThreshold = x))
+        .action((x, c) => c.copy(plasmaConfirmationThreshold = x))
         .text(
           "The number of confirmations required for a peg-in transaction in the Plasma network. (mandatory)"
         )

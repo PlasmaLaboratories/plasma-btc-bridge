@@ -40,19 +40,19 @@ trait TransitionToEffect {
   def isAboveConfirmationThresholdPlasma(
     currentHeight: Long,
     startHeight:   Long
-  )(implicit toplConfirmationThreshold: PlasmaConfirmationThreshold) =
-    currentHeight - startHeight > toplConfirmationThreshold.underlying
+  )(implicit plasmaConfirmationThreshold: PlasmaConfirmationThreshold) =
+    currentHeight - startHeight > plasmaConfirmationThreshold.underlying
 
   def transitionToEffect[F[_]: Async: Logger](
     currentState:    PeginStateMachineState,
     blockchainEvent: BlockchainEvent
   )(implicit
-    clientId:                  ClientId,
-    session:                   SessionId,
-    consensusClient:           StateMachineServiceGrpcClient[F],
-    toplWaitExpirationTime:    PlasmaWaitExpirationTime,
-    toplConfirmationThreshold: PlasmaConfirmationThreshold,
-    btcConfirmationThreshold:  BTCConfirmationThreshold
+    clientId:                    ClientId,
+    session:                     SessionId,
+    consensusClient:             StateMachineServiceGrpcClient[F],
+    plasmaWaitExpirationTime:    PlasmaWaitExpirationTime,
+    plasmaConfirmationThreshold: PlasmaConfirmationThreshold,
+    btcConfirmationThreshold:    BTCConfirmationThreshold
   ) =
     (blockchainEvent match {
       case SkippedPlasmaBlock(height) =>
@@ -128,7 +128,7 @@ trait TransitionToEffect {
         ) {
           Async[F].unit
         } else if ( // FIXME: check that this is the right time to wait
-          toplWaitExpirationTime.underlying < (be.height - cs.depositTBTCBlockHeight)
+          plasmaWaitExpirationTime.underlying < (be.height - cs.depositTBTCBlockHeight)
         )
           Async[F]
             .start(

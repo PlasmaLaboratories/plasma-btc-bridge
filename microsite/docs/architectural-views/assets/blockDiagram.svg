@@ -812,7 +812,7 @@
       stroke-opacity="1"><text x="65" xml:space="preserve" y="15" clip-path="url(#clipPath12)"
         stroke="none">references</text><text x="4" xml:space="preserve" y="30" clip-path="url(#clipPath12)"
         stroke="none">btc-node : Bitcoin Network {unique}</text><text x="4" xml:space="preserve" y="45"
-        clip-path="url(#clipPath12)" stroke="none">topl-node : Plasma Network {unique}</text></g>
+        clip-path="url(#clipPath12)" stroke="none">plasma-node : Plasma Network {unique}</text></g>
     <g font-size="11px" transform="translate(543,467)" fill-opacity="1" fill="rgb(122,207,245)"
       text-rendering="geometricPrecision" image-rendering="optimizeQuality" font-family="sans-serif"
       stroke="rgb(122,207,245)" font-weight="bold" stroke-opacity="1">
@@ -1042,7 +1042,7 @@
     <g font-size="11px" transform="translate(1380,627)" fill-opacity="1" fill="black"
       text-rendering="geometricPrecision" image-rendering="optimizeQuality" font-family="sans-serif" stroke="black"
       stroke-opacity="1"><text x="10" xml:space="preserve" y="12" clip-path="url(#clipPath44)"
-        stroke="none">topl-node</text></g>
+        stroke="none">plasma-node</text></g>
     <g font-size="11px" transform="translate(662,661)" fill-opacity="1" fill="black" text-rendering="geometricPrecision"
       image-rendering="optimizeQuality" font-family="sans-serif" stroke="black" stroke-opacity="1"><text x="10"
         xml:space="preserve" y="12" clip-path="url(#clipPath46)" stroke="none">db</text></g>
@@ -1076,23 +1076,27 @@
         xml:space="preserve" y="12" clip-path="url(#clipPath54)" stroke="none">StateMachineGrpcServiceServer</text></g>
     <g font-size="11px" transform="translate(762,694)" fill-opacity="1" fill="black" text-rendering="geometricPrecision"
       image-rendering="optimizeQuality" font-family="sans-serif" stroke="black" font-weight="bold" stroke-opacity="1">
-      <text x="10" xml:space="preserve" y="12" clip-path="url(#clipPath55)" stroke="none">StateMachineService</text></g>
+      <text x="10" xml:space="preserve" y="12" clip-path="url(#clipPath55)" stroke="none">StateMachineService</text>
+    </g>
     <g font-size="11px" transform="translate(591,362)" fill-opacity="1" fill="black" text-rendering="geometricPrecision"
       image-rendering="optimizeQuality" font-family="sans-serif" stroke="black" font-weight="bold" stroke-opacity="1">
-      <text x="10" xml:space="preserve" y="12" clip-path="url(#clipPath56)" stroke="none">PBFTInternalService</text></g>
+      <text x="10" xml:space="preserve" y="12" clip-path="url(#clipPath56)" stroke="none">PBFTInternalService</text>
+    </g>
     <g font-size="11px" transform="translate(411,432)" fill-opacity="1" fill="black" text-rendering="geometricPrecision"
       image-rendering="optimizeQuality" font-family="sans-serif" stroke="black" stroke-opacity="1"><text x="10"
         xml:space="preserve" y="12" clip-path="url(#clipPath57)" stroke="none">PBFTInternalGrpcServiceServer</text></g>
     <g font-size="11px" transform="translate(2,608)" fill-opacity="1" fill="black" text-rendering="geometricPrecision"
       image-rendering="optimizeQuality" font-family="sans-serif" stroke="black" font-weight="bold" stroke-opacity="1">
-      <text x="10" xml:space="preserve" y="12" clip-path="url(#clipPath58)" stroke="none">BridgeJSONAPI</text></g>
+      <text x="10" xml:space="preserve" y="12" clip-path="url(#clipPath58)" stroke="none">BridgeJSONAPI</text>
+    </g>
     <g font-size="11px" transform="translate(441,628)" fill-opacity="1" fill="black" text-rendering="geometricPrecision"
       image-rendering="optimizeQuality" font-family="sans-serif" stroke="black" stroke-opacity="1"><text x="48"
         xml:space="preserve" y="12" clip-path="url(#clipPath59)" stroke="none">&lt;&lt;proxy&gt;&gt;</text><text x="10"
         xml:space="preserve" y="27" clip-path="url(#clipPath59)" stroke="none">ResponseServiceFs2Grpc</text></g>
     <g font-size="11px" transform="translate(456,710)" fill-opacity="1" fill="black" text-rendering="geometricPrecision"
       image-rendering="optimizeQuality" font-family="sans-serif" stroke="black" font-weight="bold" stroke-opacity="1">
-      <text x="10" xml:space="preserve" y="12" clip-path="url(#clipPath60)" stroke="none">ResponseService</text></g>
+      <text x="10" xml:space="preserve" y="12" clip-path="url(#clipPath60)" stroke="none">ResponseService</text>
+    </g>
     <g font-size="11px" transform="translate(588,438)" fill-opacity="1" fill="black" text-rendering="geometricPrecision"
       image-rendering="optimizeQuality" font-family="sans-serif" stroke="black" stroke-opacity="1"><text x="10"
         xml:space="preserve" y="12" clip-path="url(#clipPath63)" stroke="none">PBFTInternalGrpcServiceClient</text></g>

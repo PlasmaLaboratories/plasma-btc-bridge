@@ -36,11 +36,11 @@ trait SharedData {
 
   val walletFile = "src/test/resources/wallet.json"
 
-  val toplWalletFile = "src/test/resources/plasma-wallet.json"
+  val plasmaWalletFile = "src/test/resources/plasma-wallet.json"
 
-  val toplWalletDbInitial = "src/universal/plasma-wallet.db"
+  val plasmaWalletDbInitial = "src/universal/plasma-wallet.db"
 
-  val toplWalletDb = "src/universal/plasma-wallet-instance.db"
+  val plasmaWalletDb = "src/universal/plasma-wallet-instance.db"
 
   val testSecret = "secret"
 
@@ -54,12 +54,12 @@ trait SharedData {
   implicit val btcWaitExpirationTime: BTCWaitExpirationTime =
     new BTCWaitExpirationTime(100)
 
-  implicit val toplWaitExpirationTime: PlasmaWaitExpirationTime =
+  implicit val plasmaWaitExpirationTime: PlasmaWaitExpirationTime =
     new PlasmaWaitExpirationTime(2000)
 
   implicit val btcConfirmationThreshold: BTCConfirmationThreshold = new BTCConfirmationThreshold(6)
 
-  implicit val toplConfirmationThreshold: PlasmaConfirmationThreshold = new PlasmaConfirmationThreshold(6)
+  implicit val plasmaConfirmationThreshold: PlasmaConfirmationThreshold = new PlasmaConfirmationThreshold(6)
 
   implicit val btcRetryThreshold: BTCRetryThreshold = new BTCRetryThreshold(6)
 

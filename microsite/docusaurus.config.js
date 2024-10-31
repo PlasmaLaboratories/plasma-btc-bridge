@@ -13,15 +13,15 @@ const config = {
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
-  url: 'https://topl.github.io/',
+  url: 'https://plasma.github.io/',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: '/topl-btc-bridge/',
+  baseUrl: '/plasma-btc-bridge/',
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
   organizationName: 'PlasmaLab', // Usually your GitHub org/user name.
-  projectName: 'topl-btc-bridge', // Usually your repo name.
+  projectName: 'plasma-btc-bridge', // Usually your repo name.
 
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
@@ -71,7 +71,7 @@ const config = {
             label: 'Architecture',
           },
           {
-            href: 'https://github.com/Topl/topl-btc-bridge',
+            href: 'https://github.com/Topl/plasma-btc-bridge',
             label: 'GitHub',
             position: 'right',
           },
@@ -94,7 +94,7 @@ const config = {
             items: [
               {
                 label: 'Twitter',
-                href: 'https://twitter.com/topl_protocol',
+                href: 'https://twitter.com/plasma_protocol',
               },
             ],
           },
@@ -103,7 +103,7 @@ const config = {
             items: [
               {
                 label: 'GitHub',
-                href: 'https://github.com/Topl/topl-btc-bridge',
+                href: 'https://github.com/Topl/plasma-btc-bridge',
               },
             ],
           },

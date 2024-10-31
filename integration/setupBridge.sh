@@ -4,9 +4,9 @@ shopt -s expand_aliases
 alias plasma-cli="cs launch -r https://s01.oss.sonatype.org/content/repositories/releases org.plasmalabs:plasma-cli_2.13:0.1.0 -- "
 export BTC_USER=bitcoin
 export BTC_PASSWORD=password
-export TOPL_WALLET_DB=topl-wallet.db
-export TOPL_WALLET_JSON=topl-wallet.json
-export TOPL_WALLET_MNEMONIC=topl-mnemonic.txt
+export TOPL_WALLET_DB=plasma-wallet.db
+export TOPL_WALLET_JSON=plasma-wallet.json
+export TOPL_WALLET_MNEMONIC=plasma-mnemonic.txt
 export TOPL_WALLET_PASSWORD=password
 rm -rf $TOPL_WALLET_DB $TOPL_WALLET_JSON $TOPL_WALLET_MNEMONIC 
 plasma-cli node-query mint-block --nb-blocks 1 -h 127.0.0.1  --port 9084 -s false

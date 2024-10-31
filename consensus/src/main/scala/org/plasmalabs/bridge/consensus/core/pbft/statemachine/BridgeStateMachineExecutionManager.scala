@@ -98,8 +98,8 @@ object BridgeStateMachineExecutionManagerImpl {
     keyPair:               JKeyPair,
     viewManager:           ViewManager[F],
     walletManagementUtils: WalletManagementUtils[F],
-    toplWalletSeedFile:    String,
-    toplWalletPassword:    String
+    plasmaWalletSeedFile:  String,
+    plasmaWalletPassword:  String
   )(implicit
     pbftProtocolClientGrpc:   PBFTInternalGrpcServiceClient[F],
     replica:                  ReplicaId,
@@ -112,7 +112,7 @@ object BridgeStateMachineExecutionManagerImpl {
     bridgeWalletManager:      BridgeWalletManager[F],
     fellowshipStorageAlgebra: FellowshipStorageAlgebra[F],
     templateStorageAlgebra:   TemplateStorageAlgebra[F],
-    toplWaitExpirationTime:   PlasmaWaitExpirationTime,
+    plasmaWaitExpirationTime: PlasmaWaitExpirationTime,
     btcWaitExpirationTime:    BTCWaitExpirationTime,
     tba:                      TransactionBuilderApi[F],
     currentPlasmaHeight:      CurrentPlasmaHeightRef[F],
@@ -132,14 +132,14 @@ object BridgeStateMachineExecutionManagerImpl {
   ) = {
     for {
       tKeyPair <- walletManagementUtils.loadKeys(
-        toplWalletSeedFile,
-        toplWalletPassword
+        plasmaWalletSeedFile,
+        plasmaWalletPassword
       )
       state              <- Ref.of[F, Map[String, PBFTState]](Map.empty)
       queue              <- Queue.unbounded[F, (Long, StateMachineRequest)]
       elegibilityManager <- ExecutionElegibilityManagerImpl.make[F]()
     } yield {
-      implicit val toplKeypair = new PlasmaKeypair(tKeyPair)
+      implicit val plasmaKeypair = new PlasmaKeypair(tKeyPair)
       new BridgeStateMachineExecutionManager[F] {
 
         def runStream(): fs2.Stream[F, Unit] =

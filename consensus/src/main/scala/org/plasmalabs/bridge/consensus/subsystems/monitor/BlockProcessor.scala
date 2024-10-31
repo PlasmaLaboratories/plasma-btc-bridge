@@ -27,10 +27,10 @@ object BlockProcessor {
     BlockchainEvent
   ] = {
     var btcHeight = initialBTCHeight
-    var toplHeight =
+    var plasmaHeight =
       initialPlasmaHeight
     var btcAscending = false
-    var toplAscending = false
+    var plasmaAscending = false
     def processAux[F[_]](
       block: Either[BitcoinBlockSync, NodeMonitor.NodeBlockSync]
     ): fs2.Stream[F, BlockchainEvent] = block match {
@@ -120,38 +120,38 @@ object BlockProcessor {
             }
           ): _*
         )
-        if (toplHeight == 0)
-          toplHeight = b.height - 1
+        if (plasmaHeight == 0)
+          plasmaHeight = b.height - 1
         val transactions =
-          if (b.height == (toplHeight + 1)) { // going up as expected, include all transaction
-            toplAscending = true
+          if (b.height == (plasmaHeight + 1)) { // going up as expected, include all transaction
+            plasmaAscending = true
             fs2.Stream(NewPlasmaBlock(b.height)) ++ allTransactions
-          } else if (b.height == (toplHeight - 1)) { // going down by one, we ommit transactions
-            toplAscending = false
+          } else if (b.height == (plasmaHeight - 1)) { // going down by one, we ommit transactions
+            plasmaAscending = false
             fs2.Stream(NewPlasmaBlock(b.height))
-          } else if (b.height > (toplHeight + 1)) { // we went up by more than one
-            toplAscending = true
+          } else if (b.height > (plasmaHeight + 1)) { // we went up by more than one
+            plasmaAscending = true
             fs2.Stream(
               SkippedPlasmaBlock(b.height)
             )
-          } else if (b.height < (toplHeight - 1)) { // we went down by more than one, we ommit transactions
-            toplAscending = false
+          } else if (b.height < (plasmaHeight - 1)) { // we went down by more than one, we ommit transactions
+            plasmaAscending = false
             fs2.Stream()
           } else {
             // we stayed the same
-            if (toplAscending) {
+            if (plasmaAscending) {
               // if we are ascending, it means the current block was just unapplied
               // we don't pass the transactions that we have already seen
-              toplAscending = false
+              plasmaAscending = false
               fs2.Stream(NewPlasmaBlock(b.height))
             } else {
               // if we are descending, it means the current block was just applied
               // we need to pass all transactions
-              toplAscending = true
+              plasmaAscending = true
               fs2.Stream(NewPlasmaBlock(b.height)) ++ allTransactions
             }
           }
-        toplHeight = b.height
+        plasmaHeight = b.height
         transactions
     }
     processAux

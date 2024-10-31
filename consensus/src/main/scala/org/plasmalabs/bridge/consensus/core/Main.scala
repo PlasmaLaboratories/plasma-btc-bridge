@@ -69,8 +69,8 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
       parser,
       args,
       PlasmaBTCBridgeConsensusParamConfig(
-        toplHost = Option(System.getenv("PLASMA_HOST")).getOrElse("localhost"),
-        toplWalletDb = System.getenv("PLASMA_WALLET_DB"),
+        plasmaHost = Option(System.getenv("PLASMA_HOST")).getOrElse("localhost"),
+        plasmaWalletDb = System.getenv("PLASMA_WALLET_DB"),
         zmqHost = Option(System.getenv("ZMQ_HOST")).getOrElse("localhost"),
         zmqPort = Option(System.getenv("ZMQ_PORT")).map(_.toInt).getOrElse(28332),
         btcUrl = Option(System.getenv("BTC_URL")).getOrElse("http://localhost"),
@@ -324,9 +324,9 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
       nodeQueryAlgebra = NodeQueryAlgebra
         .make[IO](
           channelResource(
-            params.toplHost,
-            params.toplPort,
-            params.toplSecureConnection
+            params.plasmaHost,
+            params.plasmaPort,
+            params.plasmaSecureConnection
           )
         )
       btcMonitor <- BitcoinMonitor(
@@ -335,9 +335,9 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         zmqPort = params.zmqPort
       )
       nodeMonitor <- NodeMonitor(
-        params.toplHost,
-        params.toplPort,
-        params.toplSecureConnection,
+        params.plasmaHost,
+        params.plasmaPort,
+        params.plasmaSecureConnection,
         nodeQueryAlgebra
       )
       _              <- storageApi.initializeStorage().toResource
@@ -435,11 +435,11 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         .map({ tip =>
           val (_, header, _, _) = tip
           currentPlasmaHeight.set(header.height) >>
-          info"Obtained and set topl height: ${header.height}" >>
+          info"Obtained and set plasma height: ${header.height}" >>
           header.height.pure[F]
         })
         .getOrElse(
-          warn"Failed to obtain and set topl height" >> Async[F]
+          warn"Failed to obtain and set plasma height" >> Async[F]
             .sleep(3.second) >> 0L.pure[F]
         )
     } yield height).iterateUntil(_ != 0)

@@ -106,7 +106,7 @@ object WaitingBTCOps {
     redeemAddress:  String,
     amount:         Int128
   )(implicit
-    toplKeypair:           PlasmaKeypair,
+    plasmaKeypair:         PlasmaKeypair,
     walletApi:             WalletApi[F],
     walletStateApi:        WalletStateAlgebra[F],
     transactionBuilderApi: TransactionBuilderApi[F],
@@ -131,7 +131,7 @@ object WaitingBTCOps {
         fromFellowship,
         fromTemplate,
         assetMintingStatement,
-        toplKeypair.underlying,
+        plasmaKeypair.underlying,
         defaultMintingFee
       )
     } yield ()

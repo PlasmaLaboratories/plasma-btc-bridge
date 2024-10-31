@@ -103,18 +103,18 @@ trait AppModule extends WalletStateResource {
   ) = {
     val walletKeyApi = WalletKeyApi.make[IO]()
     implicit val walletApi = WalletApi.make[IO](walletKeyApi)
-    val walletRes = WalletStateResource.walletResource[IO](params.toplWalletDb)
+    val walletRes = WalletStateResource.walletResource[IO](params.plasmaWalletDb)
     implicit val walletStateAlgebra = WalletStateApi
       .make[IO](walletRes, walletApi)
     implicit val transactionBuilderApi = TransactionBuilderApi.make[IO](
-      params.toplNetwork.networkId,
+      params.plasmaNetwork.networkId,
       NetworkConstants.MAIN_LEDGER_ID
     )
     implicit val genusQueryAlgebra = IndexerQueryAlgebra.make[IO](
       channelResource(
-        params.toplHost,
-        params.toplPort,
-        params.toplSecureConnection
+        params.plasmaHost,
+        params.plasmaPort,
+        params.plasmaSecureConnection
       )
     )
     implicit val fellowshipStorageApi = FellowshipStorageApi.make(walletRes)
@@ -132,14 +132,14 @@ trait AppModule extends WalletStateResource {
     implicit val btcWaitExpirationTime = new BTCWaitExpirationTime(
       params.btcWaitExpirationTime
     )
-    implicit val toplWaitExpirationTime = new PlasmaWaitExpirationTime(
-      params.toplWaitExpirationTime
+    implicit val plasmaWaitExpirationTime = new PlasmaWaitExpirationTime(
+      params.plasmaWaitExpirationTime
     )
     implicit val btcConfirmationThreshold = new BTCConfirmationThreshold(
       params.btcConfirmationThreshold
     )
-    implicit val toplConfirmationThreshold = new PlasmaConfirmationThreshold(
-      params.toplConfirmationThreshold
+    implicit val plasmaConfirmationThreshold = new PlasmaConfirmationThreshold(
+      params.plasmaConfirmationThreshold
     )
     implicit val checkpointInterval = new CheckpointInterval(
       params.checkpointInterval
@@ -153,10 +153,10 @@ trait AppModule extends WalletStateResource {
     )
     implicit val iBridgeWalletManager = new BridgeWalletManager(walletManager)
     implicit val btcNetwork = params.btcNetwork
-    implicit val toplChannelResource = channelResource(
-      params.toplHost,
-      params.toplPort,
-      params.toplSecureConnection
+    implicit val plasmaChannelResource = channelResource(
+      params.plasmaHost,
+      params.plasmaPort,
+      params.plasmaSecureConnection
     )
     implicit val currentBTCHeightRef =
       new CurrentBTCHeightRef[IO](currentBitcoinNetworkHeight)
@@ -187,8 +187,8 @@ trait AppModule extends WalletStateResource {
             replicaKeyPair,
             viewManager,
             walletManagementUtils,
-            params.toplWalletSeedFile,
-            params.toplWalletPassword
+            params.plasmaWalletSeedFile,
+            params.plasmaWalletPassword
           )
       requestStateManager <- RequestStateManagerImpl
         .make[IO](

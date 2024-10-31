@@ -126,7 +126,7 @@ package object shared {
           .map(x =>
             x.sessionId.getBytes() ++
             BigInt(x.btcHeight).toByteArray
-            ++ BigInt(x.toplHeight).toByteArray
+            ++ BigInt(x.plasmaHeight).toByteArray
           )
           .getOrElse(Array.emptyByteArray) ++
         request.operation.postRedemptionTx

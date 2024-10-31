@@ -19,10 +19,10 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
     org.typelevel.log4cats.slf4j.Slf4jLogger
       .getLoggerFromName[IO]("it-test")
 
-  def toplWalletDb(replicaId: Int) =
+  def plasmaWalletDb(replicaId: Int) =
     Option(System.getenv(s"PLASMA_WALLET_DB_$replicaId")).getOrElse(s"plasma-wallet$replicaId.db")
 
-  def toplWalletJson(replicaId: Int) =
+  def plasmaWalletJson(replicaId: Int) =
     Option(System.getenv(s"PLASMA_WALLET_JSON_$replicaId")).getOrElse(s"plasma-wallet$replicaId.json")
 
   import cats.implicits._
@@ -60,9 +60,9 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
           "--btc-peg-in-seed-file",
           "src/test/resources/pegin-wallet.json",
           "--plasma-wallet-seed-file",
-          toplWalletJson(replicaId),
+          plasmaWalletJson(replicaId),
           "--plasma-wallet-db",
-          toplWalletDb(replicaId),
+          plasmaWalletDb(replicaId),
           "--btc-url",
           "http://localhost",
           "--btc-blocks-to-recover",
@@ -110,8 +110,8 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
           }
           _              <- createReplicaConfigurationFiles[IO]()
           _              <- createPublicApiConfigurationFiles[IO]()
-          currentAddress <- currentAddress(toplWalletDb(0))
-          utxo           <- getCurrentUtxosFromAddress(toplWalletDb(0), currentAddress)
+          currentAddress <- currentAddress(plasmaWalletDb(0))
+          utxo           <- getCurrentUtxosFromAddress(plasmaWalletDb(0), currentAddress)
           (groupId, seriesId) = extractIds(utxo)
           _ <- IO(Try(Files.delete(Paths.get("bridge.db"))))
           _ <- IO.asyncForIO.both(
@@ -208,8 +208,8 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
     _ <-
       if (missingReplicas.nonEmpty) {
         for {
-          currentAddress <- currentAddress(toplWalletDb(0))
-          utxo           <- getCurrentUtxosFromAddress(toplWalletDb(0), currentAddress)
+          currentAddress <- currentAddress(plasmaWalletDb(0))
+          utxo           <- getCurrentUtxosFromAddress(plasmaWalletDb(0), currentAddress)
           (groupId, seriesId) = extractIds(utxo)
 
           _ <- IO.asyncForIO.both(

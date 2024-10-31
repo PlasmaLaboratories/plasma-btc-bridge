@@ -27,7 +27,7 @@ function WaitingForRedemption(session: SessionInformation): JSX.Element {
                 </div>
                 <div className="input-group mb-3">
                   <span className="input-group-text" id="bridge-key">Bridge Key</span>
-                  <input disabled value={session.toplBridgePKey} type="text" className="form-control" aria-label="Redeem template" aria-describedby="basic-addon1" />
+                  <input disabled value={session.plasmaBridgePKey} type="text" className="form-control" aria-label="Redeem template" aria-describedby="basic-addon1" />
                 </div>
                 <div className="input-group mb-3">
                   <span className="input-group-text" id="redeem-template">Redeem template</span>
