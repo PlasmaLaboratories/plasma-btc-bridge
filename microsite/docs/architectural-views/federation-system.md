@@ -14,14 +14,14 @@ The following diagram shows the architecture of the federation system:
 
 ### brdge-federation
 
-The bridge federation it self is composed by a set of one or more `strata-bridge`
+The bridge federation it self is composed by a set of one or more `plasma-bridge`
 nodes. It has also two properties: `clientCount` and `replicaCount`. The `clientCount`
 is the number of clients that can connect to the federation. The `replicaCount` is the
 number of replicas that the federation has.
 
-### strata-bridge
+### plasma-bridge
 
-The `strata-bridge` is a node that is part of the federation. It is responsible for
+The `plasma-bridge` is a node that is part of the federation. It is responsible for
 reaching consensus on the state of the federation. It is composed by the following:
 
 - **consensus**: This is a subsystem that run autonomously and is responsible for

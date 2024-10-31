@@ -16,8 +16,8 @@ trait ConsensusParamsDescriptor {
     import builder._
 
     OParser.sequence(
-      programName("strata-btc-bridge-consensus"),
-      head("strata-btc-bridge-consensus", "0.1"),
+      programName("plasma-btc-bridge-consensus"),
+      head("plasma-btc-bridge-consensus", "0.1"),
       opt[Int]("checkpoint-interval")
         .action((x, c) => c.copy(checkpointInterval = x))
         .text(
@@ -33,7 +33,7 @@ trait ConsensusParamsDescriptor {
         .text(
           "Network name: Possible values: mainnet, testnet, regtest. (mandatory)"
         ),
-      opt[StrataNetworkIdentifiers]("strata-network")
+      opt[StrataNetworkIdentifiers]("plasma-network")
         .action((x, c) => c.copy(toplNetwork = x))
         .text(
           "Network name: Possible values: mainnet, testnet, private. (mandatory)"
@@ -43,22 +43,22 @@ trait ConsensusParamsDescriptor {
         .text(
           "The number of blocks that the user needs to wait before they can reclaim their funds. (default: 100)"
         ),
-      opt[Int]("strata-blocks-to-recover")
+      opt[Int]("plasma-blocks-to-recover")
         .action((x, c) => c.copy(toplWaitExpirationTime = x))
         .text(
           "The number of blocks that the bridge needs to wait before it can burn the block. (default: 2000)"
         ),
-      opt[String]("strata-wallet-seed-file")
+      opt[String]("plasma-wallet-seed-file")
         .action((x, c) => c.copy(toplWalletSeedFile = x))
         .text(
           "The path to the tolp wallet seed file. (default: plasma-wallet.json)"
         ),
-      opt[String]("strata-wallet-password")
+      opt[String]("plasma-wallet-password")
         .action((x, c) => c.copy(toplWalletPassword = x))
         .text(
           "The password to the topl seed file. (default: password)"
         ),
-      opt[String]("strata-wallet-db")
+      opt[String]("plasma-wallet-db")
         .action((x, c) => c.copy(toplWalletDb = x))
         .text(
           "The topl wallet db. (default: plasma-wallet.db)"
@@ -83,7 +83,7 @@ trait ConsensusParamsDescriptor {
         .text(
           "The password to the seed file. (default: password)"
         ),
-      opt[String]("strata-host")
+      opt[String]("plasma-host")
         .action((x, c) => c.copy(toplHost = x))
         .text("The host of the Strata node. (mandatory)")
         .validate(x =>
@@ -113,7 +113,7 @@ trait ConsensusParamsDescriptor {
             failure("Bitcoin node password may not be empty")
           else success
         ),
-      opt[Int]("strata-port")
+      opt[Int]("plasma-port")
         .action((x, c) => c.copy(toplPort = x))
         .text("Port for Strata node. (mandatory)")
         .validate(x =>
@@ -134,7 +134,7 @@ trait ConsensusParamsDescriptor {
           if (x.trim().isEmpty) failure("ZMQ host may not be empty")
           else success
         ),
-      opt[Boolean]("strata-secure")
+      opt[Boolean]("plasma-secure")
         .action((x, c) => c.copy(toplSecureConnection = x))
         .text("Enables the secure connection to the node. (optional)"),
       opt[Long]("minting-fee")
@@ -165,7 +165,7 @@ trait ConsensusParamsDescriptor {
             if (x > 0) success
             else failure("Confirmation threshold must be a positive number")
         ),
-      opt[Int]("strata-confirmation-threshold")
+      opt[Int]("plasma-confirmation-threshold")
         .action((x, c) => c.copy(toplConfirmationThreshold = x))
         .text(
           "The number of confirmations required for a peg-in transaction in the Strata network. (mandatory)"

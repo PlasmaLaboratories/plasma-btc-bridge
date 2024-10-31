@@ -167,7 +167,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
             1L,
             "nodeTxId",
             0,
-            "strata-secret",
+            "plasma-secret",
             AssetToken("groupId", "seriesId", 100L)
           )
         )(transitionToEffect[IO](_, _))
@@ -197,7 +197,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
             1L,
             "nodeTxId",
             0,
-            "strata-secret",
+            "plasma-secret",
             AssetToken("groupId", "seriesId", 100L)
           )
         )(transitionToEffect[IO](_, _))
@@ -256,7 +256,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
             1L,
             "nodeTxIdDifferent",
             0,
-            "strata-secret",
+            "plasma-secret",
             AssetToken("groupId", "seriesId", 100L)
           )
         )(transitionToEffect[IO](_, _))
@@ -279,7 +279,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
             1L,
             "nodeTxId",
             1,
-            "strata-secret",
+            "plasma-secret",
             AssetToken("groupId", "seriesId", 100L)
           )
         )(transitionToEffect[IO](_, _))
@@ -498,7 +498,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
             1L,
             "nodeTxId",
             0,
-            "strata-secret",
+            "plasma-secret",
             AssetToken("groupId", "seriesId", 100L)
           )
         )(transitionToEffect[IO](_, _))
