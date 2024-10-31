@@ -69,8 +69,8 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
       parser,
       args,
       StrataBTCBridgeConsensusParamConfig(
-        toplHost = Option(System.getenv("STRATA_HOST")).getOrElse("localhost"),
-        toplWalletDb = System.getenv("STRATA_WALLET_DB"),
+        toplHost = Option(System.getenv("PLASMA_HOST")).getOrElse("localhost"),
+        toplWalletDb = System.getenv("PLASMA_WALLET_DB"),
         zmqHost = Option(System.getenv("ZMQ_HOST")).getOrElse("localhost"),
         zmqPort = Option(System.getenv("ZMQ_PORT")).map(_.toInt).getOrElse(28332),
         btcUrl = Option(System.getenv("BTC_URL")).getOrElse("http://localhost"),

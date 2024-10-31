@@ -20,10 +20,10 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
       .getLoggerFromName[IO]("it-test")
 
   def toplWalletDb(replicaId: Int) =
-    Option(System.getenv(s"STRATA_WALLET_DB_$replicaId")).getOrElse(s"plasma-wallet$replicaId.db")
+    Option(System.getenv(s"PLASMA_WALLET_DB_$replicaId")).getOrElse(s"plasma-wallet$replicaId.db")
 
   def toplWalletJson(replicaId: Int) =
-    Option(System.getenv(s"STRATA_WALLET_JSON_$replicaId")).getOrElse(s"plasma-wallet$replicaId.json")
+    Option(System.getenv(s"PLASMA_WALLET_JSON_$replicaId")).getOrElse(s"plasma-wallet$replicaId.json")
 
   import cats.implicits._
 

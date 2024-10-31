@@ -45,7 +45,7 @@ lazy val commonSettings = Seq(
     "Bintray" at "https://jcenter.bintray.com/"
   ),
   testFrameworks += TestFrameworks.MUnit,
-  // PB.protocExecutable := file("/nix/store/53gyjpxxkzrih1bj388ddw0kg8y0qz8j-protobuf-25.4/bin/protoc")
+  PB.protocExecutable := file("/nix/store/53gyjpxxkzrih1bj388ddw0kg8y0qz8j-protobuf-25.4/bin/protoc")
 )
 
 lazy val commonDockerSettings = List(

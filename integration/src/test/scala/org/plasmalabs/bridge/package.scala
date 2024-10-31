@@ -256,7 +256,7 @@ package object bridge extends ProcessOps {
               method = Method.POST,
               Uri
                 .fromString(
-                  "http://127.0.0.1:5000/api/" + BridgeContants.STRATA_MINTING_STATUS
+                  "http://127.0.0.1:5000/api/" + BridgeContants.PLASMA_MINTING_STATUS
                 )
                 .toOption
                 .get
@@ -285,7 +285,7 @@ package object bridge extends ProcessOps {
             method = Method.POST,
             Uri
               .fromString(
-                "http://127.0.0.1:5000/api/" + BridgeContants.STRATA_MINTING_STATUS
+                "http://127.0.0.1:5000/api/" + BridgeContants.PLASMA_MINTING_STATUS
               )
               .toOption
               .get
