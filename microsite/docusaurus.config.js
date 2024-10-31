@@ -71,7 +71,7 @@ const config = {
             label: 'Architecture',
           },
           {
-            href: 'https://github.com/Topl/plasma-btc-bridge',
+            href: 'https://github.com/Plasma/plasma-btc-bridge',
             label: 'GitHub',
             position: 'right',
           },
@@ -103,7 +103,7 @@ const config = {
             items: [
               {
                 label: 'GitHub',
-                href: 'https://github.com/Topl/plasma-btc-bridge',
+                href: 'https://github.com/Plasma/plasma-btc-bridge',
               },
             ],
           },

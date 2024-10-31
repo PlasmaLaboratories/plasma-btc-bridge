@@ -18,7 +18,7 @@ plasma-cli tx prove -i genesisTx.pbuf --walletdb $PLASMA_WALLET_DB --keyfile $PL
 export GROUP_UTXO=$(plasma-cli tx broadcast -i genesisTxProved.pbuf -h 127.0.0.1 --port 9084)
 plasma-cli node-query mint-block --nb-blocks 1 -h 127.0.0.1  --port 9084 -s false
 until plasma-cli indexer-query utxo-by-address --host localhost --port 9084 --secure false --walletdb $PLASMA_WALLET_DB; do sleep 5; done
-echo "label: ToplBTCGroup" > groupPolicy.yaml
+echo "label: PlasmaBTCGroup" > groupPolicy.yaml
 echo "registrationUtxo: $GROUP_UTXO#0" >> groupPolicy.yaml
 plasma-cli simple-minting create --from-fellowship self --from-template default  -h 127.0.0.1 --port 9084 -n private --keyfile $PLASMA_WALLET_JSON -w $PLASMA_WALLET_PASSWORD -o groupMintingtx.pbuf -i groupPolicy.yaml  --mint-amount 1 --fee 10 --walletdb $PLASMA_WALLET_DB --mint-token group
 plasma-cli tx prove -i groupMintingtx.pbuf --walletdb $PLASMA_WALLET_DB --keyfile $PLASMA_WALLET_JSON -w $PLASMA_WALLET_PASSWORD -o groupMintingtxProved.pbuf
@@ -26,7 +26,7 @@ export SERIES_UTXO=$(plasma-cli tx broadcast -i groupMintingtxProved.pbuf -h 127
 plasma-cli node-query mint-block --nb-blocks 1 -h 127.0.0.1  --port 9084 -s false
 echo "SERIES_UTXO: $SERIES_UTXO"
 until plasma-cli indexer-query utxo-by-address --host localhost --port 9084 --secure false --walletdb $PLASMA_WALLET_DB; do sleep 5; done
-echo "label: ToplBTCSeries" > seriesPolicy.yaml
+echo "label: PlasmaBTCSeries" > seriesPolicy.yaml
 echo "registrationUtxo: $SERIES_UTXO#0" >> seriesPolicy.yaml
 echo "fungibility: group-and-series" >> seriesPolicy.yaml
 echo "quantityDescriptor: liquid" >> seriesPolicy.yaml

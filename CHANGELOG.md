@@ -15,12 +15,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Dependency on `akka-slf4j`.
 - New parameters for the launcher:  `--btc-url`, `--btc-port`, `--btc-user`, `--btc-password`, `--zmq-url`, `--zmq-port`. These allow to connect to the Bitcoin node and the ZMQ server.
 - Support for monitoring the Bitcoin network.
-- Support for monitoring the Topl network.
+- Support for monitoring the Plasma network.
 - Logging all command line arguments when starting the application.
 - Support for sad path: User did not send the funds.
 - Support for sad path: Bridge did not mint the tokens in time.
 - Support for sad path: User did not redeem the tokens in time.
-- Add new parameter `--plasma-blocks-to-recover` to specify the number of blocks to wait for the Topl network to recover.
+- Add new parameter `--plasma-blocks-to-recover` to specify the number of blocks to wait for the Plasma network to recover.
 - Add new parameter `--btc-confirmation-threshold` to specify the number of confirmations needed for the deposit.
 - Add two new fields to the `StartPeginSessionResponse` message: `minHeight` and `maxHeight`.
 This is needed to know the range of blocks to wait for the redemption.
