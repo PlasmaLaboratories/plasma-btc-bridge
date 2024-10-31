@@ -6,14 +6,7 @@ import munit.CatsEffectSuite
 import org.plasmalabs.bridge.consensus.core.controllers.StartSessionController
 import org.plasmalabs.bridge.consensus.core.managers.{BTCWalletAlgebraImpl, WalletManagementUtils}
 import org.plasmalabs.bridge.consensus.core.utils.KeyGenerationUtils
-import org.plasmalabs.bridge.consensus.core.{
-  BridgeWalletManager,
-  CurrentPlasmaHeightRef,
-  PeginWalletManager,
-  RegTest,
-  PlasmaKeypair,
-  PlasmaPrivatenet
-}
+import org.plasmalabs.bridge.consensus.core.{BridgeWalletManager, CurrentPlasmaHeightRef, PeginWalletManager, PlasmaKeypair, PlasmaPrivatenet, RegTest}
 import org.plasmalabs.bridge.shared.{InvalidHash, InvalidKey, StartSessionOperation}
 import org.plasmalabs.sdk.builders.TransactionBuilderApi
 import org.plasmalabs.sdk.constants.NetworkConstants

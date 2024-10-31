@@ -14,11 +14,7 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.plasmalabs.bridge.consensus.core.managers.{BTCWalletAlgebra, BTCWalletAlgebraImpl}
 import org.plasmalabs.bridge.consensus.core.modules.AppModule
 import org.plasmalabs.bridge.consensus.core.utils.KeyGenerationUtils
-import org.plasmalabs.bridge.consensus.core.{
-  ConsensusParamsDescriptor,
-  ServerConfig,
-  PlasmaBTCBridgeConsensusParamConfig
-}
+import org.plasmalabs.bridge.consensus.core.{ConsensusParamsDescriptor, PlasmaBTCBridgeConsensusParamConfig, ServerConfig}
 import org.plasmalabs.bridge.consensus.service.StateMachineServiceFs2Grpc
 import org.plasmalabs.bridge.consensus.shared.BTCRetryThreshold
 import org.plasmalabs.bridge.consensus.shared.persistence.{StorageApi, StorageApiImpl}
