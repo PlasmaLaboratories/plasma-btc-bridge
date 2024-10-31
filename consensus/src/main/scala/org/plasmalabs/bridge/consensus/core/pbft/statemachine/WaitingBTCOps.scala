@@ -14,6 +14,8 @@ import org.plasmalabs.sdk.models.box.AssetMintingStatement
 import org.plasmalabs.sdk.wallet.WalletApi
 import org.typelevel.log4cats.Logger
 import quivr.models.{Int128, KeyPair}
+import org.plasmalabs.indexer.services.TxoState
+
 
 object WaitingBTCOps {
 
@@ -33,14 +35,28 @@ object WaitingBTCOps {
       .head
       .outputAddress
 
-  private def computeAssetMintingStatement[F[_]: Async: Logger](
+  def computeAssetMintingStatement[F[_]: Async: Logger](
     amount:         Int128,
     currentAddress: LockAddress,
-    utxoAlgebra:    IndexerQueryAlgebra[F]
+    utxoAlgebra:    IndexerQueryAlgebra[F], 
+    txoState: TxoState = TxoState.UNSPENT
+  ) = for {
+    txos <- getUtxos(currentAddress, utxoAlgebra, txoState)
+  } yield (AssetMintingStatement(
+    getGroupTokeUtxo(txos),
+    getSeriesTokenUtxo(txos),
+    amount
+  ), txos) 
+
+  def getUtxos[F[_]: Async: Logger](
+    currentAddress: LockAddress,
+    utxoAlgebra:    IndexerQueryAlgebra[F], 
+    txoState: TxoState = TxoState.UNSPENT
   ) = for {
     txos <- (utxoAlgebra
       .queryUtxo(
-        currentAddress
+        currentAddress, 
+        txoState
       )
       .attempt >>= {
       case Left(e) =>
@@ -60,11 +76,7 @@ object WaitingBTCOps {
     })
       .iterateUntil(_.isRight)
       .map(_.toOption.get)
-  } yield AssetMintingStatement(
-    getGroupTokeUtxo(txos),
-    getSeriesTokenUtxo(txos),
-    amount
-  )
+  } yield txos
 
   private def mintTBTC[F[_]: Async](
     redeemAddress:         String,
@@ -113,28 +125,31 @@ object WaitingBTCOps {
     utxoAlgebra:           IndexerQueryAlgebra[F],
     channelResource:       Resource[F, ManagedChannel],
     defaultMintingFee:     Lvl
-  ): F[Unit] = {
+  ): F[(LockAddress, Seq[Txo])] = {
     import cats.implicits._
+
     for {
       currentAddress <- getCurrentAddress[F](
         fromFellowship,
         fromTemplate,
         None
       )
+      
       assetMintingStatement <- computeAssetMintingStatement(
         amount,
         currentAddress,
         utxoAlgebra
       )
+
       _ <- mintTBTC(
         redeemAddress,
         fromFellowship,
         fromTemplate,
-        assetMintingStatement,
+        assetMintingStatement._1,
         toplKeypair.underlying,
         defaultMintingFee
       )
-    } yield ()
+    } yield (currentAddress, assetMintingStatement._2)
   }
 
 }

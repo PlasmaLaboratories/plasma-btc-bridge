@@ -55,6 +55,8 @@ import java.util.concurrent.atomic.LongAdder
 import java.util.concurrent.{ConcurrentHashMap, Executors}
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
+import java.util.concurrent.TimeUnit
+
 
 case class SystemGlobalState(
   currentStatus: Option[String],
@@ -320,6 +322,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
       ) = res
       _           <- requestStateManager.startProcessingEvents()
       _           <- IO.asyncForIO.background(bridgeStateMachineExecutionManager.runStream().compile.drain)
+      _           <- IO.asyncForIO.background(bridgeStateMachineExecutionManager.runMintingStream().compile.drain)
       pbftService <- pbftServiceResource
       nodeQueryAlgebra = NodeQueryAlgebra
         .make[IO](
@@ -497,19 +500,19 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
 
     implicit val pbftInternalConfig = RetryPolicy(
       initialDelay =
-        FiniteDuration.apply(conf.getInt("bridge.replica.clients.pbftInternal.retryPolicy.initialDelay"), "second"),
+        FiniteDuration(conf.getInt("bridge.replica.clients.pbftInternal.retryPolicy.initialDelay"), TimeUnit.SECONDS),
       maxRetries = conf.getInt("bridge.replica.clients.pbftInternal.retryPolicy.maxRetries"),
       delayMultiplier = conf.getInt("bridge.replica.clients.pbftInternal.retryPolicy.delayMultiplier")
     )
 
     implicit val stateMachineConf = StateMachineServiceGrpcClientRetryConfig(
       primaryResponseWait =
-        FiniteDuration.apply(conf.getInt("bridge.replica.clients.monitor.client.primaryResponseWait"), "second"),
+        FiniteDuration(conf.getInt("bridge.replica.clients.monitor.client.primaryResponseWait"), TimeUnit.SECONDS),
       otherReplicasResponseWait =
-        FiniteDuration.apply(conf.getInt("bridge.replica.clients.monitor.client.otherReplicasResponseWait"), "second"),
+        FiniteDuration(conf.getInt("bridge.replica.clients.monitor.client.otherReplicasResponseWait"), TimeUnit.SECONDS),
       retryPolicy = RetryPolicy(
         initialDelay =
-          FiniteDuration.apply(conf.getInt("bridge.replica.clients.monitor.client.retryPolicy.initialDelay"), "second"),
+          FiniteDuration(conf.getInt("bridge.replica.clients.monitor.client.retryPolicy.initialDelay"), TimeUnit.SECONDS),
         maxRetries = conf.getInt("bridge.replica.clients.monitor.client.retryPolicy.maxRetries"),
         delayMultiplier = conf.getInt("bridge.replica.clients.monitor.client.retryPolicy.delayMultiplier")
       )

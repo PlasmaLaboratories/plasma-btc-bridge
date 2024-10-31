@@ -46,7 +46,11 @@ mkdir -p node02
 chmod 777 node01
 chmod 777 node02
 # sed -i  -e 's/public/private/' staking/config.yaml
-export TIMESTAMP=`date --date="+10 seconds" +%s%N | cut -b1-13`
+if [[ "$OSTYPE" == "darwin"* ]]; then
+  export TIMESTAMP=$(date -v+10S +%s000)
+else 
+  export TIMESTAMP=`date --date="+10 seconds" +%s%N | cut -b1-13`
+fi
 
 echo > node01/config.yaml "\
 node:

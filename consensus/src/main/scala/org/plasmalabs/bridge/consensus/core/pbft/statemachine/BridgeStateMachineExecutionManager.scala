@@ -2,6 +2,8 @@ package org.plasmalabs.bridge.consensus.core.pbft.statemachine
 
 import cats.effect.kernel.{Async, Ref, Resource, Sync}
 import cats.effect.std.Queue
+import org.plasmalabs.bridge.consensus.core.pbft.statemachine.WaitingBTCOps.{startMintingProcess, getUtxos}
+import scala.concurrent.duration._
 import com.google.protobuf.ByteString
 import io.grpc.ManagedChannel
 import org.bitcoins.core.currency.{CurrencyUnit, Satoshis}
@@ -76,6 +78,19 @@ import scodec.bits.ByteVector
 
 import java.security.{KeyPair => JKeyPair}
 import java.util.UUID
+import quivr.models.Int128
+
+
+case class StartMintingRequest(
+ fellowship: Fellowship,
+ template: Template,
+ redeemAddress: String,
+ amount: Int128,
+ toplKeyPair: StrataKeypair
+)
+
+import java.util.concurrent.TimeUnit
+
 
 trait BridgeStateMachineExecutionManager[F[_]] {
 
@@ -85,6 +100,8 @@ trait BridgeStateMachineExecutionManager[F[_]] {
   ): F[Unit]
 
   def runStream(): fs2.Stream[F, Unit]
+
+  def runMintingStream(): fs2.Stream[F, Unit]
 
 }
 
@@ -137,6 +154,7 @@ object BridgeStateMachineExecutionManagerImpl {
       )
       state              <- Ref.of[F, Map[String, PBFTState]](Map.empty)
       queue              <- Queue.unbounded[F, (Long, StateMachineRequest)]
+      startMintingRequestQueue <- Queue.unbounded[F, StartMintingRequest]
       elegibilityManager <- ExecutionElegibilityManagerImpl.make[F]()
     } yield {
       implicit val toplKeypair = new StrataKeypair(tKeyPair)
@@ -159,6 +177,66 @@ object BridgeStateMachineExecutionManagerImpl {
                 )
             )
             .evalMap(x => trace"Executing the request: ${x._2}" >> executeRequestF(x._1, x._2))
+
+        def runMintingStream(): fs2.Stream[F, Unit] = fs2.Stream
+           .fromQueueUnterminated(startMintingRequestQueue)
+           .evalMap ( request => {
+              import org.plasmalabs.indexer.services.TxoState
+
+              for {
+
+               _ <- info"Processing minting request: request=$request"
+               response <- startMintingProcess(
+                  request.fellowship,
+                  request.template,
+                  request.redeemAddress,
+                  request.amount
+                )
+              _ <- (for {
+                _ <- Async[F].sleep(FiniteDuration(1, TimeUnit.SECONDS))
+                afterMintUtxos <- getUtxos(
+                  response._1,
+                  utxoAlgebra, 
+                  txoState = TxoState.SPENT
+                )
+                result = verifyMintingSpent(response._2, afterMintUtxos)
+                _ <- info"Matching spent txos: ${result._1}"
+              } yield result._1).iterateUntil(_ == true)
+             } yield ()
+           }
+             .handleErrorWith { error =>
+               error"Failed to process minting request: $error" >>
+               Async[F].unit
+             }
+           )
+          import org.plasmalabs.indexer.services.Txo
+          import org.plasmalabs.indexer.services.TxoState
+          
+          // TODO: UTXOs before mint can include more utxos then necessary, currently checked if all utxos match spent utxos
+          def verifyMintingSpent(beforeMintTxos: Seq[Txo], afterMintTxos: Seq[Txo]) = {
+
+            // Get all unspent UTXOs from before mint
+            val unspentBefore = beforeMintTxos.filter(_.state == TxoState.UNSPENT)
+            
+            // Find matching spent UTXOs in after mint state
+            val matchingSpent = afterMintTxos.filter(spentTxo => 
+              unspentBefore.exists(unspentTxo => 
+                // Match by transaction ID and value
+                spentTxo.outputAddress == unspentTxo.outputAddress &&
+                spentTxo.state == TxoState.SPENT &&
+                spentTxo.transactionOutput.value == unspentTxo.transactionOutput.value
+              )
+            )
+
+            // Verify we have all required token types in our spent UTXOs
+            val spentHasGroup = matchingSpent.exists(_.transactionOutput.value.value.isGroup)
+            val spentHasSeries = matchingSpent.exists(_.transactionOutput.value.value.isSeries)
+            val spentHasLvl = matchingSpent.exists(_.transactionOutput.value.value.isLvl)
+
+            // All conditions must be true for successful verification
+            (spentHasGroup && spentHasSeries && spentHasLvl, matchingSpent)
+          }
+
 
         private def startSession(
           clientNumber: Int,
@@ -331,7 +409,6 @@ object BridgeStateMachineExecutionManagerImpl {
             case PostDepositBTC(
                   value
                 ) =>
-              import WaitingBTCOps._
               import org.plasmalabs.sdk.syntax._
               for {
                 _ <- debug"handling PostDepositBTC ${value.sessionId}"
@@ -341,23 +418,25 @@ object BridgeStateMachineExecutionManagerImpl {
                 )
                 currentPrimary <- viewManager.currentPrimary
                 _ <- someSessionInfo
-                  .flatMap(sessionInfo =>
-                    if (currentPrimary == replica.id)
-                      MiscUtils.sessionInfoPeginPrism
-                        .getOption(sessionInfo)
-                        .map(peginSessionInfo =>
-                          debug"Starting minting process" >>
-                          startMintingProcess[F](
-                            defaultFromFellowship,
-                            defaultFromTemplate,
-                            peginSessionInfo.redeemAddress,
-                            BigInt(value.amount.toByteArray())
-                          )
-                        )
-                    else None
-                  )
-                  .getOrElse(Sync[F].unit)
-              } yield Result.Empty
+                 .flatMap(sessionInfo =>
+                   if (currentPrimary == replica.id)
+                     MiscUtils.sessionInfoPeginPrism
+                       .getOption(sessionInfo)
+                       .map(
+                         peginSessionInfo =>
+                           startMintingRequestQueue.offer(
+                             StartMintingRequest(
+                               defaultFromFellowship,
+                                defaultFromTemplate,
+                               peginSessionInfo.redeemAddress,
+                               BigInt(value.amount.toByteArray()),
+                               toplKeypair)
+                             )
+                         )
+                   else None
+                 )
+                 .getOrElse(Sync[F].unit)
+             } yield Result.Empty
             case TimeoutDepositBTC(value) =>
               trace"handling TimeoutDepositBTC ${value.sessionId}" >> state.update(_ - (value.sessionId)) >>
               sessionManager.removeSession(
