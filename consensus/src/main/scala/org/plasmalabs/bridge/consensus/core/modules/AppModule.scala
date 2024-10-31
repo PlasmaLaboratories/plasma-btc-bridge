@@ -17,7 +17,23 @@ import org.plasmalabs.bridge.consensus.core.pbft.{
   RequestTimerManagerImpl,
   ViewManagerImpl
 }
-import org.plasmalabs.bridge.consensus.core.{BridgeWalletManager, CheckpointInterval, CurrentBTCHeightRef, CurrentPlasmaHeightRef, Fellowship, KWatermark, LastReplyMap, PeginWalletManager, PlasmaBTCBridgeConsensusParamConfig, PublicApiClientGrpcMap, SequenceNumberManager, SystemGlobalState, Template, WatermarkRef, channelResource}
+import org.plasmalabs.bridge.consensus.core.{
+  BridgeWalletManager,
+  CheckpointInterval,
+  CurrentBTCHeightRef,
+  CurrentPlasmaHeightRef,
+  Fellowship,
+  KWatermark,
+  LastReplyMap,
+  PeginWalletManager,
+  PlasmaBTCBridgeConsensusParamConfig,
+  PublicApiClientGrpcMap,
+  SequenceNumberManager,
+  SystemGlobalState,
+  Template,
+  WatermarkRef,
+  channelResource
+}
 import org.plasmalabs.bridge.consensus.service.StateMachineReply.Result
 import org.plasmalabs.bridge.consensus.service.StateMachineServiceFs2Grpc
 import org.plasmalabs.bridge.consensus.shared.persistence.StorageApi

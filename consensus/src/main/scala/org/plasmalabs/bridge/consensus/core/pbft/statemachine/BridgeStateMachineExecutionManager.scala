@@ -10,7 +10,20 @@ import org.plasmalabs.bridge.consensus.core.controllers.StartSessionController
 import org.plasmalabs.bridge.consensus.core.managers.WalletManagementUtils
 import org.plasmalabs.bridge.consensus.core.pbft.ViewManager
 import org.plasmalabs.bridge.consensus.core.pbft.statemachine.PBFTEvent
-import org.plasmalabs.bridge.consensus.core.{BitcoinNetworkIdentifiers, BridgeWalletManager, CheckpointInterval, CurrentBTCHeightRef, CurrentPlasmaHeightRef, Fellowship, LastReplyMap, PeginWalletManager, PlasmaKeypair, PublicApiClientGrpcMap, Template, stateDigest}
+import org.plasmalabs.bridge.consensus.core.{
+  BitcoinNetworkIdentifiers,
+  BridgeWalletManager,
+  CheckpointInterval,
+  CurrentBTCHeightRef,
+  CurrentPlasmaHeightRef,
+  Fellowship,
+  LastReplyMap,
+  PeginWalletManager,
+  PlasmaKeypair,
+  PublicApiClientGrpcMap,
+  Template,
+  stateDigest
+}
 import org.plasmalabs.bridge.consensus.pbft.CheckpointRequest
 import org.plasmalabs.bridge.consensus.service.StateMachineReply.Result
 import org.plasmalabs.bridge.consensus.service.{InvalidInputRes, StartSessionRes, StateMachineReply}
