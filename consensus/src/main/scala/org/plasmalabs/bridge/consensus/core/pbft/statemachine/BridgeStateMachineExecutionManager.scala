@@ -9,7 +9,7 @@ import org.bitcoins.rpc.client.common.BitcoindRpcClient
 import org.plasmalabs.bridge.consensus.core.controllers.StartSessionController
 import org.plasmalabs.bridge.consensus.core.managers.WalletManagementUtils
 import org.plasmalabs.bridge.consensus.core.pbft.ViewManager
-import org.plasmalabs.bridge.consensus.core.pbft.statemachine.PBFTEvent
+import org.plasmalabs.bridge.consensus.core.pbft.statemachine.{PBFTEvent, MintingProcessManager}
 import org.plasmalabs.bridge.consensus.core.{
   BitcoinNetworkIdentifiers,
   BridgeWalletManager,
@@ -85,7 +85,6 @@ trait BridgeStateMachineExecutionManager[F[_]] {
   ): F[Unit]
 
   def runStream(): fs2.Stream[F, Unit]
-
 }
 
 object BridgeStateMachineExecutionManagerImpl {
@@ -138,6 +137,8 @@ object BridgeStateMachineExecutionManagerImpl {
       state              <- Ref.of[F, Map[String, PBFTState]](Map.empty)
       queue              <- Queue.unbounded[F, (Long, StateMachineRequest)]
       elegibilityManager <- ExecutionElegibilityManagerImpl.make[F]()
+      mintingManager <- MintingProcessManager.make[F]
+      _      <- mintingManager.start
     } yield {
       implicit val toplKeypair = new StrataKeypair(tKeyPair)
       new BridgeStateMachineExecutionManager[F] {
@@ -331,7 +332,6 @@ object BridgeStateMachineExecutionManagerImpl {
             case PostDepositBTC(
                   value
                 ) =>
-              import WaitingBTCOps._
               import org.plasmalabs.sdk.syntax._
               for {
                 _ <- debug"handling PostDepositBTC ${value.sessionId}"
@@ -345,15 +345,18 @@ object BridgeStateMachineExecutionManagerImpl {
                     if (currentPrimary == replica.id)
                       MiscUtils.sessionInfoPeginPrism
                         .getOption(sessionInfo)
-                        .map(peginSessionInfo =>
-                          debug"Starting minting process" >>
-                          startMintingProcess[F](
-                            defaultFromFellowship,
-                            defaultFromTemplate,
-                            peginSessionInfo.redeemAddress,
-                            BigInt(value.amount.toByteArray())
+                        .map( 
+                          peginSessionInfo =>
+                            debug"Enqueue minting process" >>
+                            mintingManager.offer(
+                              StartMintingRequest(
+                                defaultFromFellowship,
+                                 defaultFromTemplate,
+                                peginSessionInfo.redeemAddress,
+                                BigInt(value.amount.toByteArray()),
+                                toplKeypair)
+                              ) 
                           )
-                        )
                     else None
                   )
                   .getOrElse(Sync[F].unit)

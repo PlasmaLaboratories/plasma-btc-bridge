@@ -110,8 +110,11 @@ package object bridge extends ProcessOps {
   def pwd(implicit l: Logger[IO]) =
     withLogging(pwdP)
 
-  def addSecret(id: Int)(implicit l: Logger[IO]) =
-    withLogging(addSecretP(id))
+  def addSecret(id: Int)(implicit l: Logger[IO]) = for {
+    secretResponse <- withLoggingReturn(addSecretP(id))
+    _ <- info"secretResponse: ${secretResponse}"
+  } yield secretResponse.takeRight(64)
+    
 
   def createTx(txId: String, address: String, amount: BigDecimal)(implicit
     l: Logger[IO]
@@ -129,6 +132,12 @@ package object bridge extends ProcessOps {
 
   def getNewAddress(walletName: String)(implicit l: Logger[IO]) =
     withLoggingReturn(getNewaddressP(walletName))
+
+  def getPKey(implicit l: Logger[IO]) =
+    withLoggingReturn(getPKeyP("testwallet"))
+
+  def getPKey(address: String)(implicit l: Logger[IO]) =
+    withLoggingReturn(getPKeyP(address))
 
   def generateToAddress(id: Int, amount: Int, address: String)(implicit
     l: Logger[IO]
@@ -231,7 +240,7 @@ package object bridge extends ProcessOps {
       )
   )
 
-  def startSession(id: Int) = EmberClientBuilder
+  def startSession(pkey : String = "0295bb5a3b80eeccb1e38ab2cbac2545e9af6c7012cdc8d53bd276754c54fc2e4a", sha256: String = shaSecretMap(1)) = EmberClientBuilder
     .default[IO]
     .build
     .use({ client =>
@@ -248,8 +257,8 @@ package object bridge extends ProcessOps {
           `Content-Type`.apply(MediaType.application.json)
         ).withEntity(
           StartPeginSessionRequest(
-            pkey = "0295bb5a3b80eeccb1e38ab2cbac2545e9af6c7012cdc8d53bd276754c54fc2e4a",
-            sha256 = shaSecretMap(id)
+            pkey,
+            sha256
           )
         )
       )
@@ -458,7 +467,7 @@ package object bridge extends ProcessOps {
   def templateFromSha(sha256: String, min: Long, max: Long) =
     s"""threshold(1, sha256($sha256) and height($min, $max))"""
 
-  val secretMap = Map(1 -> "strata-secret", 2 -> "strata-secret01")
+  def userSecret (id: Int) = "plasma-secret"  + f"$id%02d"
 
   val nodeHostMap =
     Map(1 -> "localhost", 2 -> "localhost")
@@ -588,7 +597,7 @@ package object bridge extends ProcessOps {
     amount:        Long,
     groupId:       String,
     seriesId:      String, 
-    outputFile:    String = "redeemTx.pbuf"
+    outputFile:    String
   ) = process
     .ProcessBuilder(
       CS_CMD,

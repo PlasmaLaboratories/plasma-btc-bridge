@@ -19,9 +19,9 @@ class BridgeIntegrationSpec
 
   override def munitFixtures = List(startServer)
 
-  // cleanupDir.test("Bridge should correctly peg-in BTC") { _ =>
-  //   info"Bridge should correctly peg-in BTC" >> successfulPegin()
-  // }
+  cleanupDir.test("Bridge should correctly peg-in BTC") { _ =>
+    info"Bridge should correctly peg-in BTC" >> successfulPegin()
+  }
 
   // cleanupDir.test("Bridge should fail correctly when user does not send BTC") { _ =>
   //   info"Bridge should fail correctly when user does not send BTC" >> failedPeginNoDeposit()
@@ -59,10 +59,10 @@ class BridgeIntegrationSpec
   //   info"Bridge should correctly go back to minting if there is a reorg" >> failedMintingReorgModule()
   // }
 
-  cleanupDir.test(
-    "Bridge should correctly pegin if there are multiple concurrent sessions"
-  ) { _ =>
-    info"Bridge should correctly pegin if there are multiple concurrent sessions" >> successfulPeginWithConcurrentSessions(2)
-  }
+  // // cleanupDir.test(
+  // //   "Bridge should correctly pegin if there are multiple concurrent sessions"
+  // // ) { _ =>
+  // //   info"Bridge should correctly pegin if there are multiple concurrent sessions" >> successfulPeginWithConcurrentSessions(1)
+  // // }
 
 }

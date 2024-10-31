@@ -13,7 +13,7 @@ import scala.util.Try
 
 trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with PublicApiConfModule {
 
-  override val munitIOTimeout = Duration(500, "s")
+  override val munitIOTimeout = Duration(180, "s")
 
   implicit val logger: Logger[IO] =
     org.typelevel.log4cats.slf4j.Slf4jLogger
@@ -108,7 +108,6 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
           _ <- (0 until replicaCount).toList.traverse { replicaId =>
             IO(Try(Files.delete(Paths.get(s"replica${replicaId}.db"))))
           }
-          _ <- deleteFiles(2)
           _              <- createReplicaConfigurationFiles[IO]()
           _              <- createPublicApiConfigurationFiles[IO]()
           currentAddress <- currentAddress(toplWalletDb(0))
@@ -255,7 +254,7 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
         userWalletDb(id),
         userWalletMnemonic(id),
         userWalletJson(id),
-        vkFile,
+        s"key${idFormatted}.txt",
         s"fundRedeemTx${idFormatted}.pbuf",
         s"fundRedeemTxProved${idFormatted}.pbuf",
         s"redeemTx${idFormatted}.pbuf",

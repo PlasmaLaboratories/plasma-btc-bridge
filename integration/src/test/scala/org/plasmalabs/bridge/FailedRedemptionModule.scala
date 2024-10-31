@@ -14,10 +14,13 @@ trait FailedRedemptionModule {
     assertIO(
       for {
         newAddress       <- getNewAddress
+        pkey <- getPKey 
+
         _                <- generateToAddress(1, 1, newAddress)
         txIdAndBTCAmount <- extractGetTxIdAndAmount()
         (txId, btcAmount, btcAmountLong) = txIdAndBTCAmount
-        startSessionResponse <- startSession(1)
+        startSessionResponse <- startSession(pkey, "")
+        
         bitcoinTx <- createTx(
           txId,
           startSessionResponse.escrowAddress,

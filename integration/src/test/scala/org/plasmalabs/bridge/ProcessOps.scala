@@ -38,7 +38,7 @@ trait ProcessOps {
         "--walletdb",
         userWalletDb(id),
         "--secret",
-        secretMap(id),
+        userSecret(id),
         "--digest",
         "sha256"
       ): _*
@@ -140,10 +140,26 @@ trait ProcessOps {
     "-regtest"
   )
 
+  val getPKeySeqBase = Seq(
+    "exec",
+    "bitcoin01",
+    "bitcoin-cli",
+    "-rpcuser=bitcoin",
+    "-rpcpassword=password",
+    "-regtest"
+  )
+
   def getNewaddressP(walletName: String) = process
     .ProcessBuilder(DOCKER_CMD, getNewaddressSeqBase ++ Seq(
       s"-rpcwallet=${walletName}",
       "getnewaddress"
+    ): _*)
+    .spawn[IO]
+
+  def getPKeyP(address: String) = process
+    .ProcessBuilder(DOCKER_CMD, getPKeySeqBase ++ Seq(
+      s"address=${address}",
+      "validateaddress"
     ): _*)
     .spawn[IO]
 

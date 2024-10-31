@@ -4,7 +4,6 @@ import cats.effect.IO
 import org.typelevel.log4cats.syntax._
 
 import scala.concurrent.duration._
-import org.plasmalabs.bridge.shared.TimeoutError
 
 trait SuccessfulPeginWithConcurrentSessionsModule {
 
@@ -25,33 +24,34 @@ trait SuccessfulPeginWithConcurrentSessionsModule {
         _ <- mintStrataBlock(
           1,
           1
-        ) // this will update the current topl height on the node, node should not work without this
-        _           <- initUserBitcoinWallet(walletName)
-        newAddress  <- getNewAddress(walletName)
-        _           <- generateToAddress(1, 101, newAddress)
-        _           <- mintStrataBlock(1, 1)
-        _           <- initStrataWallet(id)
-        _                <- addFellowship(id)
-        _                <- addSecret(id)
-        newAddress       <- getNewAddress(walletName)
-        txIdAndBTCAmount <- extractGetTxIdAndAmount(walletName)
+        )
+        _           <- initUserBitcoinWallet(walletName) // password and user name is fixed 
+        newAddress  <- getNewAddress(walletName) // for just created wallet
+        _           <- generateToAddress(1, 101, newAddress) // checked
+        _           <- mintStrataBlock(1, 1) // plasma
+        _           <- initStrataWallet(id) // plasma
+        _                <- addFellowship(id) // plasma
+        secret               <- addSecret(id) // secret to redeem on plasma side
+        newAddress       <- getNewAddress(walletName) // needs wallet name
+        pkey <- getPKey 
+        txIdAndBTCAmount <- extractGetTxIdAndAmount(walletName) // needs wallet name
         (txId, btcAmount, btcAmountLong) = txIdAndBTCAmount
-        startSessionResponse <- startSession(1)
+        startSessionResponse <- startSession(pkey, secret) // currently all are using different id's
         _ <- addTemplate(
           id,
-          shaSecretMap(1),
+          secret,
           startSessionResponse.minHeight,
           startSessionResponse.maxHeight
         )
-        bitcoinTx <- createTx(
+        bitcoinTx <- createTx( // creates an unsigned tx so no wallet needed here 
           txId,
           startSessionResponse.escrowAddress,
           btcAmount
         )
-        signedTxHex <- signTransaction(bitcoinTx, walletName)
-        _           <- sendTransaction(signedTxHex, walletName)
+        signedTxHex <- signTransaction(bitcoinTx, walletName) // with wallet name
+        _           <- sendTransaction(signedTxHex, walletName) // with wallet name 
         _           <- IO.sleep(5.second)
-        _           <- generateToAddress(1, 8, newAddress)
+        _           <- generateToAddress(1, 8, newAddress) // 
         mintingStatusResponse <-
           (for {
             status <- checkMintingStatus(startSessionResponse.sessionID)
@@ -60,14 +60,7 @@ trait SuccessfulPeginWithConcurrentSessionsModule {
             _      <- generateToAddress(1, 1, newAddress)
             _      <- IO.sleep(1.second)
           } yield status)
-            .iterateUntil(response => response.mintingStatus == "PeginSessionStateMintingTBTC" || response.mintingStatus == "PeginSessionStateTimeout")
-            .flatMap(result => 
-              result.mintingStatus match {
-                case "PeginSessionStateTimeout" => IO.raiseError(TimeoutError(""))
-                case _ => IO.pure(result)
-              }
-
-            )
+            .iterateUntil(response => response.mintingStatus == "PeginSessionStateMintingTBTC")
         _ <- info"User ${id} - Session Status1: ${mintingStatusResponse.mintingStatus}"
         _ <- createVkFile(vkFileName)
         _ <- importVks(id, vkFileName)
@@ -107,24 +100,13 @@ trait SuccessfulPeginWithConcurrentSessionsModule {
             generateToAddress(
               1,
               1,
-              newAddress
-            ) >> warn"x.mintingStatus = ${x.mintingStatus}" >> IO
+              newAddress            
+              ) >> warn"x.mintingStatus = ${x.mintingStatus}" >> IO
               .sleep(5.second) >> IO.pure(x)
           )
-          .iterateUntil(
-            response => response.mintingStatus == "PeginSessionStateSuccessfulPegin" || response.mintingStatus == "PeginSessionStateTimeout"
-          )
-          .flatMap(result => 
-              result.mintingStatus match {
-                case "PeginSessionStateTimeout" => IO.raiseError(TimeoutError(""))
-                case _ => IO.pure(result)
-              }
-
-            )
-            _ <- info"User ${id} - Session Status2: ${response.mintingStatus}"
-
-        _ <-
-          info"Session ${startSessionResponse.sessionID} was successfully removed"
+          .iterateUntil(response => response.mintingStatus == "PeginSessionStateSuccessfulPegin" )
+        _ <- info"User ${id} - Session Status2: ${response.mintingStatus}"
+        _ <- info"Session ${startSessionResponse.sessionID} was successfully removed"
       } yield true).handleErrorWith { error =>
         error"Session $id failed with error: ${error.getMessage}" >>
           IO.pure(false)
@@ -136,7 +118,7 @@ trait SuccessfulPeginWithConcurrentSessionsModule {
       for {
         _ <- deleteFiles(numberOfSessions)
         results <- (1 to numberOfSessions).toList.parTraverse {sessionId => 
-          successfulPeginForSession(sessionId)
+          successfulPeginForSession(sessionId).timeout(180.seconds).handleErrorWith(_ => IO.pure(false))
         }
         successCount = results.count(identity)
       } yield successCount,

@@ -23,15 +23,17 @@ trait SuccessfulPeginWithClaimReorgModule {
         _                <- pwd
         _                <- initStrataWallet(2)
         _                <- addFellowship(2)
-        _                <- addSecret(2)
+        secret               <- addSecret(2)
         newAddress       <- getNewAddress
+        pkey <- getPKey 
+
         _                <- generateToAddress(1, 1, newAddress)
         txIdAndBTCAmount <- extractGetTxIdAndAmount()
         (txId, btcAmount, btcAmountLong) = txIdAndBTCAmount
-        startSessionResponse <- startSession(2)
+        startSessionResponse <- startSession(pkey, secret)
         _ <- addTemplate(
           2,
-          shaSecretMap(2),
+          secret,
           startSessionResponse.minHeight,
           startSessionResponse.maxHeight
         )
