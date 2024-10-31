@@ -9,7 +9,7 @@ import org.typelevel.log4cats.Logger
 trait InitUtils {
 
   def printParams[F[_]: Sync: Logger](
-    params: StrataBTCBridgeConsensusParamConfig
+    params: PlasmaBTCBridgeConsensusParamConfig
   ) = {
     import org.typelevel.log4cats.syntax._
     import cats.implicits._

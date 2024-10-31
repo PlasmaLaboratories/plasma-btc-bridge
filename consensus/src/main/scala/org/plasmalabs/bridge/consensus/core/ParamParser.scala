@@ -20,9 +20,9 @@ object ParamParser {
           )
       })
 
-  implicit val toplNetworkRead: scopt.Read[StrataNetworkIdentifiers] =
+  implicit val toplNetworkRead: scopt.Read[PlasmaNetworkIdentifiers] =
     scopt.Read
-      .reads(StrataNetworkIdentifiers.fromString(_))
+      .reads(PlasmaNetworkIdentifiers.fromString(_))
       .map(_ match {
         case Some(value) => value
         case None =>

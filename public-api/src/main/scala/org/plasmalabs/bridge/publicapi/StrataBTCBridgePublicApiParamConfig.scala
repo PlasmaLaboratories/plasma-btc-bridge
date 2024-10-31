@@ -2,6 +2,6 @@ package org.plasmalabs.bridge.publicapi
 
 import java.io.File
 
-case class StrataBTCBridgePublicApiParamConfig(
+case class PlasmaBTCBridgePublicApiParamConfig(
   configurationFile: File = new File("application.conf")
 )

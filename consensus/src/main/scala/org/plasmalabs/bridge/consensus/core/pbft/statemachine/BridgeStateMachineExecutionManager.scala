@@ -15,12 +15,12 @@ import org.plasmalabs.bridge.consensus.core.{
   BridgeWalletManager,
   CheckpointInterval,
   CurrentBTCHeightRef,
-  CurrentStrataHeightRef,
+  CurrentPlasmaHeightRef,
   Fellowship,
   LastReplyMap,
   PeginWalletManager,
   PublicApiClientGrpcMap,
-  StrataKeypair,
+  PlasmaKeypair,
   Template,
   stateDigest
 }
@@ -40,7 +40,7 @@ import org.plasmalabs.bridge.consensus.shared.{
   Lvl,
   MiscUtils,
   PeginSessionState,
-  StrataWaitExpirationTime
+  PlasmaWaitExpirationTime
 }
 import org.plasmalabs.bridge.consensus.subsystems.monitor.SessionManagerAlgebra
 import org.plasmalabs.bridge.shared.StateMachineRequest.Operation.{
@@ -112,10 +112,10 @@ object BridgeStateMachineExecutionManagerImpl {
     bridgeWalletManager:      BridgeWalletManager[F],
     fellowshipStorageAlgebra: FellowshipStorageAlgebra[F],
     templateStorageAlgebra:   TemplateStorageAlgebra[F],
-    toplWaitExpirationTime:   StrataWaitExpirationTime,
+    toplWaitExpirationTime:   PlasmaWaitExpirationTime,
     btcWaitExpirationTime:    BTCWaitExpirationTime,
     tba:                      TransactionBuilderApi[F],
-    currentStrataHeight:      CurrentStrataHeightRef[F],
+    currentPlasmaHeight:      CurrentPlasmaHeightRef[F],
     walletApi:                WalletApi[F],
     wsa:                      WalletStateAlgebra[F],
     groupIdIdentifier:        GroupId,
@@ -139,7 +139,7 @@ object BridgeStateMachineExecutionManagerImpl {
       queue              <- Queue.unbounded[F, (Long, StateMachineRequest)]
       elegibilityManager <- ExecutionElegibilityManagerImpl.make[F]()
     } yield {
-      implicit val toplKeypair = new StrataKeypair(tKeyPair)
+      implicit val toplKeypair = new PlasmaKeypair(tKeyPair)
       new BridgeStateMachineExecutionManager[F] {
 
         def runStream(): fs2.Stream[F, Unit] =

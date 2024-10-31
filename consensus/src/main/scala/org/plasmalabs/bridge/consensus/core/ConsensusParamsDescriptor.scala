@@ -10,7 +10,7 @@ trait ConsensusParamsDescriptor {
 
   import ParamParser._
 
-  val builder = OParser.builder[StrataBTCBridgeConsensusParamConfig]
+  val builder = OParser.builder[PlasmaBTCBridgeConsensusParamConfig]
 
   val parser = {
     import builder._
@@ -33,7 +33,7 @@ trait ConsensusParamsDescriptor {
         .text(
           "Network name: Possible values: mainnet, testnet, regtest. (mandatory)"
         ),
-      opt[StrataNetworkIdentifiers]("plasma-network")
+      opt[PlasmaNetworkIdentifiers]("plasma-network")
         .action((x, c) => c.copy(toplNetwork = x))
         .text(
           "Network name: Possible values: mainnet, testnet, private. (mandatory)"
@@ -85,9 +85,9 @@ trait ConsensusParamsDescriptor {
         ),
       opt[String]("plasma-host")
         .action((x, c) => c.copy(toplHost = x))
-        .text("The host of the Strata node. (mandatory)")
+        .text("The host of the Plasma node. (mandatory)")
         .validate(x =>
-          if (x.trim().isEmpty) failure("Strata node host may not be empty")
+          if (x.trim().isEmpty) failure("Plasma node host may not be empty")
           else success
         ),
       opt[String]("btc-url")
@@ -115,7 +115,7 @@ trait ConsensusParamsDescriptor {
         ),
       opt[Int]("plasma-port")
         .action((x, c) => c.copy(toplPort = x))
-        .text("Port for Strata node. (mandatory)")
+        .text("Port for Plasma node. (mandatory)")
         .validate(x =>
           if (x >= 0 && x <= 65536) success
           else failure("Port must be between 0 and 65536")
@@ -168,7 +168,7 @@ trait ConsensusParamsDescriptor {
       opt[Int]("plasma-confirmation-threshold")
         .action((x, c) => c.copy(toplConfirmationThreshold = x))
         .text(
-          "The number of confirmations required for a peg-in transaction in the Strata network. (mandatory)"
+          "The number of confirmations required for a peg-in transaction in the Plasma network. (mandatory)"
         )
         .validate( // check that it is a positive number
           x =>

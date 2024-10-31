@@ -16,11 +16,11 @@ trait SuccessfulPeginModule {
     assertIO(
       for {
         _ <- pwd
-        _ <- mintStrataBlock(
+        _ <- mintPlasmaBlock(
           1,
           1
         ) // this will update the current topl height on the node, node should not work without this
-        _                <- initStrataWallet(1)
+        _                <- initPlasmaWallet(1)
         _                <- addFellowship(1)
         _                <- addSecret(1)
         newAddress       <- getNewAddress
@@ -46,7 +46,7 @@ trait SuccessfulPeginModule {
           (for {
             status <- checkMintingStatus(startSessionResponse.sessionID)
             _      <- info"Current minting status: ${status.mintingStatus}"
-            _      <- mintStrataBlock(1, 1)
+            _      <- mintPlasmaBlock(1, 1)
             _      <- generateToAddress(1, 1, newAddress)
             _      <- IO.sleep(1.second)
           } yield status)
@@ -60,7 +60,7 @@ trait SuccessfulPeginModule {
           "fundRedeemTxProved.pbuf"
         )
         _ <- broadcastFundRedeemAddressTx("fundRedeemTxProved.pbuf")
-        _ <- mintStrataBlock(1, 1)
+        _ <- mintPlasmaBlock(1, 1)
         utxo <- getCurrentUtxosFromAddress(1, mintingStatusResponse.address)
           .iterateUntil(_.contains("LVL"))
         groupId = extractGroupId(utxo)
@@ -79,7 +79,7 @@ trait SuccessfulPeginModule {
           "redeemTxProved.pbuf"
         )
         _ <- broadcastFundRedeemAddressTx("redeemTxProved.pbuf")
-        _ <- List.fill(8)(mintStrataBlock(1, 1)).sequence
+        _ <- List.fill(8)(mintPlasmaBlock(1, 1)).sequence
         _ <- getCurrentUtxosFromAddress(1, currentAddress)
           .iterateUntil(_.contains("Asset"))
         _ <- generateToAddress(1, 3, newAddress)

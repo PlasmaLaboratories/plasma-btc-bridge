@@ -17,7 +17,7 @@ import org.plasmalabs.bridge.consensus.core.utils.KeyGenerationUtils
 import org.plasmalabs.bridge.consensus.core.{
   ConsensusParamsDescriptor,
   ServerConfig,
-  StrataBTCBridgeConsensusParamConfig
+  PlasmaBTCBridgeConsensusParamConfig
 }
 import org.plasmalabs.bridge.consensus.service.StateMachineServiceFs2Grpc
 import org.plasmalabs.bridge.consensus.shared.BTCRetryThreshold
@@ -68,7 +68,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
     OParser.parse(
       parser,
       args,
-      StrataBTCBridgeConsensusParamConfig(
+      PlasmaBTCBridgeConsensusParamConfig(
         toplHost = Option(System.getenv("PLASMA_HOST")).getOrElse("localhost"),
         toplWalletDb = System.getenv("PLASMA_WALLET_DB"),
         zmqHost = Option(System.getenv("ZMQ_HOST")).getOrElse("localhost"),
@@ -97,7 +97,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
     }
 
   private def loadKeyPegin(
-    params: StrataBTCBridgeConsensusParamConfig
+    params: PlasmaBTCBridgeConsensusParamConfig
   ): IO[BIP39KeyManager] =
     KeyGenerationUtils.loadKeyManager[IO](
       params.btcNetwork,
@@ -106,7 +106,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
     )
 
   private def loadKeyWallet(
-    params: StrataBTCBridgeConsensusParamConfig
+    params: PlasmaBTCBridgeConsensusParamConfig
   ): IO[BIP39KeyManager] =
     KeyGenerationUtils.loadKeyManager[IO](
       params.btcNetwork,
@@ -173,13 +173,13 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
       ClientId,
       (PublicApiClientGrpc[IO], PublicKey)
     ],
-    params:                      StrataBTCBridgeConsensusParamConfig,
+    params:                      PlasmaBTCBridgeConsensusParamConfig,
     queue:                       Queue[IO, SessionEvent],
     walletManager:               BTCWalletAlgebra[IO],
     pegInWalletManager:          BTCWalletAlgebra[IO],
     currentBitcoinNetworkHeight: Ref[IO, Int],
     seqNumberManager:            SequenceNumberManager[IO],
-    currentStrataHeight:         Ref[IO, Long],
+    currentPlasmaHeight:         Ref[IO, Long],
     currentState:                Ref[IO, SystemGlobalState]
   )(implicit
     clientId:           ClientId,
@@ -199,7 +199,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
     implicit val pbftProtocolClientImpl =
       new PublicApiClientGrpcMap[IO](publicApiClientGrpcMap)
     for {
-      currentStrataHeightVal         <- currentStrataHeight.get
+      currentPlasmaHeightVal         <- currentPlasmaHeight.get
       currentBitcoinNetworkHeightVal <- currentBitcoinNetworkHeight.get
       res <- createApp(
         replicaKeysMap,
@@ -212,11 +212,11 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         logger,
         currentBitcoinNetworkHeight,
         seqNumberManager,
-        currentStrataHeight,
+        currentPlasmaHeight,
         currentState
       )
     } yield (
-      currentStrataHeightVal,
+      currentPlasmaHeightVal,
       currentBitcoinNetworkHeightVal,
       res._1,
       res._2,
@@ -229,13 +229,13 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
 
   def startResources(
     privateKeyFile:              String,
-    params:                      StrataBTCBridgeConsensusParamConfig,
+    params:                      PlasmaBTCBridgeConsensusParamConfig,
     queue:                       Queue[IO, SessionEvent],
     walletManager:               BTCWalletAlgebra[IO],
     pegInWalletManager:          BTCWalletAlgebra[IO],
     currentBitcoinNetworkHeight: Ref[IO, Int],
     seqNumberManager:            SequenceNumberManager[IO],
-    currentStrataHeight:         Ref[IO, Long],
+    currentPlasmaHeight:         Ref[IO, Long],
     currentState:                Ref[IO, SystemGlobalState]
   )(implicit
     conf:               Config,
@@ -305,11 +305,11 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         pegInWalletManager,
         currentBitcoinNetworkHeight,
         seqNumberManager,
-        currentStrataHeight,
+        currentPlasmaHeight,
         currentState
       ).toResource
       (
-        currentStrataHeightVal,
+        currentPlasmaHeightVal,
         currentBitcoinNetworkHeightVal,
         bridgeStateMachineExecutionManager,
         grpcServiceResource,
@@ -350,16 +350,16 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
           messageResponseMap
         )
       grpcService <- grpcServiceResource
-      _ <- getAndSetCurrentStrataHeight(
-        currentStrataHeight,
+      _ <- getAndSetCurrentPlasmaHeight(
+        currentPlasmaHeight,
         nodeQueryAlgebra
       ).toResource
       _ <- getAndSetCurrentBitcoinHeight(
         currentBitcoinNetworkHeight,
         bitcoindInstance
       ).toResource
-      _ <- getAndSetCurrentStrataHeight( // we do this again in case the BTC height took too much time to get
-        currentStrataHeight,
+      _ <- getAndSetCurrentPlasmaHeight( // we do this again in case the BTC height took too much time to get
+        currentPlasmaHeight,
         nodeQueryAlgebra
       ).toResource
       replicaGrpcListener <- NettyServerBuilder
@@ -406,7 +406,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
             )
             .flatMap(
               BlockProcessor
-                .process(currentBitcoinNetworkHeightVal, currentStrataHeightVal)
+                .process(currentBitcoinNetworkHeightVal, currentPlasmaHeightVal)
             )
             .observe(_.foreach(evt => storageApi.insertBlockchainEvent(evt)))
             .flatMap(
@@ -423,8 +423,8 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
     } yield ()
   }
 
-  def getAndSetCurrentStrataHeight[F[_]: Async: Logger](
-    currentStrataHeight: Ref[F, Long],
+  def getAndSetCurrentPlasmaHeight[F[_]: Async: Logger](
+    currentPlasmaHeight: Ref[F, Long],
     bqa:                 NodeQueryAlgebra[F]
   ) = {
     import cats.implicits._
@@ -434,7 +434,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
       height <- someTip
         .map({ tip =>
           val (_, header, _, _) = tip
-          currentStrataHeight.set(header.height) >>
+          currentPlasmaHeight.set(header.height) >>
           info"Obtained and set topl height: ${header.height}" >>
           header.height.pure[F]
         })
@@ -463,7 +463,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
     } yield height).iterateUntil(_ != 0)
   }
 
-  def runWithArgs(params: StrataBTCBridgeConsensusParamConfig): IO[ExitCode] = {
+  def runWithArgs(params: PlasmaBTCBridgeConsensusParamConfig): IO[ExitCode] = {
     implicit val defaultFromFellowship = new Fellowship("self")
     implicit val defaultFromTemplate = new Template("default")
     val credentials = BitcoindAuthCredentials.PasswordBased(
@@ -526,7 +526,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
       globalState <- Ref[IO].of(
         SystemGlobalState(Some("Setting up wallet..."), None)
       )
-      currentStrataHeight         <- Ref[IO].of(0L)
+      currentPlasmaHeight         <- Ref[IO].of(0L)
       queue                       <- Queue.unbounded[IO, SessionEvent]
       currentBitcoinNetworkHeight <- Ref[IO].of(0)
       seqNumberManager            <- SequenceNumberManagerImpl.make[IO]()
@@ -538,7 +538,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         pegInWalletManager,
         currentBitcoinNetworkHeight,
         seqNumberManager,
-        currentStrataHeight,
+        currentPlasmaHeight,
         globalState
       ).useForever
     } yield Right(

@@ -5,7 +5,7 @@ import org.plasmalabs.sdk.models.{GroupId, SeriesId}
 
 import java.io.File
 
-case class StrataBTCBridgeConsensusParamConfig(
+case class PlasmaBTCBridgeConsensusParamConfig(
   btcWaitExpirationTime:     Int = 100, // the number of blocks to wait before the user can reclaim their funds
   btcConfirmationThreshold:  Int = 6, // the number of confirmations required for a peg-in transaction
   toplWaitExpirationTime:    Int = 2000, // the number of blocks to wait before the user can reclaim their funds
@@ -27,7 +27,7 @@ case class StrataBTCBridgeConsensusParamConfig(
   zmqPort:                   Int = 28332,
   btcPassword:               String = "password",
   btcNetwork:                BitcoinNetworkIdentifiers = RegTest,
-  toplNetwork:               StrataNetworkIdentifiers = StrataPrivatenet,
+  toplNetwork:               PlasmaNetworkIdentifiers = PlasmaPrivatenet,
   toplHost:                  String = "localhost",
   toplPort:                  Int = 9084,
   btcRetryThreshold:         Int = 6,

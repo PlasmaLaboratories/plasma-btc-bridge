@@ -21,14 +21,14 @@ import org.plasmalabs.bridge.consensus.core.{
   BridgeWalletManager,
   CheckpointInterval,
   CurrentBTCHeightRef,
-  CurrentStrataHeightRef,
+  CurrentPlasmaHeightRef,
   Fellowship,
   KWatermark,
   LastReplyMap,
   PeginWalletManager,
   PublicApiClientGrpcMap,
   SequenceNumberManager,
-  StrataBTCBridgeConsensusParamConfig,
+  PlasmaBTCBridgeConsensusParamConfig,
   SystemGlobalState,
   Template,
   WatermarkRef,
@@ -42,8 +42,8 @@ import org.plasmalabs.bridge.consensus.shared.{
   BTCRetryThreshold,
   BTCWaitExpirationTime,
   Lvl,
-  StrataConfirmationThreshold,
-  StrataWaitExpirationTime
+  PlasmaConfirmationThreshold,
+  PlasmaWaitExpirationTime
 }
 import org.plasmalabs.bridge.consensus.subsystems.monitor.{MonitorStateMachine, SessionEvent, SessionManagerImpl}
 import org.plasmalabs.bridge.shared.{ClientId, ReplicaCount, ReplicaId, StateMachineServiceGrpcClient}
@@ -77,14 +77,14 @@ trait AppModule extends WalletStateResource {
     replicaKeysMap:              Map[Int, PublicKey],
     replicaKeyPair:              JKeyPair,
     idReplicaClientMap:          Map[Int, StateMachineServiceFs2Grpc[IO, Metadata]],
-    params:                      StrataBTCBridgeConsensusParamConfig,
+    params:                      PlasmaBTCBridgeConsensusParamConfig,
     queue:                       Queue[IO, SessionEvent],
     walletManager:               BTCWalletAlgebra[IO],
     pegInWalletManager:          BTCWalletAlgebra[IO],
     logger:                      Logger[IO],
     currentBitcoinNetworkHeight: Ref[IO, Int],
     seqNumberManager:            SequenceNumberManager[IO],
-    currentStrataHeight:         Ref[IO, Long],
+    currentPlasmaHeight:         Ref[IO, Long],
     currentState:                Ref[IO, SystemGlobalState]
   )(implicit
     pbftProtocolClient:     PBFTInternalGrpcServiceClient[IO],
@@ -132,13 +132,13 @@ trait AppModule extends WalletStateResource {
     implicit val btcWaitExpirationTime = new BTCWaitExpirationTime(
       params.btcWaitExpirationTime
     )
-    implicit val toplWaitExpirationTime = new StrataWaitExpirationTime(
+    implicit val toplWaitExpirationTime = new PlasmaWaitExpirationTime(
       params.toplWaitExpirationTime
     )
     implicit val btcConfirmationThreshold = new BTCConfirmationThreshold(
       params.btcConfirmationThreshold
     )
-    implicit val toplConfirmationThreshold = new StrataConfirmationThreshold(
+    implicit val toplConfirmationThreshold = new PlasmaConfirmationThreshold(
       params.toplConfirmationThreshold
     )
     implicit val checkpointInterval = new CheckpointInterval(
@@ -160,8 +160,8 @@ trait AppModule extends WalletStateResource {
     )
     implicit val currentBTCHeightRef =
       new CurrentBTCHeightRef[IO](currentBitcoinNetworkHeight)
-    implicit val currentStrataHeightRef = new CurrentStrataHeightRef[IO](
-      currentStrataHeight
+    implicit val currentPlasmaHeightRef = new CurrentPlasmaHeightRef[IO](
+      currentPlasmaHeight
     )
     implicit val watermarkRef = new WatermarkRef[IO](
       Ref.unsafe[IO, (Long, Long)]((0, 0))
@@ -200,7 +200,7 @@ trait AppModule extends WalletStateResource {
       peginStateMachine <- MonitorStateMachine
         .make[IO](
           currentBitcoinNetworkHeight,
-          currentStrataHeight
+          currentPlasmaHeight
         )
     } yield {
       implicit val iRequestStateManager = requestStateManager

@@ -167,7 +167,7 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
           _          <- initUserBitcoinWallet
           newAddress <- getNewAddress
           _          <- generateToAddress(1, 101, newAddress)
-          _          <- mintStrataBlock(1, 1)
+          _          <- mintPlasmaBlock(1, 1)
         } yield ()).unsafeToFuture()
 
       override def afterAll() =

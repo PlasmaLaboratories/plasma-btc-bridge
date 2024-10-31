@@ -5,11 +5,11 @@ import org.plasmalabs.bridge.consensus.protobuf.BlockchainEvent.Event.{
   BtcFundsDeposited => BtcFundsDepositedEvent,
   BtcFundsWithdrawn => BtcFundsWithdrawnEvent,
   NewBTCBlock => NewBTCBlockEvent,
-  NewStrataBlock => NewStrataBlockEvent,
+  NewPlasmaBlock => NewPlasmaBlockEvent,
   NodeFundsDeposited => NodeFundsDepositedEvent,
   NodeFundsWithdrawn => NodeFundsWithdrawnEvent,
   SkippedBTCBlock => SkippedBTCBlockEvent,
-  SkippedStrataBlock => SkippedStrataBlockEvent
+  SkippedPlasmaBlock => SkippedPlasmaBlockEvent
 }
 import org.plasmalabs.bridge.consensus.protobuf.NodeCurrencyUnit.Currency.{
   AssetToken => AssetTokenCurrency,
@@ -25,13 +25,13 @@ import org.plasmalabs.bridge.consensus.protobuf.{
   GroupToken => GroupTokenPb,
   Lvl => LvlPb,
   NewBTCBlock => NewBTCBlockPb,
-  NewStrataBlock => NewStrataBlockPb,
+  NewPlasmaBlock => NewPlasmaBlockPb,
   NodeCurrencyUnit => NodeCurrencyUnitPb,
   NodeFundsDeposited => NodeFundsDepositedPb,
   NodeFundsWithdrawn => NodeFundsWithdrawnPb,
   SeriesToken => SeriesTokenPb,
   SkippedBTCBlock => SkippedBTCBlockPb,
-  SkippedStrataBlock => SkippedStrataBlockPb
+  SkippedPlasmaBlock => SkippedPlasmaBlockPb
 }
 import org.plasmalabs.bridge.consensus.shared.{AssetToken, GroupToken, Lvl, NodeCurrencyUnit, SeriesToken}
 import org.plasmalabs.bridge.consensus.subsystems.monitor.{
@@ -39,11 +39,11 @@ import org.plasmalabs.bridge.consensus.subsystems.monitor.{
   BTCFundsWithdrawn,
   BlockchainEvent,
   NewBTCBlock,
-  NewStrataBlock,
+  NewPlasmaBlock,
   NodeFundsDeposited,
   NodeFundsWithdrawn,
   SkippedBTCBlock,
-  SkippedStrataBlock
+  SkippedPlasmaBlock
 }
 
 trait SerializationOps {
@@ -97,13 +97,13 @@ trait SerializationOps {
         BlockchainEventPb(
           SkippedBTCBlockEvent(SkippedBTCBlockPb(height))
         )
-      case SkippedStrataBlock(height) =>
+      case SkippedPlasmaBlock(height) =>
         BlockchainEventPb(
-          SkippedStrataBlockEvent(SkippedStrataBlockPb(height))
+          SkippedPlasmaBlockEvent(SkippedPlasmaBlockPb(height))
         )
-      case NewStrataBlock(height) =>
+      case NewPlasmaBlock(height) =>
         BlockchainEventPb(
-          NewStrataBlockEvent(NewStrataBlockPb(height))
+          NewPlasmaBlockEvent(NewPlasmaBlockPb(height))
         )
       case BTCFundsDeposited(
             fundsDepositedHeight,
@@ -124,7 +124,7 @@ trait SerializationOps {
           )
         )
       case NodeFundsDeposited(
-            currentStrataBlockHeight,
+            currentPlasmaBlockHeight,
             address,
             utxoTxId,
             utxoIndex,
@@ -133,7 +133,7 @@ trait SerializationOps {
         BlockchainEventPb(
           NodeFundsDepositedEvent(
             NodeFundsDepositedPb(
-              currentStrataBlockHeight,
+              currentPlasmaBlockHeight,
               address,
               utxoTxId,
               utxoIndex,

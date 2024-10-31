@@ -3,8 +3,8 @@ package org.plasmalabs.bridge.consensus.core.pbft.statemachine
 import cats.effect.kernel.{Async, Resource}
 import cats.implicits._
 import io.grpc.ManagedChannel
-import org.plasmalabs.bridge.consensus.core.managers.{StrataWalletAlgebra, TransactionAlgebra, WalletApiHelpers}
-import org.plasmalabs.bridge.consensus.core.{Fellowship, StrataKeypair, Template}
+import org.plasmalabs.bridge.consensus.core.managers.{PlasmaWalletAlgebra, TransactionAlgebra, WalletApiHelpers}
+import org.plasmalabs.bridge.consensus.core.{Fellowship, PlasmaKeypair, Template}
 import org.plasmalabs.bridge.consensus.shared.Lvl
 import org.plasmalabs.indexer.services.Txo
 import org.plasmalabs.sdk.builders.TransactionBuilderApi
@@ -18,7 +18,7 @@ import quivr.models.{Int128, KeyPair}
 object WaitingBTCOps {
 
   import WalletApiHelpers._
-  import StrataWalletAlgebra._
+  import PlasmaWalletAlgebra._
   import TransactionAlgebra._
 
   private def getGroupTokeUtxo(txos: Seq[Txo]) =
@@ -106,7 +106,7 @@ object WaitingBTCOps {
     redeemAddress:  String,
     amount:         Int128
   )(implicit
-    toplKeypair:           StrataKeypair,
+    toplKeypair:           PlasmaKeypair,
     walletApi:             WalletApi[F],
     walletStateApi:        WalletStateAlgebra[F],
     transactionBuilderApi: TransactionBuilderApi[F],

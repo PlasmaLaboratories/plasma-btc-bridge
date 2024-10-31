@@ -26,18 +26,18 @@ trait FailedRedemptionModule {
         signedTxHex <- signTransaction(bitcoinTx)
         _           <- sendTransaction(signedTxHex)
         _           <- generateToAddress(1, 8, newAddress)
-        _           <- mintStrataBlock(1, 5)
+        _           <- mintPlasmaBlock(1, 5)
         _ <-
           (for {
             status <- checkMintingStatus(startSessionResponse.sessionID)
-            _      <- mintStrataBlock(1, 3)
+            _      <- mintPlasmaBlock(1, 3)
             _      <- IO.sleep(1.second)
           } yield status)
             .iterateUntil(_.mintingStatus == "PeginSessionStateMintingTBTC")
         _ <- info"We are in the waiting for redemption state"
         _ <- checkMintingStatus(startSessionResponse.sessionID)
           .flatMap(x =>
-            List.fill(5)(mintStrataBlock(1, 1)).sequence >> IO
+            List.fill(5)(mintPlasmaBlock(1, 1)).sequence >> IO
               .sleep(1.second) >> IO.pure(x)
           )
           .iterateUntil(

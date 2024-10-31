@@ -71,6 +71,6 @@ The monitor is a client that is responsible for monitoring the blockchain and up
 the state of the federation. It is a PBFT client. It knows all the replicas and interacts
 with them according to the PBFT protocol.
 
-It also knows the Bitcoin network and the Strata network. It monitors them,
+It also knows the Bitcoin network and the Plasma network. It monitors them,
 changes its state accordingly and then updates the state of the federation
 via the `StateMachineService` interface.
