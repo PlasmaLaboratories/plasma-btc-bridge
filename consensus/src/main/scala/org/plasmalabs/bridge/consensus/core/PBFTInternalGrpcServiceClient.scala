@@ -89,13 +89,14 @@ object PBFTInternalGrpcServiceClientImpl {
         result <- operation.handleErrorWith { _ =>
           maxRetries match {
             case 0 => error"Max retries reached for $operationName" >> Async[F].pure(defaultValue)
-            case _ => Async[F].sleep(delay) >> retryWithBackoff(
-                  operation,
-                  delay * pbftInternalConfig.delayMultiplier,
-                  maxRetries - 1,
-                  operationName,
-                  defaultValue
-                )
+            case _ =>
+              Async[F].sleep(delay) >> retryWithBackoff(
+                operation,
+                delay * pbftInternalConfig.delayMultiplier,
+                maxRetries - 1,
+                operationName,
+                defaultValue
+              )
           }
         }
       } yield result
