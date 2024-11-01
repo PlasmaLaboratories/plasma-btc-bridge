@@ -81,25 +81,33 @@ object PBFTInternalGrpcServiceClientImpl {
 
       def retryWithBackoff[A](
         operation:     => F[A],
-        delay:         FiniteDuration,
-        maxRetries:    Int,
         operationName: String,
         defaultValue:  => A
-      ): F[A] = for {
-        result <- operation.handleErrorWith { _ =>
-          maxRetries match {
-            case 0 => error"Max retries reached for $operationName" >> Async[F].pure(defaultValue)
-            case _ =>
-              Async[F].sleep(delay) >> retryWithBackoff(
-                operation,
-                delay * pbftInternalConfig.delayMultiplier,
-                maxRetries - 1,
-                operationName,
-                defaultValue
-              )
-          }
-        }
-      } yield result
+      ): F[A] = {
+        def retry(
+          remainingRetries: Int,
+          currentDelay:     FiniteDuration
+        ): F[A] =
+          for {
+            someResult <- operation.handleErrorWith { _ =>
+              if (remainingRetries <= 0) {
+                for {
+                  _ <- error"Max retries (${pbftInternalConfig.maxRetries}) reached for operation ${operationName}"
+                  defaultResult <- Async[F].pure(defaultValue)
+                } yield defaultResult
+              } else {
+                for {
+                  _           <- Async[F].sleep(currentDelay)
+                  retryResult <- retry(remainingRetries - 1, currentDelay * pbftInternalConfig.delayMultiplier)
+                } yield retryResult
+              }
+            }
+          } yield someResult
+
+        for {
+          finalResult <- retry(pbftInternalConfig.maxRetries, pbftInternalConfig.initialDelay)
+        } yield finalResult
+      }
 
       override def viewChange(request: ViewChangeRequest): F[Empty] =
         for {
@@ -116,8 +124,6 @@ object PBFTInternalGrpcServiceClientImpl {
                 ),
                 new Metadata()
               ),
-              pbftInternalConfig.initialDelay,
-              pbftInternalConfig.maxRetries,
               "View Change",
               Empty()
             )
@@ -139,8 +145,6 @@ object PBFTInternalGrpcServiceClientImpl {
                 ),
                 new Metadata()
               ),
-              pbftInternalConfig.initialDelay,
-              pbftInternalConfig.maxRetries,
               "Commit",
               Empty()
             ).handleErrorWith { _ =>
@@ -158,8 +162,6 @@ object PBFTInternalGrpcServiceClientImpl {
                 request,
                 new Metadata()
               ),
-              pbftInternalConfig.initialDelay,
-              pbftInternalConfig.maxRetries,
               "Pre Prepare",
               Empty()
             )
@@ -183,8 +185,6 @@ object PBFTInternalGrpcServiceClientImpl {
                 ),
                 new Metadata()
               ),
-              pbftInternalConfig.initialDelay,
-              pbftInternalConfig.maxRetries,
               "Prepare",
               Empty()
             )
@@ -201,8 +201,6 @@ object PBFTInternalGrpcServiceClientImpl {
               request,
               new Metadata()
             ),
-            pbftInternalConfig.initialDelay,
-            pbftInternalConfig.maxRetries,
             "Checkpoint",
             Empty()
           )
@@ -225,8 +223,6 @@ object PBFTInternalGrpcServiceClientImpl {
               ),
               new Metadata()
             ),
-            pbftInternalConfig.initialDelay,
-            pbftInternalConfig.maxRetries,
             "New View",
             Empty()
           )

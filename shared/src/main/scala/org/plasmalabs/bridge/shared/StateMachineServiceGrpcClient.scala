@@ -287,18 +287,34 @@ object StateMachineServiceGrpcClientImpl {
       def retryWithBackoff(
         replica: StateMachineServiceFs2Grpc[F, Metadata],
         request: StateMachineRequest,
-        delay: FiniteDuration,
-        maxRetries: Int
       ): F[Empty] = {
-        for {
-          _ <- info"Trying to execute request on another replica, request: ${request.timestamp}"
-          response <- replica.executeRequest(request, new Metadata()).handleErrorWith { _ => 
-            maxRetries match {
-              case 0 => error"Max retries reached for request ${request.timestamp}" >>  Empty().pure [F]
-              case _ => Async[F].sleep(delay) >> retryWithBackoff(replica, request, delay * stateMachineConf.retryPolicy.delayMultiplier, maxRetries - 1)
+        def retry(
+            remainingRetries: Int,
+            currentDelay: FiniteDuration
+        ): F[Empty] = {
+          for {
+            someResult <- replica
+            .executeRequest(request, new Metadata())
+            .handleErrorWith { _ =>
+              if (remainingRetries <= 0) {
+                for {
+                  _ <- error"Max retries (${stateMachineConf.retryPolicy.maxRetries}) reached for request ${request.timestamp}"
+                  result <- Empty().pure[F]
+                } yield result
+              } else {
+                for {
+                  _ <- info"Attempt failed for request ${request.timestamp}. Retrying in ${currentDelay.toMillis}ms. Remaining retries: $remainingRetries"
+                  _ <- Async[F].sleep(currentDelay)
+                  result <- retry(remainingRetries - 1, currentDelay * stateMachineConf.retryPolicy.delayMultiplier)
+                } yield result
+              }
             }
-          }
-        } yield response
+          } yield someResult
+          
+        }
+        for {
+          result <- retry(stateMachineConf.retryPolicy.maxRetries, stateMachineConf.retryPolicy.initialDelay)
+        } yield result
       }
 
       def executeRequest(
@@ -332,8 +348,6 @@ object StateMachineServiceGrpcClientImpl {
           _ <- retryWithBackoff(
             replicaMap(currentPrimary),
             request,
-            stateMachineConf.retryPolicy.initialDelay, 
-            stateMachineConf.retryPolicy.maxRetries
           )
           _ <- trace"Waiting for response from backend"
           replicasWithoutPrimary = replicaMap.filter(_._1 != currentPrimary).values.toList
@@ -341,7 +355,7 @@ object StateMachineServiceGrpcClientImpl {
             Async[F].sleep(stateMachineConf.primaryResponseWait) >> // wait for response
             error"The request ${request.timestamp} timed out, contacting other replicas" >> // timeout
             replicasWithoutPrimary.parTraverse{
-            replica => retryWithBackoff(replica, request, stateMachineConf.retryPolicy.initialDelay, stateMachineConf.retryPolicy.maxRetries)
+            replica => retryWithBackoff(replica, request)
           } >>
             Async[F].sleep(stateMachineConf.otherReplicasResponseWait) >> // wait for response
             (TimeoutError("Timeout waiting for response"): BridgeError)
