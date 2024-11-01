@@ -504,15 +504,11 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
     implicit val stateMachineConf = StateMachineServiceGrpcClientRetryConfig(
       primaryResponseWait =
         FiniteDuration(conf.getInt("bridge.replica.clients.monitor.client.primaryResponseWait"), TimeUnit.SECONDS),
-      otherReplicasResponseWait = FiniteDuration(
-        conf.getInt("bridge.replica.clients.monitor.client.otherReplicasResponseWait"),
-        TimeUnit.SECONDS
-      ),
+      otherReplicasResponseWait =
+        FiniteDuration(conf.getInt("bridge.replica.clients.monitor.client.otherReplicasResponseWait"), TimeUnit.SECONDS),
       retryPolicy = RetryPolicy(
-        initialDelay = FiniteDuration(
-          conf.getInt("bridge.replica.clients.monitor.client.retryPolicy.initialDelay"),
-          TimeUnit.SECONDS
-        ),
+        initialDelay =
+          FiniteDuration.apply(conf.getInt("bridge.replica.clients.monitor.client.retryPolicy.initialDelay"), TimeUnit.SECONDS),
         maxRetries = conf.getInt("bridge.replica.clients.monitor.client.retryPolicy.maxRetries"),
         delayMultiplier = conf.getInt("bridge.replica.clients.monitor.client.retryPolicy.delayMultiplier")
       )

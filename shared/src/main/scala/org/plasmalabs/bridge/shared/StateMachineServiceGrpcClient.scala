@@ -294,14 +294,8 @@ object StateMachineServiceGrpcClientImpl {
           _ <- info"Trying to execute request on another replica, request: ${request.timestamp}"
           response <- replica.executeRequest(request, new Metadata()).handleErrorWith { _ => 
             maxRetries match {
-              case 0 => for {
-                _ <- error"Max retries reached for request ${request.timestamp}"
-                someResponse <- Empty().pure [F]
-              } yield someResponse
-              case _ => for {
-                _ <- Async[F].sleep(delay)
-                someResponse <- retryWithBackoff(replica, request, delay * stateMachineConf.retryPolicy.delayMultiplier, maxRetries - 1)
-              } yield someResponse
+              case 0 => error"Max retries reached for request ${request.timestamp}" >>  Empty().pure [F]
+              case _ => Async[F].sleep(delay) >> retryWithBackoff(replica, request, delay * stateMachineConf.retryPolicy.delayMultiplier, maxRetries - 1)
             }
           }
         } yield response
