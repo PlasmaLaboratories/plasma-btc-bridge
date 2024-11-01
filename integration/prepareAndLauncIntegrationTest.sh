@@ -79,7 +79,7 @@ docker run --rm -d --name node02 -e NODE_P2P_KNOWN_PEERS=$IP_CONTAINER:9085 -p 9
 
 echo "Waiting for node to start"
 # Wait for node to start
-sleep 15
+sleep 25
 
 # Prepare the environment
 echo "Preparing the environment"
