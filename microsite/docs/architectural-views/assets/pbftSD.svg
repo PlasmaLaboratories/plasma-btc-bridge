@@ -536,7 +536,7 @@
     /></g
     ><g font-size="11px" transform="translate(2,37)" fill-opacity="1" fill="black" text-rendering="geometricPrecision" image-rendering="optimizeQuality" font-family="sans-serif" stroke="black" stroke-opacity="1"
     ><text x="10" xml:space="preserve" y="12" clip-path="url(#clipPath26)" stroke="none"
-      >Strata Blockchain</text
+      >Plasma Blockchain</text
     ></g
     ><g font-size="11px" transform="translate(238,37)" fill-opacity="1" fill="black" text-rendering="geometricPrecision" image-rendering="optimizeQuality" font-family="sans-serif" stroke="black" stroke-opacity="1"
     ><text x="10" xml:space="preserve" y="12" clip-path="url(#clipPath27)" stroke="none"
@@ -958,7 +958,7 @@
     ><g font-size="11px" transform="translate(276,1075)" fill-opacity="1" fill="white" text-rendering="geometricPrecision" image-rendering="optimizeQuality" font-family="sans-serif" stroke="white" stroke-opacity="1"
     ><rect x="0" width="111" height="15" y="0" clip-path="url(#clipPath94)" stroke="none"
       /><text fill="black" x="9" xml:space="preserve" y="12" clip-path="url(#clipPath94)" stroke="none"
-      >28: mintStrataBTC</text
+      >28: mintPlasmaBTC</text
     ></g
     ><g font-size="11px" transform="translate(1880,1278)" fill-opacity="1" fill="white" text-rendering="geometricPrecision" image-rendering="optimizeQuality" font-family="sans-serif" stroke="white" stroke-opacity="1"
     ><rect x="0" width="146" height="15" y="0" clip-path="url(#clipPath95)" stroke="none"

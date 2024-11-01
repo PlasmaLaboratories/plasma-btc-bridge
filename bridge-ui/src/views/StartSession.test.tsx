@@ -12,7 +12,7 @@ test("renders StartSession button when session is not set", () => {
     escrowScript=""
     currentState={PeginUIState.InitialState}
     redeemAddress=""
-    toplBridgePKey=""
+    plasmaBridgePKey=""
     redeemTemplate="" />);
   // verify that the button is present
   const buttonElement = screen.getByText(/Start Session/i);
@@ -28,7 +28,7 @@ test("renders disabled StartSession button when session is set", () => {
     escrowScript=""
     currentState={PeginUIState.InitialState}
     redeemAddress=""
-    toplBridgePKey=""
+    plasmaBridgePKey=""
     redeemTemplate="" />);
   // verify that the button is present
   const buttonElement = screen.getByText(/Start Session/i);

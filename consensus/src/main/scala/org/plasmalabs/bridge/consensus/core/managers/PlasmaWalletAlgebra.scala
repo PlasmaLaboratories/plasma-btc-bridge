@@ -4,7 +4,7 @@ import cats.data.OptionT
 import cats.effect.kernel.Sync
 import com.google.protobuf.ByteString
 import io.circe.Json
-import org.plasmalabs.bridge.consensus.core.{Fellowship, StrataNetworkIdentifiers, Template}
+import org.plasmalabs.bridge.consensus.core.{Fellowship, PlasmaNetworkIdentifiers, Template}
 import org.plasmalabs.bridge.consensus.shared.Lvl
 import org.plasmalabs.bridge.shared.{InvalidHash, InvalidInput, InvalidKey}
 import org.plasmalabs.indexer.services.Txo
@@ -26,7 +26,7 @@ import org.plasmalabs.sdk.utils.Encoding
 import org.plasmalabs.sdk.wallet.WalletApi
 import quivr.models.{KeyPair, VerificationKey}
 
-object StrataWalletAlgebra {
+object PlasmaWalletAlgebra {
 
   import WalletApiHelpers._
   import AssetMintingOps._
@@ -222,7 +222,7 @@ object StrataWalletAlgebra {
   }
 
   def setupBridgeWallet[F[_]: Sync](
-    networkId:      StrataNetworkIdentifiers,
+    networkId:      PlasmaNetworkIdentifiers,
     keypair:        KeyPair,
     userBaseKey:    String,
     fellowshipName: String,

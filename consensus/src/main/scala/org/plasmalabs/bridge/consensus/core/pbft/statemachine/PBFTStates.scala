@@ -19,7 +19,7 @@ sealed trait PBFTState {
  * @param escrowAddress
  *   the escrow address (on BTC)
  * @param redeemAddress
- *   the redeem address (on the Strata Network)
+ *   the redeem address (on the Plasma Network)
  * @param claimAddress
  *   the claim address (on the BTC), this is the address where the BTC will be
  *   sent to after redemption is confirmed
@@ -54,7 +54,7 @@ case class PSWaitingForBTCDeposit(
  * @param scriptAsm
  *   the script asm of the escrow address
  * @param redeemAddress
- *   the redeem address (on the Strata Network) where the TBTC will be sent to
+ *   the redeem address (on the Plasma Network) where the TBTC will be sent to
  * @param claimAddress
  *   the claim address (on the BTC), this is the address where the BTC will be
  *   sent to after redemption is confirmed

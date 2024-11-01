@@ -15,12 +15,12 @@ trait SuccessfulPeginWithClaimReorgRetryModule {
 
     assertIO(
       for {
-        _                <- mintStrataBlock(1, 1)
+        _                <- mintPlasmaBlock(1, 1)
         bridgeNetwork    <- computeBridgeNetworkName
         ipBitcoin02      <- extractIpBtc(2, bridgeNetwork._1)
         ipBitcoin01      <- extractIpBtc(1, bridgeNetwork._1)
         _                <- pwd
-        _                <- initStrataWallet(2)
+        _                <- initPlasmaWallet(2)
         _                <- addFellowship(2)
         _                <- addSecret(2)
         newAddress       <- getNewAddress
@@ -48,7 +48,7 @@ trait SuccessfulPeginWithClaimReorgRetryModule {
           (for {
             status <- checkMintingStatus(startSessionResponse.sessionID)
             _      <- info"Current minting status: ${status.mintingStatus}"
-            _      <- mintStrataBlock(1, 1)
+            _      <- mintPlasmaBlock(1, 1)
             _      <- generateToAddress(1, 1, newAddress)
             _      <- IO.sleep(1.second)
           } yield status)
@@ -65,11 +65,11 @@ trait SuccessfulPeginWithClaimReorgRetryModule {
           "fundRedeemTxProved.pbuf"
         )
         _ <- broadcastFundRedeemAddressTx("fundRedeemTxProved.pbuf")
-        _ <- mintStrataBlock(1, 1)
+        _ <- mintPlasmaBlock(1, 1)
         _ <- IO.sleep(1.second)
-        _ <- mintStrataBlock(1, 1)
+        _ <- mintPlasmaBlock(1, 1)
         _ <- IO.sleep(1.second)
-        _ <- mintStrataBlock(1, 1)
+        _ <- mintPlasmaBlock(1, 1)
         _ <- IO.sleep(1.second)
         utxo <- getCurrentUtxosFromAddress(
           2,
@@ -96,10 +96,10 @@ trait SuccessfulPeginWithClaimReorgRetryModule {
         )
         // broadcast
         _ <- broadcastFundRedeemAddressTx("redeemTxProved.pbuf")
-        _ <- mintStrataBlock(1, 1)
+        _ <- mintPlasmaBlock(1, 1)
         _ <- getCurrentUtxosFromAddress(2, currentAddress)
           .iterateUntil(_.contains("Asset"))
-        _ <- mintStrataBlock(1, 7)
+        _ <- mintPlasmaBlock(1, 7)
         _ <- List
           .fill(5)((for {
             status <- checkMintingStatus(startSessionResponse.sessionID)

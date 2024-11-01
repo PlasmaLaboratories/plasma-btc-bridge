@@ -32,7 +32,7 @@ case object BitcoinNetworkIdentifiers {
     }
 }
 
-sealed abstract class StrataNetworkIdentifiers(
+sealed abstract class PlasmaNetworkIdentifiers(
   val i:         Int,
   val name:      String,
   val networkId: Int
@@ -40,35 +40,35 @@ sealed abstract class StrataNetworkIdentifiers(
   override def toString: String = name
 }
 
-case object StrataNetworkIdentifiers {
+case object PlasmaNetworkIdentifiers {
 
-  def values = Set(StrataMainnet, StrataTestnet, StrataPrivatenet)
+  def values = Set(PlasmaMainnet, PlasmaTestnet, PlasmaPrivatenet)
 
-  def fromString(s: String): Option[StrataNetworkIdentifiers] =
+  def fromString(s: String): Option[PlasmaNetworkIdentifiers] =
     s match {
-      case "mainnet" => Some(StrataMainnet)
-      case "testnet" => Some(StrataTestnet)
-      case "private" => Some(StrataPrivatenet)
+      case "mainnet" => Some(PlasmaMainnet)
+      case "testnet" => Some(PlasmaTestnet)
+      case "private" => Some(PlasmaPrivatenet)
       case _         => None
     }
 }
 
-case object StrataMainnet
-    extends StrataNetworkIdentifiers(
+case object PlasmaMainnet
+    extends PlasmaNetworkIdentifiers(
       0,
       "mainnet",
       NetworkConstants.MAIN_NETWORK_ID
     )
 
-case object StrataTestnet
-    extends StrataNetworkIdentifiers(
+case object PlasmaTestnet
+    extends PlasmaNetworkIdentifiers(
       1,
       "testnet",
       NetworkConstants.TEST_NETWORK_ID
     )
 
-case object StrataPrivatenet
-    extends StrataNetworkIdentifiers(
+case object PlasmaPrivatenet
+    extends PlasmaNetworkIdentifiers(
       2,
       "private",
       NetworkConstants.PRIVATE_NETWORK_ID

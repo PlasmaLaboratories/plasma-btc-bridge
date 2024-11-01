@@ -10,7 +10,7 @@ export type SessionCtx = {
 }
 
 async function getMintingStatus(sessionID: string) {
-  return fetch('/api/topl-minting-status', {
+  return fetch('/api/plasma-minting-status', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
@@ -64,7 +64,7 @@ async function checkAndTransitionFromWaitingForRedemption(session: SessionInform
 
 function Frame() {
 
-  const [session, setSession] = useState<SessionInformation>({ isSet: false, sessionID: "", escrowAddress: "", escrowScript: "", currentState: PeginUIState.InitialState, redeemAddress: "", toplBridgePKey: "", redeemTemplate: "" });
+  const [session, setSession] = useState<SessionInformation>({ isSet: false, sessionID: "", escrowAddress: "", escrowScript: "", currentState: PeginUIState.InitialState, redeemAddress: "", plasmaBridgePKey: "", redeemTemplate: "" });
   useEffect(() => setupSession(session, setSession), []);
   useEffect(() => {
     const sessionPoll = setInterval(async () => {

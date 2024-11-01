@@ -2,13 +2,13 @@ package org.plasmalabs.bridge.consensus.core.controllers
 
 import cats.effect.IO
 import com.google.protobuf.ByteString
-import org.plasmalabs.bridge.consensus.core.StrataPrivatenet
+import org.plasmalabs.bridge.consensus.core.PlasmaPrivatenet
 import org.plasmalabs.bridge.consensus.shared.{
   BTCConfirmationThreshold,
   BTCRetryThreshold,
   BTCWaitExpirationTime,
-  StrataConfirmationThreshold,
-  StrataWaitExpirationTime
+  PlasmaConfirmationThreshold,
+  PlasmaWaitExpirationTime
 }
 import org.plasmalabs.sdk.models.{GroupId, SeriesId}
 import org.plasmalabs.sdk.utils.Encoding
@@ -36,17 +36,17 @@ trait SharedData {
 
   val walletFile = "src/test/resources/wallet.json"
 
-  val toplWalletFile = "src/test/resources/strata-wallet.json"
+  val plasmaWalletFile = "src/test/resources/plasma-wallet.json"
 
-  val toplWalletDbInitial = "src/universal/strata-wallet.db"
+  val plasmaWalletDbInitial = "src/universal/plasma-wallet.db"
 
-  val toplWalletDb = "src/universal/strata-wallet-instance.db"
+  val plasmaWalletDb = "src/universal/plasma-wallet-instance.db"
 
   val testSecret = "secret"
 
   val testPassword = "password"
 
-  val testStrataPassword = "test"
+  val testPlasmaPassword = "test"
 
   val testTx =
     "02000000000101d0e18d3e7353fc08411019d71d04eb6b508e41d96084dd835d94058e3ca6d908000000000000000000016879070000000000160014"
@@ -54,16 +54,16 @@ trait SharedData {
   implicit val btcWaitExpirationTime: BTCWaitExpirationTime =
     new BTCWaitExpirationTime(100)
 
-  implicit val toplWaitExpirationTime: StrataWaitExpirationTime =
-    new StrataWaitExpirationTime(2000)
+  implicit val plasmaWaitExpirationTime: PlasmaWaitExpirationTime =
+    new PlasmaWaitExpirationTime(2000)
 
   implicit val btcConfirmationThreshold: BTCConfirmationThreshold = new BTCConfirmationThreshold(6)
 
-  implicit val toplConfirmationThreshold: StrataConfirmationThreshold = new StrataConfirmationThreshold(6)
+  implicit val plasmaConfirmationThreshold: PlasmaConfirmationThreshold = new PlasmaConfirmationThreshold(6)
 
   implicit val btcRetryThreshold: BTCRetryThreshold = new BTCRetryThreshold(6)
 
-  val testStrataNetworkId = StrataPrivatenet
+  val testPlasmaNetworkId = PlasmaPrivatenet
 
   implicit val groupId: GroupId = GroupId(
     ByteString.copyFrom(

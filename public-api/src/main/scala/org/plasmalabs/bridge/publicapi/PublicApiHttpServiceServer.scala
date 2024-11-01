@@ -131,7 +131,7 @@ object PublicApiHttpServiceServer {
             "Error starting pegin session"
           )
         }
-      case req @ POST -> Root / BridgeContants.STRATA_MINTING_STATUS =>
+      case req @ POST -> Root / BridgeContants.PLASMA_MINTING_STATUS =>
         implicit val mintingStatusRequestDecoder: EntityDecoder[IO, MintingStatusRequest] =
           jsonOf[IO, MintingStatusRequest]
 

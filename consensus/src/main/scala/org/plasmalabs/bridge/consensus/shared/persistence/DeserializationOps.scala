@@ -6,11 +6,11 @@ import org.plasmalabs.bridge.consensus.protobuf.BlockchainEvent.Event.{
   BtcFundsWithdrawn,
   Empty,
   NewBTCBlock => NewBTCBlockEvent,
-  NewStrataBlock => NewStrataBlockEvent,
+  NewPlasmaBlock => NewPlasmaBlockEvent,
   NodeFundsDeposited => NodeFundsDepositedEvent,
   NodeFundsWithdrawn => NodeFundsWithdrawnEvent,
   SkippedBTCBlock => SkippedBTCBlockEvent,
-  SkippedStrataBlock => SkippedStrataBlockEvent
+  SkippedPlasmaBlock => SkippedPlasmaBlockEvent
 }
 import org.plasmalabs.bridge.consensus.protobuf.NodeCurrencyUnit.Currency.{
   AssetToken => AssetTokenCurrency,
@@ -28,11 +28,11 @@ import org.plasmalabs.bridge.consensus.subsystems.monitor.{
   BTCFundsWithdrawn,
   BlockchainEvent,
   NewBTCBlock,
-  NewStrataBlock,
+  NewPlasmaBlock,
   NodeFundsDeposited,
   NodeFundsWithdrawn,
   SkippedBTCBlock,
-  SkippedStrataBlock
+  SkippedPlasmaBlock
 }
 import quivr.models.Int128
 import scodec.bits.ByteVector
@@ -80,19 +80,19 @@ trait DeserializationOps {
         SkippedBTCBlock(value.height)
       case NodeFundsDepositedEvent(value) =>
         NodeFundsDeposited(
-          value.currentStrataBlockHeight,
+          value.currentPlasmaBlockHeight,
           value.address,
           value.utxoTxId,
           value.utxoIndex,
           fromProtobuf(value.amount)
         )
-      case NewStrataBlockEvent(value) =>
-        NewStrataBlock(value.height)
-      case SkippedStrataBlockEvent(value) =>
-        SkippedStrataBlock(value.height)
+      case NewPlasmaBlockEvent(value) =>
+        NewPlasmaBlock(value.height)
+      case SkippedPlasmaBlockEvent(value) =>
+        SkippedPlasmaBlock(value.height)
       case NodeFundsWithdrawnEvent(value) =>
         NodeFundsWithdrawn(
-          value.currentStrataBlockHeight,
+          value.currentPlasmaBlockHeight,
           value.txId,
           value.txIndex,
           value.secret,

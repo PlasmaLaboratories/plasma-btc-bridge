@@ -3,8 +3,8 @@ package org.plasmalabs.bridge.consensus.subsystems.monitor
 import org.plasmalabs.bridge.consensus.shared.{
   AssetToken,
   BTCWaitExpirationTime,
-  StrataConfirmationThreshold,
-  StrataWaitExpirationTime
+  PlasmaConfirmationThreshold,
+  PlasmaWaitExpirationTime
 }
 import org.plasmalabs.bridge.consensus.subsystems.monitor.{
   EndTransition,
@@ -27,11 +27,11 @@ trait MonitorMintingStateTransitionRelation extends TransitionToEffect {
   )(
     t2E: (PeginStateMachineState, BlockchainEvent) => F[Unit]
   )(implicit
-    btcWaitExpirationTime:     BTCWaitExpirationTime,
-    toplWaitExpirationTime:    StrataWaitExpirationTime,
-    toplConfirmationThreshold: StrataConfirmationThreshold,
-    groupId:                   GroupId,
-    seriesId:                  SeriesId
+    btcWaitExpirationTime:       BTCWaitExpirationTime,
+    plasmaWaitExpirationTime:    PlasmaWaitExpirationTime,
+    plasmaConfirmationThreshold: PlasmaConfirmationThreshold,
+    groupId:                     GroupId,
+    seriesId:                    SeriesId
   ): Option[FSMTransition] =
     ((currentState, blockchainEvent) match {
       case (
@@ -65,7 +65,7 @@ trait MonitorMintingStateTransitionRelation extends TransitionToEffect {
               currentState,
               MConfirmingTBTCMint(
                 cs.startBTCBlockHeight,
-                be.currentStrataBlockHeight,
+                be.currentPlasmaBlockHeight,
                 cs.currentWalletIdx,
                 cs.scriptAsm,
                 cs.redeemAddress,
@@ -93,9 +93,9 @@ trait MonitorMintingStateTransitionRelation extends TransitionToEffect {
         else None
       case (
             cs: MConfirmingTBTCMint,
-            be: NewStrataBlock
+            be: NewPlasmaBlock
           ) =>
-        if (isAboveConfirmationThresholdStrata(be.height, cs.depositTBTCBlockHeight)) {
+        if (isAboveConfirmationThresholdPlasma(be.height, cs.depositTBTCBlockHeight)) {
           import org.plasmalabs.sdk.syntax._
           Some(
             FSMTransitionTo(
@@ -143,9 +143,9 @@ trait MonitorMintingStateTransitionRelation extends TransitionToEffect {
           None
       case (
             cs: MWaitingForRedemption,
-            ev: NewStrataBlock
+            ev: NewPlasmaBlock
           ) =>
-        if (toplWaitExpirationTime.underlying < (ev.height - cs.currentTolpBlockHeight))
+        if (plasmaWaitExpirationTime.underlying < (ev.height - cs.currentTolpBlockHeight))
           Some(
             EndTransition[F](
               t2E(currentState, blockchainEvent)
@@ -182,9 +182,9 @@ trait MonitorMintingStateTransitionRelation extends TransitionToEffect {
         } else None
       case (
             cs: MConfirmingRedemption,
-            ev: NewStrataBlock
+            ev: NewPlasmaBlock
           ) =>
-        if (isAboveConfirmationThresholdStrata(ev.height, cs.currentTolpBlockHeight))
+        if (isAboveConfirmationThresholdPlasma(ev.height, cs.currentTolpBlockHeight))
           Some(
             FSMTransitionTo(
               currentState,
