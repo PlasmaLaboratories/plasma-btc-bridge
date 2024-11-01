@@ -79,7 +79,7 @@ import scodec.bits.ByteVector
 import java.security.{KeyPair => JKeyPair}
 import java.util.UUID
 import quivr.models.Int128
-
+import org.plasmalabs.sdk.models.transaction.UnspentTransactionOutput
 
 case class StartMintingRequest(
  fellowship: Fellowship,
@@ -90,6 +90,8 @@ case class StartMintingRequest(
 )
 
 import java.util.concurrent.TimeUnit
+import org.plasmalabs.sdk.syntax.{LvlType, int128AsBigInt, valueToQuantitySyntaxOps, valueToTypeIdentifierSyntaxOps}
+
 
 
 trait BridgeStateMachineExecutionManager[F[_]] {
@@ -182,10 +184,10 @@ object BridgeStateMachineExecutionManagerImpl {
            .fromQueueUnterminated(startMintingRequestQueue)
            .evalMap ( request => {
               import org.plasmalabs.indexer.services.TxoState
+              implicit val toplKeypair = request.toplKeyPair
 
               for {
-
-               _ <- info"Processing minting request: request=$request"
+               _ <- info"Processing minting request"
                response <- startMintingProcess(
                   request.fellowship,
                   request.template,
@@ -193,14 +195,14 @@ object BridgeStateMachineExecutionManagerImpl {
                   request.amount
                 )
               _ <- (for {
-                _ <- Async[F].sleep(FiniteDuration(1, TimeUnit.SECONDS))
                 afterMintUtxos <- getUtxos(
                   response._1,
                   utxoAlgebra, 
                   txoState = TxoState.SPENT
                 )
-                result = verifyMintingSpent(response._2, afterMintUtxos)
+                result <- verifyMintingSpent(response._2, afterMintUtxos).handleErrorWith{ e => error"Error happened checking conversion ${e.getMessage()}" >> Async[F].pure((false, Seq()))}
                 _ <- info"Matching spent txos: ${result._1}"
+                _ <- Async[F].sleep(FiniteDuration(1, TimeUnit.SECONDS))
               } yield result._1).iterateUntil(_ == true)
              } yield ()
            }
@@ -215,26 +217,52 @@ object BridgeStateMachineExecutionManagerImpl {
           // TODO: UTXOs before mint can include more utxos then necessary, currently checked if all utxos match spent utxos
           def verifyMintingSpent(beforeMintTxos: Seq[Txo], afterMintTxos: Seq[Txo]) = {
 
-            // Get all unspent UTXOs from before mint
-            val unspentBefore = beforeMintTxos.filter(_.state == TxoState.UNSPENT)
-            
-            // Find matching spent UTXOs in after mint state
-            val matchingSpent = afterMintTxos.filter(spentTxo => 
+            def safeSum(matchingSpent: Seq[Txo], predicate: Txo => Boolean): BigInt = {
+              val values = matchingSpent
+                .filter(predicate)
+                .map(txo => Option(txo.transactionOutput.value.getAsset.quantity))
+                .collect { case Some(quantity) if quantity.toString.nonEmpty => BigInt(quantity.toString) }
+              
+              if (values.isEmpty) BigInt(0)
+              else values.sum
+            }
+
+            for {
+              _ <- info"Verifying the Minting spent" 
+              // Get all spent and unspent UTXOs from before mint
+              unspentBefore = beforeMintTxos.filter(_.state == TxoState.UNSPENT)
+              spentBefore = beforeMintTxos.filter(_.state == TxoState.SPENT)
+            // filtering out the newly spent txos 
+             newlySpent = afterMintTxos.filter(spentTxo =>
+              !spentBefore.exists(previouslySpentTxo =>
+                spentTxo.outputAddress == previouslySpentTxo.outputAddress
+              ) &&
+              spentTxo.state == TxoState.SPENT
+            )
+
+            // we match newly spent to unspent before mint 
+             matchingSpent = newlySpent.filter(spentTxo => 
               unspentBefore.exists(unspentTxo => 
-                // Match by transaction ID and value
                 spentTxo.outputAddress == unspentTxo.outputAddress &&
-                spentTxo.state == TxoState.SPENT &&
-                spentTxo.transactionOutput.value == unspentTxo.transactionOutput.value
+                spentTxo.state == TxoState.SPENT
               )
             )
 
-            // Verify we have all required token types in our spent UTXOs
-            val spentHasGroup = matchingSpent.exists(_.transactionOutput.value.value.isGroup)
-            val spentHasSeries = matchingSpent.exists(_.transactionOutput.value.value.isSeries)
-            val spentHasLvl = matchingSpent.exists(_.transactionOutput.value.value.isLvl)
+            _ <- for {
+              _ <- info"Check matching Spent cumulative values"
+              valueGroup = safeSum(matchingSpent, ((txo) => txo.transactionOutput.value.value.isGroup))
+              valueSeries = safeSum(matchingSpent, ((txo) => txo.transactionOutput.value.value.isSeries))
+              valuedLvl = safeSum(matchingSpent, ((txo) => txo.transactionOutput.value.value.isLvl))
 
-            // All conditions must be true for successful verification
-            (spentHasGroup && spentHasSeries && spentHasLvl, matchingSpent)
+              _ <- info"Cumulative values - Group: $valueGroup, Series: $valueSeries, Level: $valuedLvl"
+            } yield ()
+            
+
+            // these need the cumulation of values, currently only check if all necessary are there but not check if the values matched
+             spentHasGroup = matchingSpent.exists(_.transactionOutput.value.value.isGroup) 
+             spentHasSeries = matchingSpent.exists(_.transactionOutput.value.value.isSeries)
+             spentHasLvl = matchingSpent.exists(_.transactionOutput.value.value.isLvl)
+            } yield (spentHasGroup && spentHasSeries && spentHasLvl, matchingSpent)
           }
 
 
