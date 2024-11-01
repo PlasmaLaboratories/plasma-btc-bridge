@@ -8,11 +8,11 @@ import org.plasmalabs.bridge.consensus.subsystems.monitor.{
   BTCFundsDeposited,
   BTCFundsWithdrawn,
   NewBTCBlock,
-  NewStrataBlock,
+  NewPlasmaBlock,
   NodeFundsDeposited,
   NodeFundsWithdrawn,
   SkippedBTCBlock,
-  SkippedStrataBlock
+  SkippedPlasmaBlock
 }
 
 class SerializationDeserializationSpec extends CatsEffectSuite with SerializationOps with DeserializationOps {
@@ -32,13 +32,13 @@ class SerializationDeserializationSpec extends CatsEffectSuite with Serializatio
     assertEquals(fromProtobuf(toProtobuf(event)), event)
   }
 
-  test("Serialization and Deserialization of SkippedStrataBlock") {
-    val event = SkippedStrataBlock(1)
+  test("Serialization and Deserialization of SkippedPlasmaBlock") {
+    val event = SkippedPlasmaBlock(1)
     assertEquals(fromProtobuf(toProtobuf(event)), event)
   }
 
-  test("Serialization and Deserialization of NewStrataBlock") {
-    val event = NewStrataBlock(1)
+  test("Serialization and Deserialization of NewPlasmaBlock") {
+    val event = NewPlasmaBlock(1)
     assertEquals(fromProtobuf(toProtobuf(event)), event)
   }
 

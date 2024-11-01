@@ -18,7 +18,8 @@ import org.plasmalabs.bridge.shared.{
   StartPeginSessionRequest,
   StartPeginSessionResponse,
   StartSessionOperation,
-  StateMachineServiceGrpcClient
+  StateMachineServiceGrpcClient,
+  TimeoutError
 }
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
@@ -114,10 +115,11 @@ object PublicApiHttpServiceServer {
               e match {
                 case _: SessionNotFoundError =>
                   NotFound(e)
+                case _: TimeoutError =>
+                  RequestTimeout(e)
                 case _ =>
                   BadRequest(e)
               }
-              BadRequest(e)
             case Left(_) =>
               InternalServerError()
             case Right(response) =>
@@ -129,7 +131,7 @@ object PublicApiHttpServiceServer {
             "Error starting pegin session"
           )
         }
-      case req @ POST -> Root / BridgeContants.STRATA_MINTING_STATUS =>
+      case req @ POST -> Root / BridgeContants.PLASMA_MINTING_STATUS =>
         implicit val mintingStatusRequestDecoder: EntityDecoder[IO, MintingStatusRequest] =
           jsonOf[IO, MintingStatusRequest]
 

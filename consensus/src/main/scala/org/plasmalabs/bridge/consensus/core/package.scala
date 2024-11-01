@@ -21,9 +21,9 @@ package object core {
   class PeginWalletManager[F[_]](val underlying: BTCWalletAlgebra[F]) extends AnyVal
   class BridgeWalletManager[F[_]](val underlying: BTCWalletAlgebra[F]) extends AnyVal
   class CheckpointInterval(val underlying: Int) extends AnyVal
-  class CurrentStrataHeightRef[F[_]](val underlying: Ref[F, Long]) extends AnyVal
+  class CurrentPlasmaHeightRef[F[_]](val underlying: Ref[F, Long]) extends AnyVal
   class CurrentBTCHeightRef[F[_]](val underlying: Ref[F, Int]) extends AnyVal
-  class StrataKeypair(val underlying: KeyPair) extends AnyVal
+  class PlasmaKeypair(val underlying: KeyPair) extends AnyVal
 
   case class WatermarkRef[F[_]](
     lowAndHigh: Ref[F, (Long, Long)]

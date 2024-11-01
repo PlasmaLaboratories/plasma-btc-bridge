@@ -5,8 +5,8 @@ import cats.implicits._
 import com.google.protobuf.ByteString
 import org.plasmalabs.bridge.consensus.shared.{
   BTCConfirmationThreshold,
-  StrataConfirmationThreshold,
-  StrataWaitExpirationTime
+  PlasmaConfirmationThreshold,
+  PlasmaWaitExpirationTime
 }
 import org.plasmalabs.bridge.consensus.subsystems.monitor.{
   MConfirmingBTCDeposit,
@@ -37,30 +37,30 @@ trait TransitionToEffect {
   )(implicit btcConfirmationThreshold: BTCConfirmationThreshold) =
     currentHeight - startHeight > btcConfirmationThreshold.underlying
 
-  def isAboveConfirmationThresholdStrata(
+  def isAboveConfirmationThresholdPlasma(
     currentHeight: Long,
     startHeight:   Long
-  )(implicit toplConfirmationThreshold: StrataConfirmationThreshold) =
-    currentHeight - startHeight > toplConfirmationThreshold.underlying
+  )(implicit plasmaConfirmationThreshold: PlasmaConfirmationThreshold) =
+    currentHeight - startHeight > plasmaConfirmationThreshold.underlying
 
   def transitionToEffect[F[_]: Async: Logger](
     currentState:    PeginStateMachineState,
     blockchainEvent: BlockchainEvent
   )(implicit
-    clientId:                  ClientId,
-    session:                   SessionId,
-    consensusClient:           StateMachineServiceGrpcClient[F],
-    toplWaitExpirationTime:    StrataWaitExpirationTime,
-    toplConfirmationThreshold: StrataConfirmationThreshold,
-    btcConfirmationThreshold:  BTCConfirmationThreshold
+    clientId:                    ClientId,
+    session:                     SessionId,
+    consensusClient:             StateMachineServiceGrpcClient[F],
+    plasmaWaitExpirationTime:    PlasmaWaitExpirationTime,
+    plasmaConfirmationThreshold: PlasmaConfirmationThreshold,
+    btcConfirmationThreshold:    BTCConfirmationThreshold
   ) =
     (blockchainEvent match {
-      case SkippedStrataBlock(height) =>
-        error"Error the processor skipped Strata block $height"
+      case SkippedPlasmaBlock(height) =>
+        error"Error the processor skipped Plasma block $height"
       case SkippedBTCBlock(height) =>
         error"Error the processor skipped BTC block $height"
-      case NewStrataBlock(height) =>
-        debug"New Strata block $height"
+      case NewPlasmaBlock(height) =>
+        debug"New Plasma block $height"
       case NewBTCBlock(height) =>
         debug"New BTC block $height"
       case _ =>
@@ -118,17 +118,17 @@ trait TransitionToEffect {
           .void
       case (
             cs: MConfirmingTBTCMint,
-            be: NewStrataBlock
+            be: NewPlasmaBlock
           ) =>
         if (
-          isAboveConfirmationThresholdStrata(
+          isAboveConfirmationThresholdPlasma(
             be.height,
             cs.depositTBTCBlockHeight
           )
         ) {
           Async[F].unit
         } else if ( // FIXME: check that this is the right time to wait
-          toplWaitExpirationTime.underlying < (be.height - cs.depositTBTCBlockHeight)
+          plasmaWaitExpirationTime.underlying < (be.height - cs.depositTBTCBlockHeight)
         )
           Async[F]
             .start(
@@ -145,10 +145,10 @@ trait TransitionToEffect {
           Async[F].unit
       case (
             cs: MConfirmingRedemption,
-            ev: NewStrataBlock
+            ev: NewPlasmaBlock
           ) =>
         import org.plasmalabs.sdk.syntax._
-        if (isAboveConfirmationThresholdStrata(ev.height, cs.currentTolpBlockHeight))
+        if (isAboveConfirmationThresholdPlasma(ev.height, cs.currentTolpBlockHeight))
           Async[F]
             .start(
               debug"Posting redemption transaction to network" >>
@@ -169,7 +169,7 @@ trait TransitionToEffect {
         else Async[F].unit
       case (
             _: MWaitingForRedemption,
-            ev: NewStrataBlock
+            ev: NewPlasmaBlock
           ) =>
         Async[F]
           .start(

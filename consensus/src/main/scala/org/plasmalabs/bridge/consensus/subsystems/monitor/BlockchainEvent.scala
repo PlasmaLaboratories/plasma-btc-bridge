@@ -11,9 +11,9 @@ case class NewBTCBlock(height: Int) extends BlockchainEvent
 
 case class SkippedBTCBlock(height: Int) extends BlockchainEvent
 
-case class SkippedStrataBlock(height: Long) extends BlockchainEvent
+case class SkippedPlasmaBlock(height: Long) extends BlockchainEvent
 
-case class NewStrataBlock(height: Long) extends BlockchainEvent
+case class NewPlasmaBlock(height: Long) extends BlockchainEvent
 
 case class BTCFundsDeposited(
   fundsDepositedHeight: Int,
@@ -24,7 +24,7 @@ case class BTCFundsDeposited(
 ) extends BlockchainEvent
 
 case class NodeFundsDeposited(
-  currentStrataBlockHeight: Long,
+  currentPlasmaBlockHeight: Long,
   address:                  String,
   utxoTxId:                 String,
   utxoIndex:                Int,

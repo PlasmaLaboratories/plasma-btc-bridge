@@ -23,8 +23,10 @@ import org.plasmalabs.bridge.shared.{
   ReplicaCount,
   ReplicaNode,
   ResponseGrpcServiceServer,
+  RetryPolicy,
   StateMachineServiceGrpcClient,
-  StateMachineServiceGrpcClientImpl
+  StateMachineServiceGrpcClientImpl,
+  StateMachineServiceGrpcClientRetryConfig
 }
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
@@ -34,6 +36,7 @@ import java.net.InetSocketAddress
 import java.security.{PublicKey, Security}
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.LongAdder
+import scala.concurrent.duration.FiniteDuration
 
 sealed trait PeginSessionState
 
@@ -93,9 +96,10 @@ object Main extends IOApp with PublicApiParamsDescriptor {
     replicaKeysMap: Map[Int, PublicKey],
     currentViewRef: Ref[IO, Long]
   )(implicit
-    replicaCount: ReplicaCount,
-    clientNumber: ClientId,
-    logger:       Logger[IO]
+    replicaCount:     ReplicaCount,
+    clientNumber:     ClientId,
+    logger:           Logger[IO],
+    stateMachineConf: StateMachineServiceGrpcClientRetryConfig
   ) = {
     val messageResponseMap =
       new ConcurrentHashMap[ConsensusClientMessageId, ConcurrentHashMap[Either[
@@ -189,7 +193,7 @@ object Main extends IOApp with PublicApiParamsDescriptor {
     OParser.parse(
       parser,
       args,
-      StrataBTCBridgePublicApiParamConfig()
+      PlasmaBTCBridgePublicApiParamConfig()
     ) match {
       case Some(configuration) =>
         val conf = ConfigFactory.parseFile(configuration.configurationFile)
@@ -202,6 +206,18 @@ object Main extends IOApp with PublicApiParamsDescriptor {
         implicit val logger =
           org.typelevel.log4cats.slf4j.Slf4jLogger
             .getLoggerFromName[IO]("public-api-" + f"${client.id}%02d")
+
+        implicit val stateMachineConf = StateMachineServiceGrpcClientRetryConfig(
+          primaryResponseWait = FiniteDuration.apply(conf.getInt("bridge.client.primaryResponseWait"), "second"),
+          otherReplicasResponseWait =
+            FiniteDuration.apply(conf.getInt("bridge.client.otherReplicasResponseWait"), "second"),
+          retryPolicy = RetryPolicy(
+            initialDelay = FiniteDuration.apply(conf.getInt("bridge.client.retryPolicy.initialDelay"), "second"),
+            maxRetries = conf.getInt("bridge.client.retryPolicy.maxRetries"),
+            delayMultiplier = conf.getInt("bridge.client.retryPolicy.delayMultiplier")
+          )
+        )
+
         for {
           _ <- info"Configuration parameters"
           _ <- IO(Security.addProvider(new BouncyCastleProvider()))

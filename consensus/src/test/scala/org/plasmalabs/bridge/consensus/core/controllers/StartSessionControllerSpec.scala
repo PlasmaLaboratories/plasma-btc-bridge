@@ -8,11 +8,11 @@ import org.plasmalabs.bridge.consensus.core.managers.{BTCWalletAlgebraImpl, Wall
 import org.plasmalabs.bridge.consensus.core.utils.KeyGenerationUtils
 import org.plasmalabs.bridge.consensus.core.{
   BridgeWalletManager,
-  CurrentStrataHeightRef,
+  CurrentPlasmaHeightRef,
   PeginWalletManager,
-  RegTest,
-  StrataKeypair,
-  StrataPrivatenet
+  PlasmaKeypair,
+  PlasmaPrivatenet,
+  RegTest
 }
 import org.plasmalabs.bridge.shared.{InvalidHash, InvalidKey, StartSessionOperation}
 import org.plasmalabs.sdk.builders.TransactionBuilderApi
@@ -38,15 +38,15 @@ class StartSessionControllerSpec
   val tmpDirectory = FunFixture[Path](
     setup = { _ =>
       try
-        Files.delete(Paths.get(toplWalletDb))
+        Files.delete(Paths.get(plasmaWalletDb))
       catch {
         case _: Throwable => ()
       }
-      val initialWalletDb = Paths.get(toplWalletDbInitial)
-      Files.copy(initialWalletDb, Paths.get(toplWalletDb))
+      val initialWalletDb = Paths.get(plasmaWalletDbInitial)
+      Files.copy(initialWalletDb, Paths.get(plasmaWalletDb))
     },
     teardown = { _ =>
-      Files.delete(Paths.get(toplWalletDb))
+      Files.delete(Paths.get(plasmaWalletDb))
     }
   )
 
@@ -58,16 +58,16 @@ class StartSessionControllerSpec
       walletKeyApi
     )
     implicit val walletStateAlgebra = WalletStateApi
-      .make[IO](walletResource[IO](toplWalletDb), walletApi)
+      .make[IO](walletResource[IO](plasmaWalletDb), walletApi)
     implicit val transactionBuilderApi = TransactionBuilderApi.make[IO](
-      StrataPrivatenet.networkId,
+      PlasmaPrivatenet.networkId,
       NetworkConstants.MAIN_LEDGER_ID
     )
 
     implicit val fellowshipStorageApi =
-      FellowshipStorageApi.make(walletResource[IO](toplWalletDb))
+      FellowshipStorageApi.make(walletResource[IO](plasmaWalletDb))
     implicit val templateStorageApi =
-      TemplateStorageApi.make(walletResource[IO](toplWalletDb))
+      TemplateStorageApi.make(walletResource[IO](plasmaWalletDb))
     assertIOBoolean(
       (for {
         km0 <- KeyGenerationUtils.createKeyManager[IO](
@@ -76,18 +76,18 @@ class StartSessionControllerSpec
           testPassword
         )
         keyPair <- walletManagementUtils.loadKeys(
-          toplWalletFile,
-          testStrataPassword
+          plasmaWalletFile,
+          testPlasmaPassword
         )
-        currentStrataHeight <- Ref[IO].of(1L)
+        currentPlasmaHeight <- Ref[IO].of(1L)
       } yield {
         implicit val peginWallet =
           new PeginWalletManager(BTCWalletAlgebraImpl.make[IO](km0).unsafeRunSync())
         implicit val bridgeWallet =
           new BridgeWalletManager(BTCWalletAlgebraImpl.make[IO](km0).unsafeRunSync())
-        implicit val toplKeypair = new StrataKeypair(keyPair)
-        implicit val currentStrataHeightRef =
-          new CurrentStrataHeightRef[IO](currentStrataHeight)
+        implicit val plasmaKeypair = new PlasmaKeypair(keyPair)
+        implicit val currentPlasmaHeightRef =
+          new CurrentPlasmaHeightRef[IO](currentPlasmaHeight)
         implicit val btcNetwork = RegTest
         (for {
           res <- StartSessionController.startPeginSession[IO](
@@ -113,35 +113,35 @@ class StartSessionControllerSpec
       walletKeyApi
     )
     implicit val walletStateAlgebra = WalletStateApi
-      .make[IO](walletResource[IO](toplWalletDb), walletApi)
+      .make[IO](walletResource[IO](plasmaWalletDb), walletApi)
     implicit val transactionBuilderApi = TransactionBuilderApi.make[IO](
-      StrataPrivatenet.networkId,
+      PlasmaPrivatenet.networkId,
       NetworkConstants.MAIN_LEDGER_ID
     )
 
     implicit val fellowshipStorageApi =
-      FellowshipStorageApi.make(walletResource[IO](toplWalletDb))
+      FellowshipStorageApi.make(walletResource[IO](plasmaWalletDb))
     implicit val templateStorageApi =
-      TemplateStorageApi.make(walletResource[IO](toplWalletDb))
+      TemplateStorageApi.make(walletResource[IO](plasmaWalletDb))
     assertIOBoolean((for {
       keypair <- walletManagementUtils.loadKeys(
-        toplWalletFile,
-        testStrataPassword
+        plasmaWalletFile,
+        testPlasmaPassword
       )
       km0 <- KeyGenerationUtils.createKeyManager[IO](
         RegTest,
         peginWalletFile,
         testPassword
       )
-      currentStrataHeight <- Ref[IO].of(1L)
+      currentPlasmaHeight <- Ref[IO].of(1L)
     } yield {
       implicit val peginWallet =
         new PeginWalletManager(BTCWalletAlgebraImpl.make[IO](km0).unsafeRunSync())
       implicit val bridgeWallet =
         new BridgeWalletManager(BTCWalletAlgebraImpl.make[IO](km0).unsafeRunSync())
-      implicit val toplKeypair = new StrataKeypair(keypair)
-      implicit val currentStrataHeightRef =
-        new CurrentStrataHeightRef[IO](currentStrataHeight)
+      implicit val plasmaKeypair = new PlasmaKeypair(keypair)
+      implicit val currentPlasmaHeightRef =
+        new CurrentPlasmaHeightRef[IO](currentPlasmaHeight)
       implicit val btcNetwork = RegTest
       (for {
         res <- StartSessionController.startPeginSession[IO](
@@ -166,38 +166,38 @@ class StartSessionControllerSpec
       walletKeyApi
     )
     implicit val walletStateAlgebra = WalletStateApi
-      .make[IO](walletResource[IO](toplWalletDb), walletApi)
+      .make[IO](walletResource[IO](plasmaWalletDb), walletApi)
     implicit val transactionBuilderApi = TransactionBuilderApi.make[IO](
-      StrataPrivatenet.networkId,
+      PlasmaPrivatenet.networkId,
       NetworkConstants.MAIN_LEDGER_ID
     )
 
     implicit val fellowshipStorageApi =
-      FellowshipStorageApi.make(walletResource[IO](toplWalletDb))
+      FellowshipStorageApi.make(walletResource[IO](plasmaWalletDb))
     implicit val templateStorageApi =
-      TemplateStorageApi.make(walletResource[IO](toplWalletDb))
+      TemplateStorageApi.make(walletResource[IO](plasmaWalletDb))
 
     assertIOBoolean(
       (for {
         keypair <- walletManagementUtils.loadKeys(
-          toplWalletFile,
-          testStrataPassword
+          plasmaWalletFile,
+          testPlasmaPassword
         )
         km0 <- KeyGenerationUtils.createKeyManager[IO](
           RegTest,
           peginWalletFile,
           testPassword
         )
-        currentStrataHeight <- Ref[IO].of(1L)
+        currentPlasmaHeight <- Ref[IO].of(1L)
 
       } yield {
         implicit val peginWallet =
           new PeginWalletManager(BTCWalletAlgebraImpl.make[IO](km0).unsafeRunSync())
         implicit val bridgeWallet =
           new BridgeWalletManager(BTCWalletAlgebraImpl.make[IO](km0).unsafeRunSync())
-        implicit val toplKeypair = new StrataKeypair(keypair)
-        implicit val currentStrataHeightRef =
-          new CurrentStrataHeightRef[IO](currentStrataHeight)
+        implicit val plasmaKeypair = new PlasmaKeypair(keypair)
+        implicit val currentPlasmaHeightRef =
+          new CurrentPlasmaHeightRef[IO](currentPlasmaHeight)
         implicit val btcNetwork = RegTest
         for {
           res <- StartSessionController.startPeginSession[IO](

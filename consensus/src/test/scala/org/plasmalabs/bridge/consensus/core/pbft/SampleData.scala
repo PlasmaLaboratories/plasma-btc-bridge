@@ -5,7 +5,7 @@ import com.typesafe.config.ConfigFactory
 import org.bitcoins.core.config.RegTest
 import org.bitcoins.core.currency.CurrencyUnit
 import org.plasmalabs.bridge.consensus.core.{CheckpointInterval, Fellowship, KWatermark, LastReplyMap, Template}
-import org.plasmalabs.bridge.consensus.shared.{BTCWaitExpirationTime, Lvl, StrataWaitExpirationTime}
+import org.plasmalabs.bridge.consensus.shared.{BTCWaitExpirationTime, Lvl, PlasmaWaitExpirationTime}
 import org.plasmalabs.bridge.shared.{ReplicaCount, ReplicaId}
 import org.plasmalabs.sdk.models.{GroupId, SeriesId}
 import org.plasmalabs.sdk.syntax._
@@ -19,9 +19,9 @@ trait SampleData {
 
   val privateKeyFile = "privateKey1.pem"
 
-  val toplHost = "localhost"
-  val toplPort = 9084
-  val toplSecureConnection = false
+  val plasmaHost = "localhost"
+  val plasmaPort = 9084
+  val plasmaSecureConnection = false
 
   implicit val replicaCount: ReplicaCount = new ReplicaCount(7)
 
@@ -33,9 +33,9 @@ trait SampleData {
 
   implicit val replicaId: ReplicaId = new ReplicaId(1)
 
-  val toplWalletFile = "src/test/resources/strata-wallet.json"
+  val plasmaWalletFile = "src/test/resources/plasma-wallet.json"
 
-  val testStrataPassword = "test"
+  val testPlasmaPassword = "test"
 
   val btcUser = "user"
   val btcPassword = "password"
@@ -44,8 +44,8 @@ trait SampleData {
 
   val btcUrl = "http://localhost:18332"
 
-  implicit val toplWaitExpirationTime: StrataWaitExpirationTime =
-    new StrataWaitExpirationTime(1000)
+  implicit val plasmaWaitExpirationTime: PlasmaWaitExpirationTime =
+    new PlasmaWaitExpirationTime(1000)
 
   implicit val btcWaitExpirationTime: BTCWaitExpirationTime =
     new BTCWaitExpirationTime(100)

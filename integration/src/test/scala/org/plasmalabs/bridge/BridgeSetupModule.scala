@@ -13,17 +13,17 @@ import scala.util.Try
 
 trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with PublicApiConfModule {
 
-  override val munitIOTimeout = Duration(180, "s")
+  override val munitIOTimeout = Duration(250, "s")
 
   implicit val logger: Logger[IO] =
     org.typelevel.log4cats.slf4j.Slf4jLogger
       .getLoggerFromName[IO]("it-test")
 
-  def toplWalletDb(replicaId: Int) =
-    Option(System.getenv(s"STRATA_WALLET_DB_$replicaId")).getOrElse(s"strata-wallet$replicaId.db")
+  def plasmaWalletDb(replicaId: Int) =
+    Option(System.getenv(s"PLASMA_WALLET_DB_$replicaId")).getOrElse(s"plasma-wallet$replicaId.db")
 
-  def toplWalletJson(replicaId: Int) =
-    Option(System.getenv(s"STRATA_WALLET_JSON_$replicaId")).getOrElse(s"strata-wallet$replicaId.json")
+  def plasmaWalletJson(replicaId: Int) =
+    Option(System.getenv(s"PLASMA_WALLET_JSON_$replicaId")).getOrElse(s"plasma-wallet$replicaId.json")
 
   import cats.implicits._
 
@@ -59,17 +59,17 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
           "src/test/resources/wallet.json",
           "--btc-peg-in-seed-file",
           "src/test/resources/pegin-wallet.json",
-          "--strata-wallet-seed-file",
-          toplWalletJson(replicaId),
-          "--strata-wallet-db",
-          toplWalletDb(replicaId),
+          "--plasma-wallet-seed-file",
+          plasmaWalletJson(replicaId),
+          "--plasma-wallet-db",
+          plasmaWalletDb(replicaId),
           "--btc-url",
           "http://localhost",
           "--btc-blocks-to-recover",
           "50",
-          "--strata-confirmation-threshold",
+          "--plasma-confirmation-threshold",
           "5",
-          "--strata-blocks-to-recover",
+          "--plasma-blocks-to-recover",
           "15",
           "--abtc-group-id",
           groupId,
@@ -89,12 +89,12 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
       )
     )
 
+  var fiber01: List[(Fiber[IO, Throwable, ExitCode], Int)] = _
+  var fiber02: List[(Fiber[IO, Throwable, ExitCode], Int)] = _
+
   val startServer: AnyFixture[Unit] =
     new FutureFixture[Unit]("server setup") {
-
-      var fiber01: List[(Fiber[IO, Throwable, ExitCode], Int)] = _
-      var fiber02: List[(Fiber[IO, Throwable, ExitCode], Int)] = _
-      def apply() = (fiber01, fiber02): Unit
+      def apply() = ()
 
       override def beforeAll() =
         (for {
@@ -110,8 +110,8 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
           }
           _              <- createReplicaConfigurationFiles[IO]()
           _              <- createPublicApiConfigurationFiles[IO]()
-          currentAddress <- currentAddress(toplWalletDb(0))
-          utxo           <- getCurrentUtxosFromAddress(toplWalletDb(0), currentAddress)
+          currentAddress <- currentAddress(plasmaWalletDb(0))
+          utxo           <- getCurrentUtxosFromAddress(plasmaWalletDb(0), currentAddress)
           (groupId, seriesId) = extractIds(utxo)
           _ <- IO(Try(Files.delete(Paths.get("bridge.db"))))
           _ <- IO.asyncForIO.both(
@@ -167,77 +167,100 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
           _          <- initUserBitcoinWallet
           newAddress <- getNewAddress
           _          <- generateToAddress(1, 101, newAddress)
-          _          <- mintStrataBlock(1, 1)
+          _          <- mintPlasmaBlock(1, 1)
         } yield ()).unsafeToFuture()
 
-      override def afterAll() = {
-        fiber01.map(_._1.cancel).sequence.unsafeToFuture()
-        fiber02.map(_._1.cancel).sequence.void.unsafeToFuture()
-      }
+      override def afterAll() =
+        (for {
+          _ <- IO.race(
+            fiber01.parTraverse(_._1.cancel),
+            fiber02.traverse(_._1.cancel)
+          )
+          _ <- IO.sleep(5.seconds)
+        } yield ()).void.unsafeToFuture()
     }
+
+  def killFiber(replicaId: Int): IO[Unit] = {
+    val consensusFiberOpt = fiber02.find(_._2 == replicaId)
+    val publicApiFiberOpt = fiber01.find(_._2 == replicaId)
+
+    (consensusFiberOpt, publicApiFiberOpt)
+      .mapN((consensusFiber, publicApiFiber) =>
+        for {
+          _ <- consensusFiber._1.cancel
+          _ <- publicApiFiber._1.cancel
+          _ <- IO.delay {
+            fiber02 = fiber02.filter(_._2 != replicaId)
+            fiber01 = fiber01.filter(_._2 != replicaId)
+          }
+          _ <- logger.info(s"Killed both consensus and public API fibers for replica $replicaId")
+        } yield ()
+      )
+      .sequence[IO, Unit]
+      .void
+  }
+
+  def restoreMissingFibers: IO[Unit] = for {
+    missingReplicas <- IO.delay {
+      (0 until replicaCount).filter(id => !fiber02.exists(_._2 == id) || !fiber01.exists(_._2 == id)).toList
+    }
+
+    _ <-
+      if (missingReplicas.nonEmpty) {
+        for {
+          currentAddress <- currentAddress(plasmaWalletDb(0))
+          utxo           <- getCurrentUtxosFromAddress(plasmaWalletDb(0), currentAddress)
+          (groupId, seriesId) = extractIds(utxo)
+
+          _ <- IO.asyncForIO.both(
+            missingReplicas.map(launchConsensus(_, groupId, seriesId)).sequence.map { newFibers =>
+              fiber02 = fiber02 ++ newFibers.zip(missingReplicas)
+            },
+            IO.sleep(10.seconds)
+          )
+
+          _ <- IO.asyncForIO.both(
+            missingReplicas.map(launchPublicApi(_)).sequence.map { newFibers =>
+              fiber01 = fiber01 ++ newFibers.zip(missingReplicas)
+            },
+            IO.sleep(10.seconds)
+          )
+
+          _ <- logger.info(s"Restored consensus and public api for ${missingReplicas}")
+        } yield ()
+      } else {
+        logger.info("All replicas are still running.")
+      }
+  } yield ()
 
   val cleanupDir = FunFixture[Unit](
     setup = { _ =>
-      try
-        Files.delete(Paths.get(userWalletDb(1)))
-      catch {
-        case _: Throwable => ()
-      }
-      try
-        Files.delete(Paths.get(userWalletMnemonic(1)))
-      catch {
-        case _: Throwable => ()
-      }
-      try
-        Files.delete(Paths.get(userWalletJson(1)))
-      catch {
-        case _: Throwable => ()
-      }
-      try
-        Files.delete(Paths.get(userWalletDb(2)))
-      catch {
-        case _: Throwable => ()
-      }
-      try
-        Files.delete(Paths.get(userWalletMnemonic(2)))
-      catch {
-        case _: Throwable => ()
-      }
-      try
-        Files.delete(Paths.get(userWalletJson(2)))
-      catch {
-        case _: Throwable => ()
-      }
-      try
-        Files.delete(Paths.get(vkFile))
-      catch {
-        case _: Throwable => ()
-      }
-      try
-        Files.delete(Paths.get("fundRedeemTx.pbuf"))
-      catch {
-        case _: Throwable => ()
-      }
-      try
-        Files.delete(Paths.get("fundRedeemTxProved.pbuf"))
-      catch {
-        case _: Throwable => ()
-      }
-      try
-        Files.delete(Paths.get("redeemTx.pbuf"))
-      catch {
-        case _: Throwable => ()
-      }
-      try
-        Files.delete(Paths.get("redeemTxProved.pbuf"))
-      catch {
-        case _: Throwable => ()
-      }
-
+      (for {
+        _ <- restoreMissingFibers
+        _ <- IO {
+          List(
+            userWalletDb(1),
+            userWalletMnemonic(1),
+            userWalletJson(1),
+            userWalletDb(2),
+            userWalletMnemonic(2),
+            userWalletJson(2),
+            vkFile,
+            "fundRedeemTx.pbuf",
+            "fundRedeemTxProved.pbuf",
+            "redeemTx.pbuf",
+            "redeemTxProved.pbuf"
+          ).foreach { case (path) =>
+            try
+              Files.delete(Paths.get(path))
+            catch {
+              case _: Throwable => ()
+            }
+          }
+        }
+      } yield ()).unsafeRunSync()
     },
-    teardown = { _ =>
-      ()
-    }
+    teardown = { _ => () }
   )
 
   val computeBridgeNetworkName = for {

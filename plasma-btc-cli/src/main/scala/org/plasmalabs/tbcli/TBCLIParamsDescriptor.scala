@@ -6,18 +6,18 @@ package org.plasmalabs.tbcli
 trait TBCLIParamsDescriptor {
   // import org.plasmalabs.bridge.ParamParser._
 
-  // val builder = OParser.builder[StrataBTCCLIParamConfig]
+  // val builder = OParser.builder[PlasmaBTCCLIParamConfig]
 
   // val parser = {
   //   import builder._
   //   import monocle.Optional
-  //   val someCommand = Optional[StrataBTCCLIParamConfig, StrataBTCCLICommand] {
+  //   val someCommand = Optional[PlasmaBTCCLIParamConfig, PlasmaBTCCLICommand] {
   //     _.command
   //   } { command =>
   //     _.copy(command = Some(command))
   //   }
   //   import monocle.macros.GenPrism
-  //   val initSession = GenPrism[StrataBTCCLICommand, InitSession]
+  //   val initSession = GenPrism[PlasmaBTCCLICommand, InitSession]
   //   import monocle.macros.GenLens
   //   val initSessionLens = someCommand.andThen(initSession)
   //   OParser.sequence(

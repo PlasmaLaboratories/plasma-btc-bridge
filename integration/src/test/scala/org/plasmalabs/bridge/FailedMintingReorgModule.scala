@@ -14,10 +14,10 @@ trait FailedMintingReorgModule {
 
     assertIO(
       for {
-        _                    <- mintStrataBlock(1, 1)
+        _                    <- mintPlasmaBlock(1, 1)
         bridgeNetworkAndName <- computeBridgeNetworkName
         _                    <- pwd
-        _                    <- initStrataWallet(2)
+        _                    <- initPlasmaWallet(2)
         _                    <- addFellowship(2)
         _                    <- addSecret(2)
         newAddress           <- getNewAddress
@@ -44,12 +44,12 @@ trait FailedMintingReorgModule {
         _ <- generateToAddress(1, 8, newAddress)
         _ <- List
           .fill(5)(for {
-            _ <- mintStrataBlockDocker(1, 1)
+            _ <- mintPlasmaBlockDocker(1, 1)
             _ <- IO.sleep(1.second)
           } yield ())
           .sequence
         _ <- info"Session ${startSessionResponse.sessionID} went to PeginSessionMintingTBTCConfirmation"
-        _ <- List.fill(10)(mintStrataBlockDocker(2, 1)).sequence
+        _ <- List.fill(10)(mintPlasmaBlockDocker(2, 1)).sequence
         _ <- connectBridge(bridgeNetworkAndName._2, "node02")
         _ <- (for {
           status <- checkMintingStatus(startSessionResponse.sessionID)

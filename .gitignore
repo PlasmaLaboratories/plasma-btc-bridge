@@ -9,11 +9,11 @@ metals.sbt
 logs/
 static/
 secret.yaml
-strata-wallet*.json
-strata-wallet*.db
+plasma-wallet*.json
+plasma-wallet*.db
 replica*.db
 replicaConfig*.conf
-strata-mnemonic.txt
+plasma-mnemonic.txt
 genesisTxProved.pbuf
 genesisTx.pbuf
 helm/
