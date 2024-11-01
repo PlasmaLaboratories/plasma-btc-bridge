@@ -51,7 +51,7 @@ trait ConsensusParamsDescriptor {
       opt[String]("plasma-wallet-seed-file")
         .action((x, c) => c.copy(plasmaWalletSeedFile = x))
         .text(
-          "The path to the tolp wallet seed file. (default: plasma-wallet.json)"
+          "The path to the Plasma wallet seed file. (default: plasma-wallet.json)"
         ),
       opt[String]("plasma-wallet-password")
         .action((x, c) => c.copy(plasmaWalletPassword = x))
