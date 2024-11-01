@@ -230,7 +230,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: it-reports
-          path: integration/target/test-reports/**/*.xml
+          path: integration-monitor/target/test-reports/**/*.xml
           overwrite: true
       - uses: actions/download-artifact@v3
         with:
@@ -241,8 +241,5 @@ jobs:
         if: success()
         with:
           files: |
-            consensus/target/test-reports/**/*.xml
-            consensus/subsystems/monitors/target/it-reports/**/*.xml
-            consensus/subsystems/monitors/target/test-reports/**/*.xml
-            target/it-reports/**/*.xml
+            integration-monitor/target/test-reports/**/*.xml
           deduplicate_classes_by_file_name: true
