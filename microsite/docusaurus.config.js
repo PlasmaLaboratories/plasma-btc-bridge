@@ -71,7 +71,7 @@ const config = {
             label: 'Architecture',
           },
           {
-            href: 'https://github.com/Plasma/plasma-btc-bridge',
+            href: 'https://github.com/PlasmaLaboratories/plasma-btc-bridge',
             label: 'GitHub',
             position: 'right',
           },
