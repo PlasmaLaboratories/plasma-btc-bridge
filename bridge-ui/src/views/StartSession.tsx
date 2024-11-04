@@ -7,7 +7,7 @@ export interface SessionInformation {
   escrowAddress: string;
   currentState: PeginUIState;
   redeemAddress: string;
-  toplBridgePKey: string;
+  plasmaBridgePKey: string;
   redeemTemplate: string;
   escrowScript: string;
 }

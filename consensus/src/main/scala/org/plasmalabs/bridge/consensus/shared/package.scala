@@ -19,9 +19,9 @@ package object shared {
 
   class BTCWaitExpirationTime(val underlying: Int) extends AnyVal
 
-  class StrataWaitExpirationTime(val underlying: Int) extends AnyVal
+  class PlasmaWaitExpirationTime(val underlying: Int) extends AnyVal
 
-  class StrataConfirmationThreshold(val underlying: Int) extends AnyVal
+  class PlasmaConfirmationThreshold(val underlying: Int) extends AnyVal
 
   sealed trait SessionInfo
 

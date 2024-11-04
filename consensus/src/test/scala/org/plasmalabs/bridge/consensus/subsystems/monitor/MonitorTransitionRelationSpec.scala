@@ -22,7 +22,7 @@ import org.plasmalabs.bridge.consensus.subsystems.monitor.{
   MWaitingForRedemption,
   MonitorTransitionRelation,
   NewBTCBlock,
-  NewStrataBlock,
+  NewPlasmaBlock,
   NodeFundsDeposited,
   NodeFundsWithdrawn,
   PeginStateMachineState
@@ -145,7 +145,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
             claimAddress
           ),
           NodeFundsDeposited(
-            currentStrataBlockHeight = 0L, // Assuming a placeholder value for the missing argument
+            currentPlasmaBlockHeight = 0L, // Assuming a placeholder value for the missing argument
             address = redeemAddress,
             utxoTxId = "utxoTxId",
             utxoIndex = 0,
@@ -167,7 +167,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
             1L,
             "nodeTxId",
             0,
-            "strata-secret",
+            "plasma-secret",
             AssetToken("groupId", "seriesId", 100L)
           )
         )(transitionToEffect[IO](_, _))
@@ -197,7 +197,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
             1L,
             "nodeTxId",
             0,
-            "strata-secret",
+            "plasma-secret",
             AssetToken("groupId", "seriesId", 100L)
           )
         )(transitionToEffect[IO](_, _))
@@ -226,7 +226,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
             utxoIndex = 0,
             amount = AssetToken("groupId", "seriesId", 100L)
           ),
-          NewStrataBlock(2002)
+          NewPlasmaBlock(2002)
         )(transitionToEffect[IO](_, _))
         .get
         .isInstanceOf[EndTransition[IO]]: @nowarn
@@ -256,7 +256,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
             1L,
             "nodeTxIdDifferent",
             0,
-            "strata-secret",
+            "plasma-secret",
             AssetToken("groupId", "seriesId", 100L)
           )
         )(transitionToEffect[IO](_, _))
@@ -279,7 +279,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
             1L,
             "nodeTxId",
             1,
-            "strata-secret",
+            "plasma-secret",
             AssetToken("groupId", "seriesId", 100L)
           )
         )(transitionToEffect[IO](_, _))
@@ -466,7 +466,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
             claimAddress = claimAddress
           ),
           NodeFundsDeposited(
-            currentStrataBlockHeight = 0L, // Assuming a missing parameter needs to be added
+            currentPlasmaBlockHeight = 0L, // Assuming a missing parameter needs to be added
             address = redeemAddress,
             utxoTxId = "utxoTxId",
             utxoIndex = 0,
@@ -498,7 +498,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
             1L,
             "nodeTxId",
             0,
-            "strata-secret",
+            "plasma-secret",
             AssetToken("groupId", "seriesId", 100L)
           )
         )(transitionToEffect[IO](_, _))
@@ -550,7 +550,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
             100.satoshis
           ),
           NodeFundsDeposited(
-            currentStrataBlockHeight = 0L, // Assuming a missing parameter needs to be added
+            currentPlasmaBlockHeight = 0L, // Assuming a missing parameter needs to be added
             address = redeemAddress,
             utxoTxId = "utxoTxId",
             utxoIndex = 0,
@@ -587,7 +587,7 @@ class MonitorTransitionRelationSpec extends CatsEffectSuite with SharedData {
             100.satoshis
           ),
           NodeFundsDeposited(
-            currentStrataBlockHeight = 0L, // Assuming a missing parameter needs to be added
+            currentPlasmaBlockHeight = 0L, // Assuming a missing parameter needs to be added
             address = redeemAddressOther,
             utxoTxId = "utxoTxId",
             utxoIndex = 0,

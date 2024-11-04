@@ -5,6 +5,6 @@ object BridgeContants {
 
   val START_PEGOUT_SESSION_PATH = "start-session-pegout"
 
-  val STRATA_MINTING_STATUS = "strata-minting-status"
+  val PLASMA_MINTING_STATUS = "plasma-minting-status"
 
 }

@@ -9,7 +9,7 @@ import org.typelevel.log4cats.Logger
 trait InitUtils {
 
   def printParams[F[_]: Sync: Logger](
-    params: StrataBTCBridgeConsensusParamConfig
+    params: PlasmaBTCBridgeConsensusParamConfig
   ) = {
     import org.typelevel.log4cats.syntax._
     import cats.implicits._
@@ -17,29 +17,29 @@ trait InitUtils {
       // For each parameter, log its value to info
       _ <- info"Command line arguments"
       _ <- info"btc-blocks-to-recover    : ${params.btcWaitExpirationTime}"
-      _ <- info"strata-blocks-to-recover   : ${params.toplWaitExpirationTime}"
+      _ <- info"plasma-blocks-to-recover   : ${params.plasmaWaitExpirationTime}"
       _ <-
         info"btc-confirmation-threshold  : ${params.btcConfirmationThreshold}"
       _ <-
-        info"strata-confirmation-threshold : ${params.toplConfirmationThreshold}"
+        info"plasma-confirmation-threshold : ${params.plasmaConfirmationThreshold}"
       _ <- info"btc-peg-in-seed-file     : ${params.btcPegInSeedFile}"
       _ <- info"btc-peg-in-password      : ******"
       _ <- info"wallet-seed-file         : ${params.btcWalletSeedFile}"
       _ <- info"wallet-password          : ******"
-      _ <- info"strata-wallet-seed-file    : ${params.toplWalletSeedFile}"
-      _ <- info"strata-wallet-password     : ******"
-      _ <- info"strata-wallet-db           : ${params.toplWalletDb}"
+      _ <- info"plasma-wallet-seed-file    : ${params.plasmaWalletSeedFile}"
+      _ <- info"plasma-wallet-password     : ******"
+      _ <- info"plasma-wallet-db           : ${params.plasmaWalletDb}"
       _ <- info"btc-url                  : ${params.btcUrl}"
       _ <- info"btc-user                 : ${params.btcUser}"
       _ <- info"zmq-host                 : ${params.zmqHost}"
       _ <- info"zmq-port                 : ${params.zmqPort}"
       _ <- info"btc-password             : ******"
       _ <- info"btc-network              : ${params.btcNetwork}"
-      _ <- info"strata-network             : ${params.toplNetwork}"
-      _ <- info"strata-host                : ${params.toplHost}"
-      _ <- info"strata-port                : ${params.toplPort}"
+      _ <- info"plasma-network             : ${params.plasmaNetwork}"
+      _ <- info"plasma-host                : ${params.plasmaHost}"
+      _ <- info"plasma-port                : ${params.plasmaPort}"
       _ <- info"config-file              : ${params.configurationFile.toPath().toString()}"
-      _ <- info"strata-secure-connection   : ${params.toplSecureConnection}"
+      _ <- info"plasma-secure-connection   : ${params.plasmaSecureConnection}"
       _ <- info"minting-fee              : ${params.mintingFee}"
       _ <- info"fee-per-byte             : ${params.feePerByte}"
       _ <- info"abtc-group-id            : ${Encoding.encodeToHex(params.groupId.value.toByteArray)}"
