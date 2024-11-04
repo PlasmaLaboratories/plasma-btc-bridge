@@ -52,11 +52,9 @@ import scopt.OParser
 import java.net.InetSocketAddress
 import java.security.{KeyPair => JKeyPair, PublicKey, Security}
 import java.util.concurrent.atomic.LongAdder
-import java.util.concurrent.{ConcurrentHashMap, Executors}
+import java.util.concurrent.{ConcurrentHashMap, Executors, TimeUnit}
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
-import java.util.concurrent.TimeUnit
-
 
 case class SystemGlobalState(
   currentStatus: Option[String],
@@ -508,11 +506,15 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
     implicit val stateMachineConf = StateMachineServiceGrpcClientRetryConfig(
       primaryResponseWait =
         FiniteDuration(conf.getInt("bridge.replica.clients.monitor.client.primaryResponseWait"), TimeUnit.SECONDS),
-      otherReplicasResponseWait =
-        FiniteDuration(conf.getInt("bridge.replica.clients.monitor.client.otherReplicasResponseWait"), TimeUnit.SECONDS),
+      otherReplicasResponseWait = FiniteDuration(
+        conf.getInt("bridge.replica.clients.monitor.client.otherReplicasResponseWait"),
+        TimeUnit.SECONDS
+      ),
       retryPolicy = RetryPolicy(
-        initialDelay =
-          FiniteDuration(conf.getInt("bridge.replica.clients.monitor.client.retryPolicy.initialDelay"), TimeUnit.SECONDS),
+        initialDelay = FiniteDuration(
+          conf.getInt("bridge.replica.clients.monitor.client.retryPolicy.initialDelay"),
+          TimeUnit.SECONDS
+        ),
         maxRetries = conf.getInt("bridge.replica.clients.monitor.client.retryPolicy.maxRetries"),
         delayMultiplier = conf.getInt("bridge.replica.clients.monitor.client.retryPolicy.delayMultiplier")
       )

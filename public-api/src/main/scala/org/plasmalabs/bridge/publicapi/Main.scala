@@ -34,11 +34,9 @@ import scopt.OParser
 
 import java.net.InetSocketAddress
 import java.security.{PublicKey, Security}
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.LongAdder
+import java.util.concurrent.{ConcurrentHashMap, TimeUnit}
 import scala.concurrent.duration.FiniteDuration
-import java.util.concurrent.TimeUnit
-
 
 sealed trait PeginSessionState
 

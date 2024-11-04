@@ -6,7 +6,7 @@ import io.grpc.ManagedChannel
 import org.plasmalabs.bridge.consensus.core.managers.{StrataWalletAlgebra, TransactionAlgebra, WalletApiHelpers}
 import org.plasmalabs.bridge.consensus.core.{Fellowship, StrataKeypair, Template}
 import org.plasmalabs.bridge.consensus.shared.Lvl
-import org.plasmalabs.indexer.services.Txo
+import org.plasmalabs.indexer.services.{Txo, TxoState}
 import org.plasmalabs.sdk.builders.TransactionBuilderApi
 import org.plasmalabs.sdk.dataApi.{IndexerQueryAlgebra, WalletStateAlgebra}
 import org.plasmalabs.sdk.models.LockAddress
@@ -14,8 +14,6 @@ import org.plasmalabs.sdk.models.box.AssetMintingStatement
 import org.plasmalabs.sdk.wallet.WalletApi
 import org.typelevel.log4cats.Logger
 import quivr.models.{Int128, KeyPair}
-import org.plasmalabs.indexer.services.TxoState
-
 
 object WaitingBTCOps {
 
@@ -38,24 +36,27 @@ object WaitingBTCOps {
   def computeAssetMintingStatement[F[_]: Async: Logger](
     amount:         Int128,
     currentAddress: LockAddress,
-    utxoAlgebra:    IndexerQueryAlgebra[F], 
-    txoState: TxoState = TxoState.UNSPENT
+    utxoAlgebra:    IndexerQueryAlgebra[F],
+    txoState:       TxoState = TxoState.UNSPENT
   ) = for {
     txos <- getUtxos(currentAddress, utxoAlgebra, txoState)
-  } yield (AssetMintingStatement(
-    getGroupTokeUtxo(txos),
-    getSeriesTokenUtxo(txos),
-    amount
-  ), txos) 
+  } yield (
+    AssetMintingStatement(
+      getGroupTokeUtxo(txos),
+      getSeriesTokenUtxo(txos),
+      amount
+    ),
+    txos
+  )
 
   def getUtxos[F[_]: Async: Logger](
     currentAddress: LockAddress,
-    utxoAlgebra:    IndexerQueryAlgebra[F], 
-    txoState: TxoState = TxoState.UNSPENT
+    utxoAlgebra:    IndexerQueryAlgebra[F],
+    txoState:       TxoState = TxoState.UNSPENT
   ) = for {
     txos <- (utxoAlgebra
       .queryUtxo(
-        currentAddress, 
+        currentAddress,
         txoState
       )
       .attempt >>= {
@@ -134,7 +135,7 @@ object WaitingBTCOps {
         fromTemplate,
         None
       )
-      
+
       assetMintingStatement <- computeAssetMintingStatement(
         amount,
         currentAddress,

@@ -2,8 +2,6 @@ package org.plasmalabs.bridge.consensus.core.pbft.statemachine
 
 import cats.effect.kernel.{Async, Ref, Resource, Sync}
 import cats.effect.std.Queue
-import org.plasmalabs.bridge.consensus.core.pbft.statemachine.WaitingBTCOps.{startMintingProcess, getUtxos}
-import scala.concurrent.duration._
 import com.google.protobuf.ByteString
 import io.grpc.ManagedChannel
 import org.bitcoins.core.currency.{CurrencyUnit, Satoshis}
@@ -12,6 +10,7 @@ import org.plasmalabs.bridge.consensus.core.controllers.StartSessionController
 import org.plasmalabs.bridge.consensus.core.managers.WalletManagementUtils
 import org.plasmalabs.bridge.consensus.core.pbft.ViewManager
 import org.plasmalabs.bridge.consensus.core.pbft.statemachine.PBFTEvent
+import org.plasmalabs.bridge.consensus.core.pbft.statemachine.WaitingBTCOps.{getUtxos, startMintingProcess}
 import org.plasmalabs.bridge.consensus.core.{
   BitcoinNetworkIdentifiers,
   BridgeWalletManager,
@@ -71,21 +70,23 @@ import org.plasmalabs.sdk.dataApi.{
   WalletStateAlgebra
 }
 import org.plasmalabs.sdk.models.{GroupId, SeriesId}
+import org.plasmalabs.sdk.syntax.{int128AsBigInt, valueToQuantitySyntaxOps}
 import org.plasmalabs.sdk.utils.Encoding
 import org.plasmalabs.sdk.wallet.WalletApi
 import org.typelevel.log4cats.Logger
+import quivr.models.Int128
 import scodec.bits.ByteVector
 
 import java.security.{KeyPair => JKeyPair}
 import java.util.UUID
-import quivr.models.Int128
+import scala.concurrent.duration._
 
 case class StartMintingRequest(
- fellowship: Fellowship,
- template: Template,
- redeemAddress: String,
- amount: Int128,
- toplKeyPair: StrataKeypair
+  fellowship:    Fellowship,
+  template:      Template,
+  redeemAddress: String,
+  amount:        Int128,
+  toplKeyPair:   StrataKeypair
 )
 
 import java.util.concurrent.TimeUnit
@@ -150,10 +151,10 @@ object BridgeStateMachineExecutionManagerImpl {
         toplWalletSeedFile,
         toplWalletPassword
       )
-      state              <- Ref.of[F, Map[String, PBFTState]](Map.empty)
-      queue              <- Queue.unbounded[F, (Long, StateMachineRequest)]
+      state                    <- Ref.of[F, Map[String, PBFTState]](Map.empty)
+      queue                    <- Queue.unbounded[F, (Long, StateMachineRequest)]
       startMintingRequestQueue <- Queue.unbounded[F, StartMintingRequest]
-      elegibilityManager <- ExecutionElegibilityManagerImpl.make[F]()
+      elegibilityManager       <- ExecutionElegibilityManagerImpl.make[F]()
     } yield {
       implicit val toplKeypair = new StrataKeypair(tKeyPair)
       new BridgeStateMachineExecutionManager[F] {
@@ -177,90 +178,85 @@ object BridgeStateMachineExecutionManagerImpl {
             .evalMap(x => trace"Executing the request: ${x._2}" >> executeRequestF(x._1, x._2))
 
         def runMintingStream(): fs2.Stream[F, Unit] = fs2.Stream
-           .fromQueueUnterminated(startMintingRequestQueue)
-           .evalMap ( request => {
+          .fromQueueUnterminated(startMintingRequestQueue)
+          .evalMap(request =>
+            {
               import org.plasmalabs.indexer.services.TxoState
               implicit val toplKeypair = request.toplKeyPair
 
               for {
-               _ <- info"Processing minting request"
-               response <- startMintingProcess(
+                _ <- info"Processing minting request for fellowship ${request.fellowship}, template ${request.template}, redeem address ${request.redeemAddress} and amount ${int128AsBigInt(request.amount)}"
+                response <- startMintingProcess(
                   request.fellowship,
                   request.template,
                   request.redeemAddress,
                   request.amount
                 )
-              _ <- (for {
-                afterMintUtxos <- getUtxos(
-                  response._1,
-                  utxoAlgebra, 
-                  txoState = TxoState.SPENT
-                )
-                result <- verifyMintingSpent(response._2, afterMintUtxos)
-                _ <- info"Matching spent txos: ${result._1}"
-                _ <- Async[F].sleep(FiniteDuration(1, TimeUnit.SECONDS))
-              } yield result._1).iterateUntil(_ == true)
-             } yield ()
-           }
-             .handleErrorWith { error =>
-               error"Failed to process minting request: $error" >>
-               Async[F].unit
-             }
-           )
-          import org.plasmalabs.indexer.services.Txo
-          import org.plasmalabs.indexer.services.TxoState
-          
-          // TODO: UTXOs before mint can include more utxos then necessary, currently checked if all utxos match spent utxos
-          def verifyMintingSpent(beforeMintTxos: Seq[Txo], afterMintTxos: Seq[Txo]) = {
-
-            def safeSum(matchingSpent: Seq[Txo], predicate: Txo => Boolean): BigInt = {
-              val values = matchingSpent
-                .filter(predicate)
-                .map(txo => Option(txo.transactionOutput.value.getAsset.quantity))
-                .collect { case Some(quantity) if quantity.toString.nonEmpty => BigInt(quantity.toString) }
-              
-              if (values.isEmpty) BigInt(0)
-              else values.sum
+                unspentBefore = response._2.filter(_.state == TxoState.UNSPENT)
+                spentBefore = response._2.filter(_.state == TxoState.SPENT)
+                _ <- (for {
+                  afterMintUtxos <- getUtxos(
+                    response._1,
+                    utxoAlgebra,
+                    txoState = TxoState.SPENT
+                  )
+                  result <- verifyMintingSpent(unspentBefore, spentBefore, afterMintUtxos, request.amount)
+                  _      <- info"Matching spent txos: ${result._1}"
+                  _      <- Async[F].sleep(FiniteDuration(1, TimeUnit.SECONDS))
+                } yield result._1).iterateUntil(_ == true)
+              } yield ()
             }
+              .handleErrorWith { error =>
+                error"Failed to process minting request: $error" >>
+                Async[F].unit
+              }
+          )
 
-            for {
-              _ <- info"Verifying the Minting spent" 
-              // Get all spent and unspent UTXOs from before mint
-              unspentBefore = beforeMintTxos.filter(_.state == TxoState.UNSPENT)
-              spentBefore = beforeMintTxos.filter(_.state == TxoState.SPENT)
-            // filtering out the newly spent txos 
-             newlySpent = afterMintTxos.filter(spentTxo =>
+        import org.plasmalabs.indexer.services.Txo
+        import org.plasmalabs.indexer.services.TxoState
+
+        def verifyMintingSpent(
+          unspentBefore: Seq[Txo],
+          spentBefore:   Seq[Txo],
+          afterMintTxos: Seq[Txo],
+          amount:        Int128
+        ) =
+          for {
+            _ <- info"Verifying the Minting spent"
+            matchingSpent = afterMintTxos.filter(spentTxo =>
+              // TxoState should be SPENT
+              spentTxo.state == TxoState.SPENT &&
+              // should be newly spent
               !spentBefore.exists(previouslySpentTxo =>
-                spentTxo.outputAddress == previouslySpentTxo.outputAddress
-              ) &&
-              spentTxo.state == TxoState.SPENT
-            )
-
-            // we match newly spent to unspent before mint 
-             matchingSpent = newlySpent.filter(spentTxo => 
-              unspentBefore.exists(unspentTxo => 
-                spentTxo.outputAddress == unspentTxo.outputAddress &&
+                spentTxo.outputAddress.id == previouslySpentTxo.outputAddress.id
+              )
+              // was unspend before
+              && unspentBefore.exists(unspentTxo =>
+                spentTxo.transactionOutput == unspentTxo.transactionOutput &&
                 spentTxo.state == TxoState.SPENT
               )
             )
 
-            _ <- for {
-              _ <- info"Check matching Spent cumulative values"
-              valueGroup = safeSum(matchingSpent, ((txo) => txo.transactionOutput.value.value.isGroup)).handleErrorWith{e => error"Error happened checking conversion ${e.getMessage()}" >> Async[F].pure( 0)}
-              valueSeries = safeSum(matchingSpent, ((txo) => txo.transactionOutput.value.value.isSeries)).handleErrorWith{e => error"Error happened checking conversion ${e.getMessage()}" >> Async[F].pure( 0)}
-              valuedLvl = safeSum(matchingSpent, ((txo) => txo.transactionOutput.value.value.isLvl)).handleErrorWith{e => error"Error happened checking conversion ${e.getMessage()}" >> Async[F].pure(0)}
+            seriesSum = matchingSpent
+              .filter(_.transactionOutput.value.value.isSeries)
+              .map(v => int128AsBigInt(valueToQuantitySyntaxOps(v.transactionOutput.value.value).quantity))
+              .sum
+            groupSum = matchingSpent
+              .filter(_.transactionOutput.value.value.isGroup)
+              .map(v => int128AsBigInt(valueToQuantitySyntaxOps(v.transactionOutput.value.value).quantity))
+              .sum
+            lvlSum = matchingSpent
+              .filter(_.transactionOutput.value.value.isLvl)
+              .map(v => int128AsBigInt(valueToQuantitySyntaxOps(v.transactionOutput.value.value).quantity))
+              .sum
 
-              _ <- info"Cumulative values - Group: $valueGroup, Series: $valueSeries, Level: $valuedLvl"
-            } yield ()
-            
+            _ <-
+              info"Group Value: ${groupSum}, Series Value: ${seriesSum} and LVL Value: ${lvlSum} while Amount is ${int128AsBigInt(amount)}"
 
-            // these need the cumulation of values, currently only check if all necessary are there but not check if the values matched
-             spentHasGroup = matchingSpent.exists(_.transactionOutput.value.value.isGroup) 
-             spentHasSeries = matchingSpent.exists(_.transactionOutput.value.value.isSeries)
-             spentHasLvl = matchingSpent.exists(_.transactionOutput.value.value.isLvl)
-            } yield (spentHasGroup && spentHasSeries && spentHasLvl, matchingSpent)
-          }
-
+            spentHasGroup = matchingSpent.exists(_.transactionOutput.value.value.isGroup)
+            spentHasSeries = matchingSpent.exists(_.transactionOutput.value.value.isSeries)
+            spentHasLvl = matchingSpent.exists(_.transactionOutput.value.value.isLvl)
+          } yield (spentHasGroup && spentHasSeries && spentHasLvl, matchingSpent)
 
         private def startSession(
           clientNumber: Int,
@@ -442,25 +438,25 @@ object BridgeStateMachineExecutionManagerImpl {
                 )
                 currentPrimary <- viewManager.currentPrimary
                 _ <- someSessionInfo
-                 .flatMap(sessionInfo =>
-                   if (currentPrimary == replica.id)
-                     MiscUtils.sessionInfoPeginPrism
-                       .getOption(sessionInfo)
-                       .map(
-                         peginSessionInfo =>
-                           startMintingRequestQueue.offer(
-                             StartMintingRequest(
-                               defaultFromFellowship,
-                                defaultFromTemplate,
-                               peginSessionInfo.redeemAddress,
-                               BigInt(value.amount.toByteArray()),
-                               toplKeypair)
-                             )
-                         )
-                   else None
-                 )
-                 .getOrElse(Sync[F].unit)
-             } yield Result.Empty
+                  .flatMap(sessionInfo =>
+                    if (currentPrimary == replica.id)
+                      MiscUtils.sessionInfoPeginPrism
+                        .getOption(sessionInfo)
+                        .map(peginSessionInfo =>
+                          startMintingRequestQueue.offer(
+                            StartMintingRequest(
+                              defaultFromFellowship,
+                              defaultFromTemplate,
+                              peginSessionInfo.redeemAddress,
+                              BigInt(value.amount.toByteArray()),
+                              toplKeypair
+                            )
+                          )
+                        )
+                    else None
+                  )
+                  .getOrElse(Sync[F].unit)
+              } yield Result.Empty
             case TimeoutDepositBTC(value) =>
               trace"handling TimeoutDepositBTC ${value.sessionId}" >> state.update(_ - (value.sessionId)) >>
               sessionManager.removeSession(
