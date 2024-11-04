@@ -185,7 +185,7 @@ object BridgeStateMachineExecutionManagerImpl {
               implicit val toplKeypair = request.toplKeyPair
 
               for {
-                _ <- info"Processing minting request for fellowship ${request.fellowship}, template ${request.template}, redeem address ${request.redeemAddress} and amount ${int128AsBigInt(request.amount)}"
+                _ <- info"Processing minting request amount ${int128AsBigInt(request.amount)}"
                 response <- startMintingProcess(
                   request.fellowship,
                   request.template,
@@ -204,6 +204,7 @@ object BridgeStateMachineExecutionManagerImpl {
                   _      <- info"Matching spent txos: ${result._1}"
                   _      <- Async[F].sleep(FiniteDuration(1, TimeUnit.SECONDS))
                 } yield result._1).iterateUntil(_ == true)
+                _ <- info"Processing minting successful, continue with next Request"
               } yield ()
             }
               .handleErrorWith { error =>
@@ -223,20 +224,45 @@ object BridgeStateMachineExecutionManagerImpl {
         ) =
           for {
             _ <- info"Verifying the Minting spent"
-            matchingSpent = afterMintTxos.filter(spentTxo =>
+            matchingSpent = afterMintTxos.filter(txo =>
               // TxoState should be SPENT
-              spentTxo.state == TxoState.SPENT &&
+              txo.state == TxoState.SPENT &&
               // should be newly spent
               !spentBefore.exists(previouslySpentTxo =>
-                spentTxo.outputAddress.id == previouslySpentTxo.outputAddress.id
+                txo.outputAddress.id == previouslySpentTxo.outputAddress.id
               )
               // was unspend before
               && unspentBefore.exists(unspentTxo =>
-                spentTxo.transactionOutput == unspentTxo.transactionOutput &&
-                spentTxo.state == TxoState.SPENT
+                txo.transactionOutput == unspentTxo.transactionOutput &&
+                txo.state == TxoState.SPENT
               )
-            )
-
+              && txo.spender.exists { spender =>
+                spender.input.attestation.value.predicate
+                  .exists { predicate =>
+                    predicate.responses
+                      .find(_.value.isDigitalSignature)
+                      .flatMap(_.value.digitalSignature)
+                      .exists { dSig => // TODO: compare with witness 
+                        println(s"I found a digital signature with the byte string ${dSig.witness.value}")
+                        true
+                      }
+                  }
+              }
+              // Bridge is Witness TODO: where to get pubkey of bridge
+              && (txo.spender.exists { s =>
+                  s.input.attestation.value.predicate.exists { predicate =>
+                    predicate.lock.challenges
+                      .find(_.proposition.isRevealed)
+                      .flatMap(_.proposition.revealed)
+                      .flatMap(_.value.digitalSignature)
+                      .flatMap(_.verificationKey.vk.extendedEd25519)
+                      .exists { key =>
+                        println(s"I found a verification key ${key.vk.value}")
+                        true
+                      }
+                  }
+                })    
+              )           
             seriesSum = matchingSpent
               .filter(_.transactionOutput.value.value.isSeries)
               .map(v => int128AsBigInt(valueToQuantitySyntaxOps(v.transactionOutput.value.value).quantity))
