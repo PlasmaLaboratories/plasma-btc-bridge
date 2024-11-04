@@ -7,6 +7,7 @@ import io.grpc.ManagedChannel
 import org.bitcoins.core.currency.{CurrencyUnit, Satoshis}
 import org.bitcoins.rpc.client.common.BitcoindRpcClient
 import org.plasmalabs.bridge.consensus.core.controllers.StartSessionController
+import org.plasmalabs.bridge.consensus.core.managers.WalletApiHelpers.{getChangeLockPredicate, getCurrentIndices}
 import org.plasmalabs.bridge.consensus.core.managers.WalletManagementUtils
 import org.plasmalabs.bridge.consensus.core.pbft.ViewManager
 import org.plasmalabs.bridge.consensus.core.pbft.statemachine.PBFTEvent
@@ -69,7 +70,7 @@ import org.plasmalabs.sdk.dataApi.{
   TemplateStorageAlgebra,
   WalletStateAlgebra
 }
-import org.plasmalabs.sdk.models.{GroupId, SeriesId}
+import org.plasmalabs.sdk.models.{GroupId, LockAddress, SeriesId}
 import org.plasmalabs.sdk.syntax.{int128AsBigInt, valueToQuantitySyntaxOps}
 import org.plasmalabs.sdk.utils.Encoding
 import org.plasmalabs.sdk.wallet.WalletApi
@@ -88,8 +89,6 @@ case class StartMintingRequest(
   amount:        Int128,
   toplKeyPair:   StrataKeypair
 )
-
-import java.util.concurrent.TimeUnit
 
 trait BridgeStateMachineExecutionManager[F[_]] {
 
@@ -181,7 +180,6 @@ object BridgeStateMachineExecutionManagerImpl {
           .fromQueueUnterminated(startMintingRequestQueue)
           .evalMap(request =>
             {
-              import org.plasmalabs.indexer.services.TxoState
               implicit val toplKeypair = request.toplKeyPair
 
               for {
@@ -192,18 +190,41 @@ object BridgeStateMachineExecutionManagerImpl {
                   request.redeemAddress,
                   request.amount
                 )
-                unspentBefore = response._2.filter(_.state == TxoState.UNSPENT)
-                spentBefore = response._2.filter(_.state == TxoState.SPENT)
-                _ <- (for {
-                  afterMintUtxos <- getUtxos(
-                    response._1,
-                    utxoAlgebra,
-                    txoState = TxoState.SPENT
+                unspentPlasmaBeforeMint = response._2.filter((txo) =>
+                  txo.transactionOutput.value.value.isGroup || txo.transactionOutput.value.value.isSeries || txo.transactionOutput.value.value.isLvl
+                )
+                changeLock <- for {
+                  someNextIndices <- getCurrentIndices(request.fellowship, request.template, None)
+                  changeLock <- getChangeLockPredicate[F](
+                    someNextIndices,
+                    request.fellowship,
+                    request.template
                   )
-                  result <- verifyMintingSpent(unspentBefore, spentBefore, afterMintUtxos, request.amount)
-                  _      <- info"Matching spent txos: ${result._1}"
-                  _      <- Async[F].sleep(FiniteDuration(1, TimeUnit.SECONDS))
-                } yield result._1).iterateUntil(_ == true)
+                } yield (changeLock)
+
+                lockForChange = changeLock match {
+                  case Some(lock) => lock
+                  case None       => throw new RuntimeException("changeLock is None, unable to get address")
+                }
+                changeAddress <- tba.lockAddress(
+                  lockForChange
+                )
+
+                groupValueToArrive = unspentPlasmaBeforeMint
+                  .filter(_.transactionOutput.value.value.isGroup)
+                  .map(txo => int128AsBigInt(valueToQuantitySyntaxOps(txo.transactionOutput.value.value).quantity))
+                  .sum
+                seriesValueToArrive = unspentPlasmaBeforeMint
+                  .filter(_.transactionOutput.value.value.isSeries)
+                  .map(txo => int128AsBigInt(valueToQuantitySyntaxOps(txo.transactionOutput.value.value).quantity))
+                  .sum
+
+                _ <- (for {
+                  mintingSuccessful <- verifyMintingSpent(unspentPlasmaBeforeMint, response._1, changeAddress, groupValueToArrive, seriesValueToArrive).handleErrorWith{
+                    e => error"Something went wrong verifying the mint: ${e.getMessage}" >> Async[F].pure(false)
+                  }
+                  _                 <- Async[F].sleep(1.second)
+                } yield mintingSuccessful).iterateUntil(_ == true)
                 _ <- info"Processing minting successful, continue with next Request"
               } yield ()
             }
@@ -217,72 +238,47 @@ object BridgeStateMachineExecutionManagerImpl {
         import org.plasmalabs.indexer.services.TxoState
 
         def verifyMintingSpent(
-          unspentBefore: Seq[Txo],
-          spentBefore:   Seq[Txo],
-          afterMintTxos: Seq[Txo],
-          amount:        Int128
-        ) =
+          unspentPlasmaBeforeMint: Seq[Txo],
+          currentAddress:          LockAddress,
+          changeAddress:           LockAddress, 
+          groupValueToArrive: BigInt,
+          seriesValueToArrive: BigInt,
+        ): F[Boolean] =
           for {
-            _ <- info"Verifying the Minting spent"
-            matchingSpent = afterMintTxos.filter(txo =>
-              // TxoState should be SPENT
-              txo.state == TxoState.SPENT &&
-              // should be newly spent
-              !spentBefore.exists(previouslySpentTxo =>
-                txo.outputAddress.id == previouslySpentTxo.outputAddress.id
-              )
-              // was unspend before
-              && unspentBefore.exists(unspentTxo =>
-                txo.transactionOutput == unspentTxo.transactionOutput &&
-                txo.state == TxoState.SPENT
-              )
-              && txo.spender.exists { spender =>
-                spender.input.attestation.value.predicate
-                  .exists { predicate =>
-                    predicate.responses
-                      .find(_.value.isDigitalSignature)
-                      .flatMap(_.value.digitalSignature)
-                      .exists { dSig => // TODO: compare with witness 
-                        println(s"I found a digital signature with the byte string ${dSig.witness.value}")
-                        true
-                      }
-                  }
-              }
-              // Bridge is Witness TODO: where to get pubkey of bridge
-              && (txo.spender.exists { s =>
-                  s.input.attestation.value.predicate.exists { predicate =>
-                    predicate.lock.challenges
-                      .find(_.proposition.isRevealed)
-                      .flatMap(_.proposition.revealed)
-                      .flatMap(_.value.digitalSignature)
-                      .flatMap(_.verificationKey.vk.extendedEd25519)
-                      .exists { key =>
-                        println(s"I found a verification key ${key.vk.value}")
-                        true
-                      }
-                  }
-                })    
-              )           
-            seriesSum = matchingSpent
-              .filter(_.transactionOutput.value.value.isSeries)
-              .map(v => int128AsBigInt(valueToQuantitySyntaxOps(v.transactionOutput.value.value).quantity))
-              .sum
-            groupSum = matchingSpent
+            _ <- debug"Trying to get utxos for the current address ${currentAddress}"
+
+            // get all spent
+            spentTxos <- getUtxos(
+              currentAddress,
+              utxoAlgebra,
+              TxoState.SPENT
+            )
+            // for all unspent before there should exist a spent txo
+            spentPlasmaUtxos = spentTxos.filter(spentTxo =>
+              unspentPlasmaBeforeMint.exists(unspentTxo => unspentTxo.outputAddress.id == spentTxo.outputAddress.id)
+            )
+
+            // funds are at change address
+            _ <- debug"Trying to get utxos for the change address ${changeAddress}"
+
+            arrivedUtxos <- getUtxos(
+              changeAddress,
+              utxoAlgebra,
+              TxoState.UNSPENT
+            )
+
+            groupSumArrived = arrivedUtxos
               .filter(_.transactionOutput.value.value.isGroup)
-              .map(v => int128AsBigInt(valueToQuantitySyntaxOps(v.transactionOutput.value.value).quantity))
+              .map(txo => int128AsBigInt(valueToQuantitySyntaxOps(txo.transactionOutput.value.value).quantity))
               .sum
-            lvlSum = matchingSpent
-              .filter(_.transactionOutput.value.value.isLvl)
-              .map(v => int128AsBigInt(valueToQuantitySyntaxOps(v.transactionOutput.value.value).quantity))
+            seriesSumArrived = arrivedUtxos
+              .filter(_.transactionOutput.value.value.isSeries)
+              .map(txo => int128AsBigInt(valueToQuantitySyntaxOps(txo.transactionOutput.value.value).quantity))
               .sum
 
             _ <-
-              info"Group Value: ${groupSum}, Series Value: ${seriesSum} and LVL Value: ${lvlSum} while Amount is ${int128AsBigInt(amount)}"
-
-            spentHasGroup = matchingSpent.exists(_.transactionOutput.value.value.isGroup)
-            spentHasSeries = matchingSpent.exists(_.transactionOutput.value.value.isSeries)
-            spentHasLvl = matchingSpent.exists(_.transactionOutput.value.value.isLvl)
-          } yield (spentHasGroup && spentHasSeries && spentHasLvl, matchingSpent)
+              info"The following funds arrived at the change address: Group ${groupSumArrived}, Series ${seriesSumArrived}"
+          } yield (spentPlasmaUtxos.length == unspentPlasmaBeforeMint.length && seriesSumArrived == seriesValueToArrive && groupSumArrived == groupValueToArrive)
 
         private def startSession(
           clientNumber: Int,

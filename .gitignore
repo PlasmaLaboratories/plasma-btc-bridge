@@ -30,6 +30,9 @@ integration/seriesPolicy.yaml
 integration/user-wallet-mnemonic*.txt
 integration/user-wallet*.db
 integration/user-wallet*.json
+integration/plasma-wallet*.db
+integration/user-wallet*.json
+integration/plasma-wallet*.json
 integration/node01/
 integration/node02/
 integration/clientConfig*.conf
