@@ -79,7 +79,6 @@ import scodec.bits.ByteVector
 import java.security.{KeyPair => JKeyPair}
 import java.util.UUID
 import quivr.models.Int128
-import org.plasmalabs.sdk.models.transaction.UnspentTransactionOutput
 
 case class StartMintingRequest(
  fellowship: Fellowship,
@@ -90,9 +89,6 @@ case class StartMintingRequest(
 )
 
 import java.util.concurrent.TimeUnit
-import org.plasmalabs.sdk.syntax.{LvlType, int128AsBigInt, valueToQuantitySyntaxOps, valueToTypeIdentifierSyntaxOps}
-
-
 
 trait BridgeStateMachineExecutionManager[F[_]] {
 
