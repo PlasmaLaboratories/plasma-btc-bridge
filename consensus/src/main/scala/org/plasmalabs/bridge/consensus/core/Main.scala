@@ -16,6 +16,8 @@ import org.plasmalabs.bridge.consensus.core.modules.AppModule
 import org.plasmalabs.bridge.consensus.core.utils.KeyGenerationUtils
 import org.plasmalabs.bridge.consensus.core.{
   ConsensusParamsDescriptor,
+  PBFTInternalGrpcServiceClient,
+  PBFTInternalGrpcServiceClientImpl,
   PlasmaBTCBridgeConsensusParamConfig,
   ServerConfig
 }
@@ -40,7 +42,6 @@ import org.plasmalabs.bridge.shared.{
   StateMachineServiceGrpcClientImpl,
   StateMachineServiceGrpcClientRetryConfig
 }
-import org.plasmalabs.bridge.consensus.core.{PBFTInternalGrpcServiceClient, PBFTInternalGrpcServiceClientImpl}
 import org.plasmalabs.sdk.dataApi.NodeQueryAlgebra
 import org.plasmalabs.sdk.models.{GroupId, SeriesId}
 import org.plasmalabs.sdk.utils.Encoding

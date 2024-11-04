@@ -5,7 +5,7 @@ import cats.effect.kernel.Sync
 import com.google.protobuf.ByteString
 import io.grpc.Metadata
 import org.plasmalabs.bridge.consensus.core.pbft.{RequestIdentifier, RequestTimerManager, ViewManager}
-import org.plasmalabs.bridge.consensus.core.{LastReplyMap, PublicApiClientGrpcMap}
+import org.plasmalabs.bridge.consensus.core.{LastReplyMap, PBFTInternalGrpcServiceClient, PublicApiClientGrpcMap}
 import org.plasmalabs.bridge.consensus.pbft.PrePrepareRequest
 import org.plasmalabs.bridge.consensus.service.MintingStatusReply.{Result => MSReply}
 import org.plasmalabs.bridge.consensus.service.{
@@ -26,7 +26,6 @@ import org.plasmalabs.bridge.shared.{
   ReplicaId,
   StateMachineRequest
 }
-import org.plasmalabs.bridge.consensus.core.PBFTInternalGrpcServiceClient
 import org.typelevel.log4cats.Logger
 
 import java.security.{KeyPair => JKeyPair, MessageDigest}

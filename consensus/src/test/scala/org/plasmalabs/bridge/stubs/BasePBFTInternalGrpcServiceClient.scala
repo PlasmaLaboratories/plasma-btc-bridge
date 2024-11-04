@@ -1,6 +1,7 @@
 package org.plasmalabs.bridge.stubs
 
 import cats.effect.IO
+import org.plasmalabs.bridge.consensus.core.PBFTInternalGrpcServiceClient
 import org.plasmalabs.bridge.consensus.pbft.{
   CheckpointRequest,
   CommitRequest,
@@ -10,7 +11,6 @@ import org.plasmalabs.bridge.consensus.pbft.{
   ViewChangeRequest
 }
 import org.plasmalabs.bridge.shared.Empty
-import org.plasmalabs.bridge.consensus.core.PBFTInternalGrpcServiceClient
 
 class BasePBFTInternalGrpcServiceClient extends PBFTInternalGrpcServiceClient[IO] {
 

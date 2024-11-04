@@ -18,6 +18,7 @@ import org.plasmalabs.bridge.consensus.core.{
   CurrentPlasmaHeightRef,
   Fellowship,
   LastReplyMap,
+  PBFTInternalGrpcServiceClient,
   PeginWalletManager,
   PlasmaKeypair,
   PublicApiClientGrpcMap,
@@ -60,7 +61,6 @@ import org.plasmalabs.bridge.shared.{
   StartSessionOperation,
   StateMachineRequest
 }
-import org.plasmalabs.bridge.consensus.core.PBFTInternalGrpcServiceClient
 import org.plasmalabs.sdk.builders.TransactionBuilderApi
 import org.plasmalabs.sdk.dataApi.{
   FellowshipStorageAlgebra,

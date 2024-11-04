@@ -1,10 +1,10 @@
 package org.plasmalabs.bridge.consensus.core.pbft
 
 import cats.effect.kernel.{Async, Ref}
+import org.plasmalabs.bridge.consensus.core.PBFTInternalGrpcServiceClient
 import org.plasmalabs.bridge.consensus.pbft.{NewViewRequest, Pm, PrePrepareRequest, ViewChangeRequest}
 import org.plasmalabs.bridge.consensus.shared.persistence.StorageApi
 import org.plasmalabs.bridge.shared.{ReplicaCount, ReplicaId}
-import org.plasmalabs.bridge.consensus.core.PBFTInternalGrpcServiceClient
 
 trait ViewManager[F[_]] {
 

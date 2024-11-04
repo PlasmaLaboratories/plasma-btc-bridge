@@ -21,7 +21,7 @@ object BlockProcessor {
   def process[F[_]](
     initialBTCHeight:    Int,
     initialPlasmaHeight: Long
-  ): Either[BitcoinBlockSync, NodeMonitor.NodeBlockSync] => fs2.Stream[
+  ): Either[BitcoinBlockSync, NodeBlockSync] => fs2.Stream[
     F,
     BlockchainEvent
   ] = {
