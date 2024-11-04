@@ -71,7 +71,7 @@ ${clientsConfString(replicaCount)}
 |         retryPolicy =  {
 |           # in seconds
 |           initialDelay = 1
-|           maxRetries = 1
+|           maxRetries = 0
 |           delayMultiplier = 1
 |         }
 |       }
@@ -81,7 +81,7 @@ ${clientsConfString(replicaCount)}
 |         # in seconds
 |         initialDelay = 1 
 |         # in seconds
-|         maxRetries = 1
+|         maxRetries = 0
 |         delayMultiplier = 1
 |       }
 |     }
