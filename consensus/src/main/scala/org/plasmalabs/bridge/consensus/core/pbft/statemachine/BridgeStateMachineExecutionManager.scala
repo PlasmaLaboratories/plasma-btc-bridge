@@ -196,7 +196,7 @@ object BridgeStateMachineExecutionManagerImpl {
                   utxoAlgebra, 
                   txoState = TxoState.SPENT
                 )
-                result <- verifyMintingSpent(response._2, afterMintUtxos).handleErrorWith{ e => error"Error happened checking conversion ${e.getMessage()}" >> Async[F].pure((false, Seq()))}
+                result <- verifyMintingSpent(response._2, afterMintUtxos)
                 _ <- info"Matching spent txos: ${result._1}"
                 _ <- Async[F].sleep(FiniteDuration(1, TimeUnit.SECONDS))
               } yield result._1).iterateUntil(_ == true)
@@ -246,9 +246,9 @@ object BridgeStateMachineExecutionManagerImpl {
 
             _ <- for {
               _ <- info"Check matching Spent cumulative values"
-              valueGroup = safeSum(matchingSpent, ((txo) => txo.transactionOutput.value.value.isGroup))
-              valueSeries = safeSum(matchingSpent, ((txo) => txo.transactionOutput.value.value.isSeries))
-              valuedLvl = safeSum(matchingSpent, ((txo) => txo.transactionOutput.value.value.isLvl))
+              valueGroup = safeSum(matchingSpent, ((txo) => txo.transactionOutput.value.value.isGroup)).handleErrorWith{e => error"Error happened checking conversion ${e.getMessage()}" >> Async[F].pure( 0)}
+              valueSeries = safeSum(matchingSpent, ((txo) => txo.transactionOutput.value.value.isSeries)).handleErrorWith{e => error"Error happened checking conversion ${e.getMessage()}" >> Async[F].pure( 0)}
+              valuedLvl = safeSum(matchingSpent, ((txo) => txo.transactionOutput.value.value.isLvl)).handleErrorWith{e => error"Error happened checking conversion ${e.getMessage()}" >> Async[F].pure(0)}
 
               _ <- info"Cumulative values - Group: $valueGroup, Series: $valueSeries, Level: $valuedLvl"
             } yield ()
