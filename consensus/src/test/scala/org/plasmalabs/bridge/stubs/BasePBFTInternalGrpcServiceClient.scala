@@ -10,7 +10,7 @@ import org.plasmalabs.bridge.consensus.pbft.{
   ViewChangeRequest
 }
 import org.plasmalabs.bridge.shared.Empty
-import org.plasmalabs.consensus.core.PBFTInternalGrpcServiceClient
+import org.plasmalabs.bridge.consensus.core.PBFTInternalGrpcServiceClient
 
 class BasePBFTInternalGrpcServiceClient extends PBFTInternalGrpcServiceClient[IO] {
 

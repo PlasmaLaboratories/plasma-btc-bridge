@@ -60,7 +60,7 @@ import org.plasmalabs.bridge.shared.{
   StartSessionOperation,
   StateMachineRequest
 }
-import org.plasmalabs.consensus.core.PBFTInternalGrpcServiceClient
+import org.plasmalabs.bridge.consensus.core.PBFTInternalGrpcServiceClient
 import org.plasmalabs.sdk.builders.TransactionBuilderApi
 import org.plasmalabs.sdk.dataApi.{
   FellowshipStorageAlgebra,

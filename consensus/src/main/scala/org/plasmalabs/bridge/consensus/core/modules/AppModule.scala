@@ -47,7 +47,7 @@ import org.plasmalabs.bridge.consensus.shared.{
 }
 import org.plasmalabs.bridge.consensus.subsystems.monitor.{MonitorStateMachine, SessionEvent, SessionManagerImpl}
 import org.plasmalabs.bridge.shared.{ClientId, ReplicaCount, ReplicaId, StateMachineServiceGrpcClient}
-import org.plasmalabs.consensus.core.PBFTInternalGrpcServiceClient
+import org.plasmalabs.bridge.consensus.core.PBFTInternalGrpcServiceClient
 import org.plasmalabs.sdk.builders.TransactionBuilderApi
 import org.plasmalabs.sdk.constants.NetworkConstants
 import org.plasmalabs.sdk.dataApi.IndexerQueryAlgebra

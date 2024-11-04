@@ -26,7 +26,7 @@ import org.plasmalabs.bridge.shared.{
   ReplicaId,
   StateMachineRequest
 }
-import org.plasmalabs.consensus.core.PBFTInternalGrpcServiceClient
+import org.plasmalabs.bridge.consensus.core.PBFTInternalGrpcServiceClient
 import org.typelevel.log4cats.Logger
 
 import java.security.{KeyPair => JKeyPair, MessageDigest}

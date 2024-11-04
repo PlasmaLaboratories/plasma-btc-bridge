@@ -1,4 +1,4 @@
-package org.plasmalabs.consensus.core
+package org.plasmalabs.bridge.consensus.core
 
 import cats.Parallel
 import cats.effect.kernel.Async

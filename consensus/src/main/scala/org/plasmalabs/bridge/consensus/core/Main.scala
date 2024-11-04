@@ -40,7 +40,7 @@ import org.plasmalabs.bridge.shared.{
   StateMachineServiceGrpcClientImpl,
   StateMachineServiceGrpcClientRetryConfig
 }
-import org.plasmalabs.consensus.core.{PBFTInternalGrpcServiceClient, PBFTInternalGrpcServiceClientImpl}
+import org.plasmalabs.bridge.consensus.core.{PBFTInternalGrpcServiceClient, PBFTInternalGrpcServiceClientImpl}
 import org.plasmalabs.sdk.dataApi.NodeQueryAlgebra
 import org.plasmalabs.sdk.models.{GroupId, SeriesId}
 import org.plasmalabs.sdk.utils.Encoding

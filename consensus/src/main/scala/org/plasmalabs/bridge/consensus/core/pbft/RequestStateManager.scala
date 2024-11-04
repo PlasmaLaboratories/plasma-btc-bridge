@@ -5,7 +5,7 @@ import cats.effect.std.Queue
 import org.plasmalabs.bridge.consensus.core.pbft.statemachine.BridgeStateMachineExecutionManager
 import org.plasmalabs.bridge.consensus.pbft.{CommitRequest, PrePrepareRequest, PrepareRequest}
 import org.plasmalabs.bridge.shared.{ClientId, ReplicaId, StateMachineRequest}
-import org.plasmalabs.consensus.core.PBFTInternalGrpcServiceClient
+import org.plasmalabs.bridge.consensus.core.PBFTInternalGrpcServiceClient
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
 
