@@ -213,6 +213,15 @@ lazy val integration = (project in file("integration"))
     libraryDependencies ++= Dependencies.plasmaBtcBridge.consensus ++ Dependencies.plasmaBtcBridge.publicApi ++ Dependencies.plasmaBtcBridge.shared ++ Dependencies.plasmaBtcBridge.test
   )
 
+lazy val `integration-monitor` = (project in file("integration-monitor"))
+  .dependsOn(consensus, plasmaBtcCli) // your current subproject
+  .settings(
+    publish / skip := true,
+    commonSettings,
+    libraryDependencies ++= Dependencies.plasmaBtcBridge.consensus ++ Dependencies.plasmaBtcBridge.shared ++ Dependencies.plasmaBtcBridge.test
+  )
+
+
 lazy val root = project
   .in(file("."))
   .settings(

@@ -1,4 +1,4 @@
-package org.plasmalabs.bridge.consensus.monitor
+package org.plasmalabs.bridge.consensus.subsystems.monitor
 
 import cats.effect.IO
 import cats.effect.kernel.Async

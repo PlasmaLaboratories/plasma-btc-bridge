@@ -1,30 +1,41 @@
 name: Check and Deploy
 on:
   workflow_call:
+    inputs:
+      target-os:
+        description: "List of operating systems to build on."
+        default: '["ubuntu-latest"]'
+        required: false
+        type: string
+      java-versions:
+        description: "List of Java versions to target."
+        default: '["11"]'
+        required: false
+        type: string
 
 jobs:
   unit-test:
     name: Run Unit Tests
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    - uses: actions/setup-java@v4
-      with:
-        distribution: temurin
-        java-version: "21"
-        cache: sbt
-    - uses: sbt/setup-sbt@v1
-    - name: Check formatting
-      run: sbt checkFormat
-    - name: Run unit tests
-      run: sbt coverage test
-    - uses: actions/upload-artifact@v3
-      with:
-        name: unit-test-reports
-        path: consensus/target/test-reports/
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: sbt
+      - uses: sbt/setup-sbt@v1
+      - name: Check formatting
+        run: sbt checkFormat
+      - name: Run unit tests
+        run: sbt coverage test
+      - uses: actions/upload-artifact@v3
+        with:
+          name: unit-test-reports
+          path: consensus/target/test-reports/
   integration-test:
     name: Run Integration Tests
     runs-on: ubuntu-latest
@@ -35,140 +46,200 @@ jobs:
         image: stratalab/bitcoin-zmq:v25-regtest
         #
         ports:
-        - 18444:18444
-        - 18443:18443
-        - 28332:28332
+          - 18444:18444
+          - 18443:18443
+          - 28332:28332
         options: --name bitcoin01
       bitcoin02:
         # Docker Hub image
         image: stratalab/bitcoin-zmq:v25-regtest
         #
         ports:
-        - 18446:18444
-        - 18445:18443
-        - 28333:28332
+          - 18446:18444
+          - 18445:18443
+          - 28333:28332
         options: --name bitcoin02
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v4
-      with:
-        fetch-depth: 0
-    - uses: actions/setup-java@v4
-      with:
-        distribution: temurin
-        java-version: "21"
-        cache: sbt
-    - uses: sbt/setup-sbt@v1
-    - name: Prepare wallet
-      run: |
-        pwd
-        mkdir ${{ github.workspace }}/node01
-        echo "node:" > node01/config.yaml 
-        echo "  big-bang:" >> node01/config.yaml
-        echo "    staker-count: 2" >> node01/config.yaml
-        echo "    local-staker-index: 0" >> node01/config.yaml
-        echo "    timestamp: 0" >> node01/config.yaml
-        echo "    regtest-enabled: true" >> node01/config.yaml
-        echo "    stakes: [10000, 10000]" >> node01/config.yaml
-        docker network ls
-        export BRIDGE=`docker network ls | head -3 | tail -1 | awk -e '{print $2}'`
-        echo "BRIDGE=$BRIDGE" >> $GITHUB_ENV
-        echo "BRIDGE NETWORK: $BRIDGE"
-        export NODE_01=`docker run --rm -d --network=$BRIDGE --name node01 -p 9085:9085 -p 9084:9084 -p 9091:9091 -v ${{ github.workspace }}/node01:/staking:rw stratalab/plasma-node-tooling:0.1.0 --  --config  /staking/config.yaml --regtest`
-        echo "NODE_01=$NODE_01" >> $GITHUB_ENV
-        echo "Node01 container id: $NODE_01"
-        curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz" | gzip -d > cs
-        chmod +x cs
-        ./cs setup --yes
-        shopt -s expand_aliases
-        mkdir ${{ github.workspace }}/data
-        alias plasma-cli="./cs launch -r https://s01.oss.sonatype.org/content/repositories/releases org.plasmalabs:plasma-cli_2.13:0.1.0 -- "
-        plasma-cli node-query mint-block --nb-blocks 1 -h localhost  --port 9084 -s false
-        export PLASMA_WALLET_DB=${{ github.workspace }}/data/plasma-wallet.db
-        export PLASMA_WALLET_JSON=${{ github.workspace }}/data/plasma-wallet.json
-        export PLASMA_WALLET_MNEMONIC=${{ github.workspace }}/data/plasma-mnemonic.txt
-        export PLASMA_WALLET_PASSWORD=password
-        plasma-cli wallet init --network private --password password --newwalletdb $PLASMA_WALLET_DB --mnemonicfile $PLASMA_WALLET_MNEMONIC --output $PLASMA_WALLET_JSON
-        export ADDRESS=$(plasma-cli wallet current-address --walletdb $PLASMA_WALLET_DB)
-        plasma-cli simple-transaction create --from-fellowship nofellowship --from-template genesis --from-interaction 1 --change-fellowship nofellowship --change-template genesis --change-interaction 1  -t $ADDRESS -w $PLASMA_WALLET_PASSWORD -o genesisTx.pbuf -n private -a 1000 -h  127.0.0.1 --port 9084 --keyfile $PLASMA_WALLET_JSON --walletdb $PLASMA_WALLET_DB --fee 10 --transfer-token lvl
-        plasma-cli tx prove -i genesisTx.pbuf --walletdb $PLASMA_WALLET_DB --keyfile $PLASMA_WALLET_JSON -w $PLASMA_WALLET_PASSWORD -o genesisTxProved.pbuf
-        export GROUP_UTXO=$(plasma-cli tx broadcast -i genesisTxProved.pbuf -h 127.0.0.1 --port 9084)
-        plasma-cli node-query mint-block --nb-blocks 1 -h localhost  --port 9084 -s false
-        echo "GROUP_UTXO: $GROUP_UTXO"
-        until plasma-cli indexer-query utxo-by-address --host localhost --port 9084 --secure false --walletdb $PLASMA_WALLET_DB; do sleep 5; done
-        echo "label: PlasmaBTCGroup" > groupPolicy.yaml
-        echo "registrationUtxo: $GROUP_UTXO#0" >> groupPolicy.yaml
-        plasma-cli simple-minting create --from-fellowship self --from-template default  -h 127.0.0.1 --port 9084 -n private --keyfile $PLASMA_WALLET_JSON -w $PLASMA_WALLET_PASSWORD -o groupMintingtx.pbuf -i groupPolicy.yaml  --mint-amount 1 --fee 10 --walletdb $PLASMA_WALLET_DB --mint-token group
-        plasma-cli tx prove -i groupMintingtx.pbuf --walletdb $PLASMA_WALLET_DB --keyfile $PLASMA_WALLET_JSON -w $PLASMA_WALLET_PASSWORD -o groupMintingtxProved.pbuf
-        export SERIES_UTXO=$(plasma-cli tx broadcast -i groupMintingtxProved.pbuf -h 127.0.0.1 --port 9084)
-        echo "SERIES_UTXO: $SERIES_UTXO"
-        plasma-cli node-query mint-block --nb-blocks 1 -h localhost  --port 9084 -s false
-        until plasma-cli indexer-query utxo-by-address --host localhost --port 9084 --secure false --walletdb $PLASMA_WALLET_DB; do sleep 5; done
-        echo "label: PlasmaBTCSeries" > seriesPolicy.yaml
-        echo "registrationUtxo: $SERIES_UTXO#0" >> seriesPolicy.yaml
-        echo "fungibility: group-and-series" >> seriesPolicy.yaml
-        echo "quantityDescriptor: liquid" >> seriesPolicy.yaml
-        plasma-cli simple-minting create --from-fellowship self --from-template default  -h localhost --port 9084 -n private --keyfile $PLASMA_WALLET_JSON -w $PLASMA_WALLET_PASSWORD -o seriesMintingTx.pbuf -i seriesPolicy.yaml  --mint-amount 1 --fee 10 --walletdb $PLASMA_WALLET_DB --mint-token series
-        plasma-cli tx prove -i seriesMintingTx.pbuf --walletdb $PLASMA_WALLET_DB --keyfile $PLASMA_WALLET_JSON -w $PLASMA_WALLET_PASSWORD -o seriesMintingTxProved.pbuf
-        export ASSET_UTXO=$(plasma-cli tx broadcast -i seriesMintingTxProved.pbuf -h 127.0.0.1 --port 9084)
-        echo "ASSET_UTXO: $ASSET_UTXO"
-        plasma-cli node-query mint-block --nb-blocks 1 -h localhost  --port 9084 -s false
-        until plasma-cli indexer-query utxo-by-address --host localhost --port 9084 --secure false --walletdb $PLASMA_WALLET_DB; do sleep 5; done
-        for i in {0..6}; do
-          j=$((2 * i))
-          openssl ecparam -name secp256k1 -genkey -noout -out integration/consensusPrivateKey$i.pem
-          openssl ec -in integration/consensusPrivateKey$i.pem -pubout -out integration/consensusPublicKey$i.pem
-          openssl ecparam -name secp256k1 -genkey -noout -out integration/clientPrivateKey$j.pem
-          openssl ec -in integration/clientPrivateKey$j.pem -pubout -out integration/clientPublicKey$j.pem
-        done      
-        for i in {0..6}; do
-          cp $PLASMA_WALLET_DB integration/plasma-wallet$i.db
-          cp $PLASMA_WALLET_JSON integration/plasma-wallet$i.json
-        done
-    - name: Run integration tests
-      run: |
-        mkdir node02
-        echo "node:" > node02/config.yaml
-        echo "  big-bang:" >> node02/config.yaml
-        echo "    staker-count: 2" >> node02/config.yaml
-        echo "    local-staker-index: 1" >> node02/config.yaml
-        echo "    timestamp: 0" >> node02/config.yaml
-        echo "    regtest-enabled: true" >> node02/config.yaml
-        echo "    stakes: [10000, 10000]" >> node02/config.yaml
-        export IP_CONTAINER=`docker network inspect $BRIDGE | jq  ".[0].Containers.\"$NODE_01\".IPv4Address" | sed  's:"::g' | sed -n 's:\(.*\)/.*:\1:p'`
-        echo "IP_CONTAINER: $IP_CONTAINER"
-        export NODE_02=`docker run --rm -d  --network=$BRIDGE --name node02 -e NODE_P2P_KNOWN_PEERS=$IP_CONTAINER:9085 -p 9087:9085 -p 9086:9084 -p 9092:9091 -v $(pwd)/node02:/staking:rw stratalab/plasma-node-tooling:0.1.0 --  --config  /staking/config.yaml --regtest`
-        sbt coverage integration/test coverageReport
-        docker stop $NODE_01
-        docker stop $NODE_02
-      env:
-        PLASMA_WALLET_DB: ${{ github.workspace }}/data/plasma-wallet.db
-        PLASMA_WALLET_JSON: ${{ github.workspace }}/data/plasma-wallet.json
-    - uses: actions/download-artifact@v3
-      with:
-        path: consensus/target/test-reports/
-        name: unit-test-reports
-    - name: Publish Test Results
-      uses: EnricoMi/publish-unit-test-result-action@v2
-      if: success()
-      with:
-        files: |
-          integration/target/test-reports/**/*.xml
-          consensus/target/test-reports/**/*.xml
-          public-api/target/test-reports/**/*.xml
-    - name: Code Coverage Report
-      uses: irongut/CodeCoverageSummary@v1.3.0
-      with:
-        filename: consensus/target/scala-2.13/coverage-report/cobertura.xml
-        badge: false
-        fail_below_min: false
-        format: markdown
-        hide_branch_rate: false
-        hide_complexity: true
-        indicators: true
-        output: both
-    - name: Add Coverage PR Comment
-      uses: marocchino/sticky-pull-request-comment@v2
-      with:
-        recreate: true
-        path: code-coverage-results.md
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
+          cache: sbt
+      - uses: sbt/setup-sbt@v1
+      - name: Prepare wallet
+        run: |
+          pwd
+          mkdir ${{ github.workspace }}/node01
+          echo "node:" > node01/config.yaml 
+          echo "  big-bang:" >> node01/config.yaml
+          echo "    staker-count: 2" >> node01/config.yaml
+          echo "    local-staker-index: 0" >> node01/config.yaml
+          echo "    timestamp: 0" >> node01/config.yaml
+          echo "    regtest-enabled: true" >> node01/config.yaml
+          echo "    stakes: [10000, 10000]" >> node01/config.yaml
+          docker network ls
+          export BRIDGE=`docker network ls | head -3 | tail -1 | awk -e '{print $2}'`
+          echo "BRIDGE=$BRIDGE" >> $GITHUB_ENV
+          echo "BRIDGE NETWORK: $BRIDGE"
+          export NODE_01=`docker run --rm -d --network=$BRIDGE --name node01 -p 9085:9085 -p 9084:9084 -p 9091:9091 -v ${{ github.workspace }}/node01:/staking:rw stratalab/plasma-node-tooling:0.1.0 --  --config  /staking/config.yaml --regtest`
+          echo "NODE_01=$NODE_01" >> $GITHUB_ENV
+          echo "Node01 container id: $NODE_01"
+          curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz" | gzip -d > cs
+          chmod +x cs
+          ./cs setup --yes
+          shopt -s expand_aliases
+          mkdir ${{ github.workspace }}/data
+          alias plasma-cli="./cs launch -r https://s01.oss.sonatype.org/content/repositories/releases org.plasmalabs:plasma-cli_2.13:0.1.0 -- "
+          plasma-cli node-query mint-block --nb-blocks 1 -h localhost  --port 9084 -s false
+          export PLASMA_WALLET_DB=${{ github.workspace }}/data/plasma-wallet.db
+          export PLASMA_WALLET_JSON=${{ github.workspace }}/data/plasma-wallet.json
+          export PLASMA_WALLET_MNEMONIC=${{ github.workspace }}/data/plasma-mnemonic.txt
+          export PLASMA_WALLET_PASSWORD=password
+          plasma-cli wallet init --network private --password password --newwalletdb $PLASMA_WALLET_DB --mnemonicfile $PLASMA_WALLET_MNEMONIC --output $PLASMA_WALLET_JSON
+          export ADDRESS=$(plasma-cli wallet current-address --walletdb $PLASMA_WALLET_DB)
+          plasma-cli simple-transaction create --from-fellowship nofellowship --from-template genesis --from-interaction 1 --change-fellowship nofellowship --change-template genesis --change-interaction 1  -t $ADDRESS -w $PLASMA_WALLET_PASSWORD -o genesisTx.pbuf -n private -a 1000 -h  127.0.0.1 --port 9084 --keyfile $PLASMA_WALLET_JSON --walletdb $PLASMA_WALLET_DB --fee 10 --transfer-token lvl
+          plasma-cli tx prove -i genesisTx.pbuf --walletdb $PLASMA_WALLET_DB --keyfile $PLASMA_WALLET_JSON -w $PLASMA_WALLET_PASSWORD -o genesisTxProved.pbuf
+          export GROUP_UTXO=$(plasma-cli tx broadcast -i genesisTxProved.pbuf -h 127.0.0.1 --port 9084)
+          plasma-cli node-query mint-block --nb-blocks 1 -h localhost  --port 9084 -s false
+          echo "GROUP_UTXO: $GROUP_UTXO"
+          until plasma-cli indexer-query utxo-by-address --host localhost --port 9084 --secure false --walletdb $PLASMA_WALLET_DB; do sleep 5; done
+          echo "label: PlasmaBTCGroup" > groupPolicy.yaml
+          echo "registrationUtxo: $GROUP_UTXO#0" >> groupPolicy.yaml
+          plasma-cli simple-minting create --from-fellowship self --from-template default  -h 127.0.0.1 --port 9084 -n private --keyfile $PLASMA_WALLET_JSON -w $PLASMA_WALLET_PASSWORD -o groupMintingtx.pbuf -i groupPolicy.yaml  --mint-amount 1 --fee 10 --walletdb $PLASMA_WALLET_DB --mint-token group
+          plasma-cli tx prove -i groupMintingtx.pbuf --walletdb $PLASMA_WALLET_DB --keyfile $PLASMA_WALLET_JSON -w $PLASMA_WALLET_PASSWORD -o groupMintingtxProved.pbuf
+          export SERIES_UTXO=$(plasma-cli tx broadcast -i groupMintingtxProved.pbuf -h 127.0.0.1 --port 9084)
+          echo "SERIES_UTXO: $SERIES_UTXO"
+          plasma-cli node-query mint-block --nb-blocks 1 -h localhost  --port 9084 -s false
+          until plasma-cli indexer-query utxo-by-address --host localhost --port 9084 --secure false --walletdb $PLASMA_WALLET_DB; do sleep 5; done
+          echo "label: PlasmaBTCSeries" > seriesPolicy.yaml
+          echo "registrationUtxo: $SERIES_UTXO#0" >> seriesPolicy.yaml
+          echo "fungibility: group-and-series" >> seriesPolicy.yaml
+          echo "quantityDescriptor: liquid" >> seriesPolicy.yaml
+          plasma-cli simple-minting create --from-fellowship self --from-template default  -h localhost --port 9084 -n private --keyfile $PLASMA_WALLET_JSON -w $PLASMA_WALLET_PASSWORD -o seriesMintingTx.pbuf -i seriesPolicy.yaml  --mint-amount 1 --fee 10 --walletdb $PLASMA_WALLET_DB --mint-token series
+          plasma-cli tx prove -i seriesMintingTx.pbuf --walletdb $PLASMA_WALLET_DB --keyfile $PLASMA_WALLET_JSON -w $PLASMA_WALLET_PASSWORD -o seriesMintingTxProved.pbuf
+          export ASSET_UTXO=$(plasma-cli tx broadcast -i seriesMintingTxProved.pbuf -h 127.0.0.1 --port 9084)
+          echo "ASSET_UTXO: $ASSET_UTXO"
+          plasma-cli node-query mint-block --nb-blocks 1 -h localhost  --port 9084 -s false
+          until plasma-cli indexer-query utxo-by-address --host localhost --port 9084 --secure false --walletdb $PLASMA_WALLET_DB; do sleep 5; done
+          for i in {0..6}; do
+            j=$((2 * i))
+            openssl ecparam -name secp256k1 -genkey -noout -out integration/consensusPrivateKey$i.pem
+            openssl ec -in integration/consensusPrivateKey$i.pem -pubout -out integration/consensusPublicKey$i.pem
+            openssl ecparam -name secp256k1 -genkey -noout -out integration/clientPrivateKey$j.pem
+            openssl ec -in integration/clientPrivateKey$j.pem -pubout -out integration/clientPublicKey$j.pem
+          done      
+          for i in {0..6}; do
+            cp $PLASMA_WALLET_DB integration/plasma-wallet$i.db
+            cp $PLASMA_WALLET_JSON integration/plasma-wallet$i.json
+          done
+      - name: Run integration tests
+        run: |
+          mkdir node02
+          echo "node:" > node02/config.yaml
+          echo "  big-bang:" >> node02/config.yaml
+          echo "    staker-count: 2" >> node02/config.yaml
+          echo "    local-staker-index: 1" >> node02/config.yaml
+          echo "    timestamp: 0" >> node02/config.yaml
+          echo "    regtest-enabled: true" >> node02/config.yaml
+          echo "    stakes: [10000, 10000]" >> node02/config.yaml
+          export IP_CONTAINER=`docker network inspect $BRIDGE | jq  ".[0].Containers.\"$NODE_01\".IPv4Address" | sed  's:"::g' | sed -n 's:\(.*\)/.*:\1:p'`
+          echo "IP_CONTAINER: $IP_CONTAINER"
+          export NODE_02=`docker run --rm -d  --network=$BRIDGE --name node02 -e NODE_P2P_KNOWN_PEERS=$IP_CONTAINER:9085 -p 9087:9085 -p 9086:9084 -p 9092:9091 -v $(pwd)/node02:/staking:rw stratalab/plasma-node-tooling:0.1.0 --  --config  /staking/config.yaml --regtest`
+          sbt coverage integration/test coverageReport
+          docker stop $NODE_01
+          docker stop $NODE_02
+        env:
+          PLASMA_WALLET_DB: ${{ github.workspace }}/data/plasma-wallet.db
+          PLASMA_WALLET_JSON: ${{ github.workspace }}/data/plasma-wallet.json
+      - uses: actions/download-artifact@v3
+        with:
+          path: consensus/target/test-reports/
+          name: unit-test-reports
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: success()
+        with:
+          files: |
+            integration/target/test-reports/**/*.xml
+            consensus/target/test-reports/**/*.xml
+            public-api/target/test-reports/**/*.xml
+      - name: Code Coverage Report
+        uses: irongut/CodeCoverageSummary@v1.3.0
+        with:
+          filename: consensus/target/scala-2.13/coverage-report/cobertura.xml
+          badge: false
+          fail_below_min: false
+          format: markdown
+          hide_branch_rate: false
+          hide_complexity: true
+          indicators: true
+          output: both
+      - name: Add Coverage PR Comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          recreate: true
+          path: code-coverage-results.md
+  integration-tests-monitor:
+    name: Integration Tests Monitor
+    strategy:
+      matrix:
+        os: ${{fromJson(inputs.target-os)}}
+        java: ${{fromJson(inputs.java-versions)}}
+    runs-on: ${{ matrix.os }}
+    needs: unit-test
+    steps:
+      - name: Echo docker version
+        uses: docker://docker
+        with:
+          args: docker -v
+      - name: Checkout current branch
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Need full history to update last modified time.
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: "temurin"
+          java-version: ${{ matrix.java }}
+      - name: Setup Scala
+        uses: olafurpg/setup-scala@v13
+        with:
+          java-version: ${{ matrix.java }}
+      - name: Run integration tests Monitor
+        run: |
+          docker run -d --rm --add-host host.docker.internal:host-gateway -p 18444:18444 -p 18443:18443 -p 28332:28332 --name=bitcoind ruimarinho/bitcoin-core -chain=regtest -zmqpubrawblock=tcp://0.0.0.0:28332 -rpcuser=test -rpcpassword=test -port=18444 -rpcport=18443 -rpcbind=:18443 -rpcallowip=0.0.0.0/0
+          docker run -d --rm --name bitcoind2 --add-host host.docker.internal:host-gateway -p 12224:18444 -p 12223:18443 -p 12222:28332 ruimarinho/bitcoin-core -chain=regtest -zmqpubrawblock=tcp://0.0.0.0:28332 -rpcuser=test -rpcpassword=test -port=18444 -rpcport=18443 -rpcbind=:18443 -rpcallowip=0.0.0.0/0
+          docker run -d --rm --name node -p 9084:9084 docker.io/stratalab/plasma-node:0.0.0-8215-792f55b2
+          ls -lai
+          chmod 777 ./integration-monitor/setupNodeRegtest.sh
+          ./integration-monitor/setupNodeRegtest.sh
+          sbt "integration-monitor / test"
+          docker kill bitcoind
+          docker kill bitcoind2
+          docker kill node
+          docker kill node01
+          docker kill node02
+          docker rm node01
+          docker rm node02
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: it-reports
+          path: integration-monitor/target/test-reports/**/*.xml
+          overwrite: true
+      - uses: actions/download-artifact@v3
+        with:
+          path: target/test-reports/
+          name: unit-test-reports
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: success()
+        with:
+          files: |
+            integration-monitor/target/test-reports/**/*.xml
+          deduplicate_classes_by_file_name: true

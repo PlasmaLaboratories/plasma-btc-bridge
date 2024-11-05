@@ -34,8 +34,8 @@ import scopt.OParser
 
 import java.net.InetSocketAddress
 import java.security.{PublicKey, Security}
-import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.LongAdder
+import java.util.concurrent.{ConcurrentHashMap, TimeUnit}
 import scala.concurrent.duration.FiniteDuration
 
 sealed trait PeginSessionState
@@ -208,11 +208,11 @@ object Main extends IOApp with PublicApiParamsDescriptor {
             .getLoggerFromName[IO]("public-api-" + f"${client.id}%02d")
 
         implicit val stateMachineConf = StateMachineServiceGrpcClientRetryConfig(
-          primaryResponseWait = FiniteDuration.apply(conf.getInt("bridge.client.primaryResponseWait"), "second"),
+          primaryResponseWait = FiniteDuration(conf.getInt("bridge.client.primaryResponseWait"), TimeUnit.SECONDS),
           otherReplicasResponseWait =
-            FiniteDuration.apply(conf.getInt("bridge.client.otherReplicasResponseWait"), "second"),
+            FiniteDuration(conf.getInt("bridge.client.otherReplicasResponseWait"), TimeUnit.SECONDS),
           retryPolicy = RetryPolicy(
-            initialDelay = FiniteDuration.apply(conf.getInt("bridge.client.retryPolicy.initialDelay"), "second"),
+            initialDelay = FiniteDuration(conf.getInt("bridge.client.retryPolicy.initialDelay"), TimeUnit.SECONDS),
             maxRetries = conf.getInt("bridge.client.retryPolicy.maxRetries"),
             delayMultiplier = conf.getInt("bridge.client.retryPolicy.delayMultiplier")
           )
