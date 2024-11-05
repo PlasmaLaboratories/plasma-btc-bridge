@@ -183,7 +183,7 @@ object BridgeStateMachineExecutionManagerImpl {
               implicit val toplKeypair = request.toplKeyPair
 
               for {
-                _ <- info"Processing minting request amount ${int128AsBigInt(request.amount)}"
+                _ <- info"Processing new minting request"
                 response <- startMintingProcess(
                   request.fellowship,
                   request.template,
@@ -245,21 +245,15 @@ object BridgeStateMachineExecutionManagerImpl {
           seriesValueToArrive: BigInt,
         ): F[Boolean] =
           for {
-            _ <- debug"Trying to get utxos for the current address ${currentAddress}"
-
-            // get all spent
             spentTxos <- getUtxos(
               currentAddress,
               utxoAlgebra,
               TxoState.SPENT
             )
-            // for all unspent before there should exist a spent txo
+
             spentPlasmaUtxos = spentTxos.filter(spentTxo =>
               unspentPlasmaBeforeMint.exists(unspentTxo => unspentTxo.outputAddress.id == spentTxo.outputAddress.id)
             )
-
-            // funds are at change address
-            _ <- debug"Trying to get utxos for the change address ${changeAddress}"
 
             arrivedUtxos <- getUtxos(
               changeAddress,
@@ -276,8 +270,6 @@ object BridgeStateMachineExecutionManagerImpl {
               .map(txo => int128AsBigInt(valueToQuantitySyntaxOps(txo.transactionOutput.value.value).quantity))
               .sum
 
-            _ <-
-              info"The following funds arrived at the change address: Group ${groupSumArrived}, Series ${seriesSumArrived}"
           } yield (spentPlasmaUtxos.length == unspentPlasmaBeforeMint.length && seriesSumArrived == seriesValueToArrive && groupSumArrived == groupValueToArrive)
 
         private def startSession(

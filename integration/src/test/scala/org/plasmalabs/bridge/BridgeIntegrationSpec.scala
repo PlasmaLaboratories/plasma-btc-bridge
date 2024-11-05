@@ -14,15 +14,16 @@ class BridgeIntegrationSpec
     with FailedMintingReorgModule
     with SuccessfulPeginWithNonPrimaryFailureModule
     with FailedPeginNonPrimaryFailureModule
+    with SuccessfulPeginWithConcurrentSessionsModule
     with BridgeSetupModule {
 
   import org.typelevel.log4cats.syntax._
 
   override def munitFixtures = List(startServer)
 
-  cleanupDir.test("Bridge should correctly peg-in BTC") { _ =>
-    info"Bridge should correctly peg-in BTC" >> successfulPegin()
-  }
+  // cleanupDir.test("Bridge should correctly peg-in BTC") { _ =>
+  //   info"Bridge should correctly peg-in BTC" >> successfulPegin()
+  // }
 
   // cleanupDir.test("Bridge should fail correctly when user does not send BTC") { _ =>
   //   info"Bridge should fail correctly when user does not send BTC" >> failedPeginNoDeposit()
@@ -67,5 +68,9 @@ class BridgeIntegrationSpec
   // cleanupDir.test("Bridge should fail peg-in BTC if more than f non-primaries replicas fail") { _ =>
   //   info"Bridge should fail peg-in BTC if more than f non-primaries replicas fail" >> failedPeginNonPrimaryFailure() 
   // }
+
+  cleanupDir.test("Bridge should correctly peg-in BTC for multiple concurrent Sessions") { _ =>
+    info"Bridge should correctly peg-in BTC for multiple concurrent Sessions" >> successfulPeginWithConcurrentSessions(2)
+  }
 
 }

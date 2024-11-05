@@ -111,12 +111,20 @@ package object bridge extends ProcessOps {
     withLogging(pwdP)
 
   def addSecret(id: Int)(implicit l: Logger[IO]) =
-    withLogging(addSecretP(id))
+    for {
+      secretResponse <- withLoggingReturn(addSecretP(id)) 
+      secret = secretResponse.takeRight(64)
+    } yield secret
 
   def createTx(txId: String, address: String, amount: BigDecimal)(implicit
     l: Logger[IO]
   ) =
     withLoggingReturn(createTxP(txId, address, amount))
+
+  def createTxMultiple(txId: String, addresses: Seq[String], amount: BigDecimal)(implicit
+    l: Logger[IO]
+  ) =
+    withLoggingReturn(createTxPMultiple(txId, addresses, amount))
 
   def initUserBitcoinWallet(implicit l: Logger[IO]) =
     withLogging(initUserBitcoinWalletP)
@@ -124,10 +132,10 @@ package object bridge extends ProcessOps {
   def getNewAddress(implicit l: Logger[IO]) =
     withLoggingReturn(getNewaddressP)
 
-  def generateToAddress(id: Int, amount: Int, address: String)(implicit
+  def generateToAddress(id: Int, blocks: Int, address: String)(implicit
     l: Logger[IO]
   ) =
-    withTrace(generateToAddressP(id, amount, address))
+    withTrace(generateToAddressP(id, blocks, address))
 
   def addTemplate(id: Int, sha256: String, min: Long, max: Long)(implicit
     l: Logger[IO]
@@ -151,8 +159,8 @@ package object bridge extends ProcessOps {
   ) =
     withLogging(proveFundRedeemAddressTxP(id, fileToProve, provedFile))
 
-  def broadcastFundRedeemAddressTx(txFile: String)(implicit l: Logger[IO]) =
-    withLogging(broadcastFundRedeemAddressTxP(txFile))
+  def broadcastFundRedeemAddressTx(file: String)(implicit l: Logger[IO]) =
+    withLogging(broadcastFundRedeemAddressTxP(file))
 
   def currentAddress(id: Int)(implicit l: Logger[IO]) =
     withLoggingReturn(currentAddressP(id))
@@ -221,7 +229,7 @@ package object bridge extends ProcessOps {
       )
   )
 
-  def startSession(id: Int) = EmberClientBuilder
+  def startSession(sha256: String = "60cd434b2fd6d22cec4cf3c9b16d3f57de4bf4d0bd0da1b16659a76ec7736610") = EmberClientBuilder
     .default[IO]
     .build
     .use({ client =>
@@ -239,7 +247,7 @@ package object bridge extends ProcessOps {
         ).withEntity(
           StartPeginSessionRequest(
             pkey = "0295bb5a3b80eeccb1e38ab2cbac2545e9af6c7012cdc8d53bd276754c54fc2e4a",
-            sha256 = shaSecretMap(id)
+            sha256
           )
         )
       )
@@ -395,11 +403,23 @@ package object bridge extends ProcessOps {
     "--"
   )
 
+  def userSecret(id: Int) = "user-secret" + f"$id%02d"
+
   def userWalletDb(id: Int) = "user-wallet" + f"$id%02d" + ".db"
 
   def userWalletMnemonic(id: Int) = "user-wallet-mnemonic" + f"$id%02d" + ".txt"
 
   def userWalletJson(id: Int) = "user-wallet" + f"$id%02d" + ".json"
+
+  def userVkFile(id: Int) = "key" + f"$id%02d" + ".txt"
+
+  def userRedeemTx(id: Int) = "redeemTx" + f"$id%02d" + ".pbuf"
+
+  def userRedeemTxProved(id: Int) = "redeemTxProved" + f"$id%02d" + ".pbuf"
+
+  def userFundRedeemTx(id: Int) = "fundRedeemTx" + f"$id%02d" + ".pbuf"
+
+  def userFundRedeemTxProved(id: Int) = "fundRedeemTxProved" + f"$id%02d" + ".pbuf"
 
   val vkFile = "key.txt"
 
@@ -448,18 +468,12 @@ package object bridge extends ProcessOps {
   def templateFromSha(sha256: String, min: Long, max: Long) =
     s"""threshold(1, sha256($sha256) and height($min, $max))"""
 
-  val secretMap = Map(1 -> "strata-secret", 2 -> "strata-secret01")
-
   val nodeHostMap =
     Map(1 -> "localhost", 2 -> "localhost")
 
   val nodePortMap =
     Map(1 -> 9084, 2 -> 9086)
 
-  val shaSecretMap = Map(
-    1 -> "60cd434b2fd6d22cec4cf3c9b16d3f57de4bf4d0bd0da1b16659a76ec7736610",
-    2 -> "2d537c332fe62c45bfe38aea3ea7239163d49fa67b7c46031749eb982b2f6024"
-  )
 
   // plasma-cli templates add --walletdb user-wallet.db --template-name redeemBridge --lock-template
   def addTemplateP(id: Int, sha256: String, min: Long, max: Long) = process
@@ -488,7 +502,7 @@ package object bridge extends ProcessOps {
         "--walletdb",
         userWalletDb(id),
         "--input-vks",
-        vkFile,
+        userVkFile(id),
         "--fellowship-name",
         "bridge",
         "--template-name",
@@ -550,7 +564,7 @@ package object bridge extends ProcessOps {
         "-w",
         "password",
         "-o",
-        "fundRedeemTx.pbuf",
+        userFundRedeemTx(id),
         "-n",
         "private",
         "-a",
@@ -593,7 +607,7 @@ package object bridge extends ProcessOps {
         "-w",
         "password",
         "-o",
-        "redeemTx.pbuf",
+        userRedeemTx(id),
         "-n",
         "private",
         "-a",
@@ -631,7 +645,7 @@ package object bridge extends ProcessOps {
           "tx",
           "prove",
           "-i",
-          fileToProve, // "fundRedeemTx.pbuf",
+          fileToProve, 
           "--walletdb",
           userWalletDb(id),
           "--keyfile",
@@ -639,20 +653,20 @@ package object bridge extends ProcessOps {
           "-w",
           "password",
           "-o",
-          provedFile // "fundRedeemTxProved.pbuf"
+          provedFile
         ): _*
       )
       .spawn[IO]
 
   // plasma-cli tx broadcast -i fundRedeemTxProved.pbuf -h localhost --port 9084
-  def broadcastFundRedeemAddressTxP(txFile: String) = process
+  def broadcastFundRedeemAddressTxP(file: String) = process
     .ProcessBuilder(
       CS_CMD,
       csParams ++ Seq(
         "tx",
         "broadcast",
         "-i",
-        txFile,
+        file,
         "-h",
         "localhost",
         "--port",
@@ -740,6 +754,15 @@ package object bridge extends ProcessOps {
     s"in=$txId:0",
     s"outaddr=$amount:$address"
   )
+
+  def createTxSeqMultiple(txId: String, addresses: Seq[String], amount: BigDecimal) = Seq(
+    "exec",
+    "bitcoin01",
+    "bitcoin-tx",
+    "-regtest",
+    "-create",
+    s"in=$txId:0") ++ 
+    addresses.map(addr => s"outaddr=${amount / addresses.length}:$addr")
 
   def getText(p: fs2.io.process.Process[IO]): IO[String] =
     p.stdout

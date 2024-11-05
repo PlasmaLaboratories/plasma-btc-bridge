@@ -17,7 +17,7 @@ trait FailedRedemptionModule {
         _                <- generateToAddress(1, 1, newAddress)
         txIdAndBTCAmount <- extractGetTxIdAndAmount
         (txId, btcAmount, btcAmountLong) = txIdAndBTCAmount
-        startSessionResponse <- startSession(1)
+        startSessionResponse <- startSession()
         bitcoinTx <- createTx(
           txId,
           startSessionResponse.escrowAddress,

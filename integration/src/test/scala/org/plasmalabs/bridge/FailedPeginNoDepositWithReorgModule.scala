@@ -16,7 +16,7 @@ trait FailedPeginNoDepositWithReorgModule {
         _                <- generateToAddress(1, 1, newAddress)
         txIdAndBTCAmount <- extractGetTxIdAndAmount
         (txId, btcAmount, btcAmountLong) = txIdAndBTCAmount
-        startSessionResponse <- startSession(1)
+        startSessionResponse <- startSession()
         bridgeNetwork        <- computeBridgeNetworkName
         // parse
         ipBitcoin02 <- extractIpBtc(2, bridgeNetwork._1)

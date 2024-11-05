@@ -12,14 +12,14 @@ trait SuccessfulPeginWithNonPrimaryFailureModule { self: BridgeIntegrationSpec =
       _ <- mintStrataBlock(1, 1)
       _ <- initStrataWallet(1)
       _ <- addFellowship(1)
-      _ <- addSecret(1)
+      secret <- addSecret(1)
       newAddress <- getNewAddress
       txIdAndBTCAmount <- extractGetTxIdAndAmount
       (txId, btcAmount, btcAmountLong) = txIdAndBTCAmount
-      startSessionResponse <- startSession(1)
+      startSessionResponse <- startSession(secret)
       _ <- addTemplate(
         1,
-        shaSecretMap(1),
+        secret,
         startSessionResponse.minHeight,
         startSessionResponse.maxHeight
       )

@@ -38,7 +38,7 @@ trait ProcessOps {
         "--walletdb",
         userWalletDb(id),
         "--secret",
-        secretMap(id),
+        userSecret(id),
         "--digest",
         "sha256"
       ): _*
@@ -231,6 +231,17 @@ trait ProcessOps {
       createTxSeq(
         txId,
         address,
+        amount
+      ): _*
+    )
+    .spawn[IO]
+
+  def createTxPMultiple(txId: String, addresses: Seq[String], amount: BigDecimal) = process
+    .ProcessBuilder(
+      DOCKER_CMD,
+      createTxSeqMultiple(
+        txId,
+        addresses,
         amount
       ): _*
     )

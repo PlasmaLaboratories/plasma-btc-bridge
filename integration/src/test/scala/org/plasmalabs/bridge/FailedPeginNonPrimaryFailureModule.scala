@@ -14,7 +14,7 @@ trait FailedPeginNonPrimaryFailureModule { self: BridgeIntegrationSpec =>
       _ <- killFiber(3)
       result <- (for {
         _ <- getNewAddress
-        startSessionResponse <- startSession(1).handleErrorWith {
+        startSessionResponse <- startSession().handleErrorWith {
           case _: TimeoutError => IO.pure(Left(TimeoutError(errorMessage)))
         }
         result <- startSessionResponse match {

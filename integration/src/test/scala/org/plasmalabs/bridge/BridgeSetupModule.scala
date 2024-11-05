@@ -10,6 +10,8 @@ import org.typelevel.log4cats.Logger
 import java.nio.file.{Files, Paths}
 import scala.concurrent.duration._
 import scala.util.Try
+import org.typelevel.log4cats.syntax._
+
 
 trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with PublicApiConfModule {
 
@@ -194,7 +196,7 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
           fiber02 = fiber02.filter(_._2 != replicaId)
           fiber01 = fiber01.filter(_._2 != replicaId)
         }
-        _ <- logger.info(s"Killed both consensus and public API fibers for replica $replicaId")
+        _ <- info"Killed both consensus and public API fibers for replica $replicaId"
       } yield ()
     ).sequence[IO, Unit].void
   }
@@ -227,14 +229,47 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
           IO.sleep(10.seconds)
         )
         
-        _ <- logger.info(s"Restored consensus and public api for ${missingReplicas}")
+        _ <- info"Restored consensus and public api for ${missingReplicas}"
       } yield ()
     } else {
-      logger.info("All replicas are still running.")
+      info"All replicas are still running."
     }
   } yield ()
 
-
+  def deleteOutputFiles(numberOfSessions: Int) = {
+    def deleteFilesForSession(id: Int) = {
+      for {
+        _ <- IO {
+          List(
+            userWalletDb(id),
+            userWalletMnemonic(id),
+            userWalletJson(id),
+            userVkFile(id), 
+            userFundRedeemTx(id),
+            userFundRedeemTxProved(id), 
+            userRedeemTx(id), 
+            userRedeemTxProved(id)
+          ).foreach { case (path) =>
+            try {
+              Files.delete(Paths.get(path))
+            } catch {
+              case _: Throwable => ()
+            }
+          }
+        }
+      } yield ()
+    }
+    
+    for {
+        _ <- info"Deleting files for ${numberOfSessions} sessions"
+        _ <-  (1 to numberOfSessions).toList.parTraverse {
+          id => for {
+          _ <- deleteFilesForSession(id)
+        } yield ()
+      }
+    } yield ()
+  }
+  
 
 
   val cleanupDir = FunFixture[Unit](

@@ -22,14 +22,14 @@ trait SuccessfulPeginModule {
         ) // this will update the current topl height on the node, node should not work without this
         _                <- initStrataWallet(1)
         _                <- addFellowship(1)
-        _                <- addSecret(1)
+        secret                <- addSecret(1)
         newAddress       <- getNewAddress
         txIdAndBTCAmount <- extractGetTxIdAndAmount
         (txId, btcAmount, btcAmountLong) = txIdAndBTCAmount
-        startSessionResponse <- startSession(1)
+        startSessionResponse <- startSession(secret)
         _ <- addTemplate(
           1,
-          shaSecretMap(1),
+          secret,
           startSessionResponse.minHeight,
           startSessionResponse.maxHeight
         )
