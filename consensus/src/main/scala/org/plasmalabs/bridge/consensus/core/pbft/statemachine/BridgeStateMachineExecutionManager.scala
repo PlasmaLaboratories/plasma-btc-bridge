@@ -180,15 +180,14 @@ object BridgeStateMachineExecutionManagerImpl {
           .fromQueueUnterminated(startMintingRequestQueue)
           .evalMap(request =>
             {
-              implicit val toplKeypair = request.toplKeyPair
-
               for {
                 _ <- info"Processing new minting request"
                 response <- startMintingProcess(
                   request.fellowship,
                   request.template,
                   request.redeemAddress,
-                  request.amount
+                  request.amount,
+                  request.toplKeyPair
                 )
                 unspentPlasmaBeforeMint = response._2.filter((txo) =>
                   txo.transactionOutput.value.value.isGroup || txo.transactionOutput.value.value.isSeries || txo.transactionOutput.value.value.isLvl
@@ -220,10 +219,16 @@ object BridgeStateMachineExecutionManagerImpl {
                   .sum
 
                 _ <- (for {
-                  mintingSuccessful <- verifyMintingSpent(unspentPlasmaBeforeMint, response._1, changeAddress, groupValueToArrive, seriesValueToArrive).handleErrorWith{
-                    e => error"Something went wrong verifying the mint: ${e.getMessage}" >> Async[F].pure(false)
+                  mintingSuccessful <- verifyMintingSpent(
+                    unspentPlasmaBeforeMint,
+                    response._1,
+                    changeAddress,
+                    groupValueToArrive,
+                    seriesValueToArrive
+                  ).handleErrorWith { e =>
+                    error"Failed to process minting request, something went wrong verifying the mint: ${e.getMessage}" >> Async[F].pure(false)
                   }
-                  _                 <- Async[F].sleep(1.second)
+                  _ <- Async[F].sleep(500.millis)
                 } yield mintingSuccessful).iterateUntil(_ == true)
                 _ <- info"Processing minting successful, continue with next Request"
               } yield ()
@@ -240,9 +245,9 @@ object BridgeStateMachineExecutionManagerImpl {
         def verifyMintingSpent(
           unspentPlasmaBeforeMint: Seq[Txo],
           currentAddress:          LockAddress,
-          changeAddress:           LockAddress, 
-          groupValueToArrive: BigInt,
-          seriesValueToArrive: BigInt,
+          changeAddress:           LockAddress,
+          groupValueToArrive:      BigInt,
+          seriesValueToArrive:     BigInt
         ): F[Boolean] =
           for {
             spentTxos <- getUtxos(

@@ -1,10 +1,10 @@
 package org.plasmalabs.bridge
 
 import cats.effect.IO
+import org.plasmalabs.bridge.checkMintingStatus
 import org.typelevel.log4cats.syntax._
 
 import scala.concurrent.duration._
-import org.plasmalabs.bridge.checkMintingStatus
 
 trait FailedPeginNoDepositModule {
 

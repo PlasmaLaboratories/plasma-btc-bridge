@@ -2,27 +2,19 @@ package org.plasmalabs
 
 import cats.effect.IO
 import cats.effect.kernel.Resource
-import org.plasmalabs.bridge.shared.BridgeContants
-import org.plasmalabs.bridge.shared.MintingStatusRequest
-import org.plasmalabs.bridge.shared.MintingStatusResponse
-import org.plasmalabs.bridge.shared.StartPeginSessionRequest
-import org.plasmalabs.bridge.shared.StartPeginSessionResponse
-import org.plasmalabs.bridge.shared.SyncWalletRequest
+import fs2.io.file.Files
 import fs2.io.process
 import io.circe.generic.auto._
 import io.circe.parser._
-import org.http4s.EntityDecoder
-import org.http4s.Method
-import org.http4s.Request
-import org.http4s.Uri
-import org.http4s._
 import org.http4s.circe._
 import org.http4s.ember.client.EmberClientBuilder
 import org.http4s.headers.`Content-Type`
+import org.http4s.{EntityDecoder, Method, Request, Uri, _}
+import org.plasmalabs.bridge.shared.{BridgeContants, MintingStatusRequest, MintingStatusResponse, StartPeginSessionRequest, StartPeginSessionResponse, SyncWalletRequest}
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
+
 import java.io.ByteArrayInputStream
-import fs2.io.file.Files
 
 package object bridge extends ProcessOps {
 
@@ -112,7 +104,7 @@ package object bridge extends ProcessOps {
 
   def addSecret(id: Int)(implicit l: Logger[IO]) =
     for {
-      secretResponse <- withLoggingReturn(addSecretP(id)) 
+      secretResponse <- withLoggingReturn(addSecretP(id))
       secret = secretResponse.takeRight(64)
     } yield secret
 
@@ -129,13 +121,19 @@ package object bridge extends ProcessOps {
   def initUserBitcoinWallet(implicit l: Logger[IO]) =
     withLogging(initUserBitcoinWalletP)
 
+  def initUserBitcoinWallet(walletName: String)(implicit l: Logger[IO]) =
+    withLogging(initUserBitcoinWalletP(walletName))
+
   def getNewAddress(implicit l: Logger[IO]) =
     withLoggingReturn(getNewaddressP)
 
-  def generateToAddress(id: Int, blocks: Int, address: String)(implicit
+  def getNewAddress(walletName: String)(implicit l: Logger[IO]) =
+    withLoggingReturn(getNewaddressP(walletName))
+
+  def generateToAddress(id: Int, blocks: Int, address: String, walletName: String = "testwallet")(implicit
     l: Logger[IO]
   ) =
-    withTrace(generateToAddressP(id, blocks, address))
+    withTrace(generateToAddressP(id, blocks, address, walletName))
 
   def addTemplate(id: Int, sha256: String, min: Long, max: Long)(implicit
     l: Logger[IO]
@@ -160,7 +158,7 @@ package object bridge extends ProcessOps {
     withLogging(proveFundRedeemAddressTxP(id, fileToProve, provedFile))
 
   def broadcastFundRedeemAddressTx(file: String)(implicit l: Logger[IO]) =
-    withLogging(broadcastFundRedeemAddressTxP(file))
+    withLoggingReturn(broadcastFundRedeemAddressTxP(file))
 
   def currentAddress(id: Int)(implicit l: Logger[IO]) =
     withLoggingReturn(currentAddressP(id))
@@ -229,29 +227,30 @@ package object bridge extends ProcessOps {
       )
   )
 
-  def startSession(sha256: String = "60cd434b2fd6d22cec4cf3c9b16d3f57de4bf4d0bd0da1b16659a76ec7736610") = EmberClientBuilder
-    .default[IO]
-    .build
-    .use({ client =>
-      client.expect[StartPeginSessionResponse](
-        Request[IO](
-          method = Method.POST,
-          Uri
-            .fromString(
-              "http://127.0.0.1:5000/api/" + BridgeContants.START_PEGIN_SESSION_PATH
+  def startSession(sha256: String = "60cd434b2fd6d22cec4cf3c9b16d3f57de4bf4d0bd0da1b16659a76ec7736610") =
+    EmberClientBuilder
+      .default[IO]
+      .build
+      .use({ client =>
+        client.expect[StartPeginSessionResponse](
+          Request[IO](
+            method = Method.POST,
+            Uri
+              .fromString(
+                "http://127.0.0.1:5000/api/" + BridgeContants.START_PEGIN_SESSION_PATH
+              )
+              .toOption
+              .get
+          ).withContentType(
+            `Content-Type`.apply(MediaType.application.json)
+          ).withEntity(
+            StartPeginSessionRequest(
+              pkey = "0295bb5a3b80eeccb1e38ab2cbac2545e9af6c7012cdc8d53bd276754c54fc2e4a",
+              sha256
             )
-            .toOption
-            .get
-        ).withContentType(
-          `Content-Type`.apply(MediaType.application.json)
-        ).withEntity(
-          StartPeginSessionRequest(
-            pkey = "0295bb5a3b80eeccb1e38ab2cbac2545e9af6c7012cdc8d53bd276754c54fc2e4a",
-            sha256
           )
         )
-      )
-    })
+      })
 
   def checkMintingStatus(sessionId: String)(implicit l: Logger[IO]) =
     EmberClientBuilder
@@ -314,6 +313,21 @@ package object bridge extends ProcessOps {
 
   def extractGetTxIdAndAmount(implicit l: Logger[IO]) = for {
     unxpentTx <- withTracingReturn(extractGetTxIdP)
+    _ <- info"Received unspent Tx: ${unxpentTx}"
+    txId <- IO.fromEither(
+      parse(unxpentTx).map(x => (x \\ "txid").head.asString.get)
+    )
+    btcAmount <- IO.fromEither(
+      parse(unxpentTx).map(x => (x \\ "amount").head.asNumber.get)
+    )
+  } yield (
+    txId,
+    btcAmount.toBigDecimal.get - BigDecimal("0.01"),
+    ((btcAmount.toBigDecimal.get - BigDecimal("0.01")) * 100000000L).toLong
+  )
+
+  def extractGetTxIdAndAmount(walletName: String)(implicit l: Logger[IO]) = for {
+    unxpentTx <- withTracingReturn(extractGetTxIdP(walletName))
     txId <- IO.fromEither(
       parse(unxpentTx).map(x => (x \\ "txid").head.asString.get)
     )
@@ -405,6 +419,8 @@ package object bridge extends ProcessOps {
 
   def userSecret(id: Int) = "user-secret" + f"$id%02d"
 
+  def userBitcoinWallet(id: Int) = "bitcoin-wallet" + f"$id%02d"
+
   def userWalletDb(id: Int) = "user-wallet" + f"$id%02d" + ".db"
 
   def userWalletMnemonic(id: Int) = "user-wallet-mnemonic" + f"$id%02d" + ".txt"
@@ -473,7 +489,6 @@ package object bridge extends ProcessOps {
 
   val nodePortMap =
     Map(1 -> 9084, 2 -> 9086)
-
 
   // plasma-cli templates add --walletdb user-wallet.db --template-name redeemBridge --lock-template
   def addTemplateP(id: Int, sha256: String, min: Long, max: Long) = process
@@ -645,7 +660,7 @@ package object bridge extends ProcessOps {
           "tx",
           "prove",
           "-i",
-          fileToProve, 
+          fileToProve,
           "--walletdb",
           userWalletDb(id),
           "--keyfile",
@@ -755,13 +770,8 @@ package object bridge extends ProcessOps {
     s"outaddr=$amount:$address"
   )
 
-  def createTxSeqMultiple(txId: String, addresses: Seq[String], amount: BigDecimal) = Seq(
-    "exec",
-    "bitcoin01",
-    "bitcoin-tx",
-    "-regtest",
-    "-create",
-    s"in=$txId:0") ++ 
+  def createTxSeqMultiple(txId: String, addresses: Seq[String], amount: BigDecimal) =
+    Seq("exec", "bitcoin01", "bitcoin-tx", "-regtest", "-create", s"in=$txId:0") ++
     addresses.map(addr => s"outaddr=${amount / addresses.length}:$addr")
 
   def getText(p: fs2.io.process.Process[IO]): IO[String] =
@@ -783,6 +793,14 @@ package object bridge extends ProcessOps {
   def signTransaction(tx: String)(implicit l: Logger[IO]) =
     for {
       signedTx <- withLoggingReturn(signTransactionP(tx))
+      signedTxHex <- IO.fromEither(
+        parse(signedTx).map(x => (x \\ "hex").head.asString.get)
+      )
+    } yield signedTxHex
+
+  def signTransaction(tx: String, walletName: String)(implicit l: Logger[IO]) =
+    for {
+      signedTx <- withLoggingReturn(signTransactionP(tx, walletName))
       signedTxHex <- IO.fromEither(
         parse(signedTx).map(x => (x \\ "hex").head.asString.get)
       )

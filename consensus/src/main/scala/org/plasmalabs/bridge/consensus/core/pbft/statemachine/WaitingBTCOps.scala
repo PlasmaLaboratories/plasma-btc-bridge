@@ -117,9 +117,10 @@ object WaitingBTCOps {
     fromFellowship: Fellowship,
     fromTemplate:   Template,
     redeemAddress:  String,
-    amount:         Int128
-  )(implicit
+    amount:         Int128,
     toplKeypair:           StrataKeypair,
+
+  )(implicit
     walletApi:             WalletApi[F],
     walletStateApi:        WalletStateAlgebra[F],
     transactionBuilderApi: TransactionBuilderApi[F],

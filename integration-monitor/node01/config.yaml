@@ -1,0 +1,8 @@
+node:
+  big-bang:
+    staker-count: 2
+    local-staker-index: 0
+    timestamp: 1730822789000
+    regtest-enabled: true
+    stakes: [10000, 10000]
+

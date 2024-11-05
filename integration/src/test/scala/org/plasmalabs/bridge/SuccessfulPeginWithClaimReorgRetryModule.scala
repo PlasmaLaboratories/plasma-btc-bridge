@@ -1,9 +1,9 @@
 package org.plasmalabs.bridge
 
 import cats.effect.IO
+import org.plasmalabs.bridge.checkMintingStatus
 
 import scala.concurrent.duration._
-import org.plasmalabs.bridge.checkMintingStatus
 
 trait SuccessfulPeginWithClaimReorgRetryModule {
 
@@ -22,7 +22,7 @@ trait SuccessfulPeginWithClaimReorgRetryModule {
         _                <- pwd
         _                <- initStrataWallet(2)
         _                <- addFellowship(2)
-        secret                <- addSecret(2)
+        secret           <- addSecret(2)
         newAddress       <- getNewAddress
         _                <- generateToAddress(1, 1, newAddress)
         txIdAndBTCAmount <- extractGetTxIdAndAmount

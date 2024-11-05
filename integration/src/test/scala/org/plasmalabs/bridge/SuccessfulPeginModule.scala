@@ -4,6 +4,7 @@ import cats.effect.IO
 import org.typelevel.log4cats.syntax._
 
 import scala.concurrent.duration._
+import org.plasmalabs.bridge.createTxSeq
 
 trait SuccessfulPeginModule {
 
@@ -22,7 +23,7 @@ trait SuccessfulPeginModule {
         ) // this will update the current topl height on the node, node should not work without this
         _                <- initStrataWallet(1)
         _                <- addFellowship(1)
-        secret                <- addSecret(1)
+        secret           <- addSecret(1)
         newAddress       <- getNewAddress
         txIdAndBTCAmount <- extractGetTxIdAndAmount
         (txId, btcAmount, btcAmountLong) = txIdAndBTCAmount
@@ -33,6 +34,8 @@ trait SuccessfulPeginModule {
           startSessionResponse.minHeight,
           startSessionResponse.maxHeight
         )
+
+        _ <- info"User will create the following tx: ${createTxSeq(txId, startSessionResponse.escrowAddress, btcAmount)}"
         bitcoinTx <- createTx(
           txId,
           startSessionResponse.escrowAddress,

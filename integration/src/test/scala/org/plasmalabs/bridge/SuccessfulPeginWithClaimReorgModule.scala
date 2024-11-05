@@ -23,7 +23,7 @@ trait SuccessfulPeginWithClaimReorgModule {
         _                <- pwd
         _                <- initStrataWallet(2)
         _                <- addFellowship(2)
-        secret               <- addSecret(2)
+        secret           <- addSecret(2)
         newAddress       <- getNewAddress
         _                <- generateToAddress(1, 1, newAddress)
         txIdAndBTCAmount <- extractGetTxIdAndAmount
