@@ -89,7 +89,8 @@ trait SuccessfulPeginWithNonPrimaryFailureModule { self: BridgeIntegrationSpec =
           .iterateUntil(
             _.mintingStatus == "PeginSessionStateSuccessfulPegin"
           )
-        _ <- info"Session ${startSessionResponse.sessionID} was successfully removed"
+        _ <-
+          info"Session ${startSessionResponse.sessionID} was successfully removed"
       } yield (),
       ()
     )
