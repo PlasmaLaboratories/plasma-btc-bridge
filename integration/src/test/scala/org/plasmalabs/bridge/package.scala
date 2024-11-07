@@ -10,7 +10,14 @@ import org.http4s.circe._
 import org.http4s.ember.client.EmberClientBuilder
 import org.http4s.headers.`Content-Type`
 import org.http4s.{EntityDecoder, Method, Request, Uri, _}
-import org.plasmalabs.bridge.shared.{BridgeContants, MintingStatusRequest, MintingStatusResponse, StartPeginSessionRequest, StartPeginSessionResponse, SyncWalletRequest}
+import org.plasmalabs.bridge.shared.{
+  BridgeContants,
+  MintingStatusRequest,
+  MintingStatusResponse,
+  StartPeginSessionRequest,
+  StartPeginSessionResponse,
+  SyncWalletRequest
+}
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
 
@@ -113,6 +120,12 @@ package object bridge extends ProcessOps {
   ) =
     withLoggingReturn(createTxP(txId, address, amount))
 
+  def getTxConfirmationsAndBlockHeight(id: Int, txId: String)(implicit
+    l: Logger[IO]
+  ) = for {
+    tx <- withTracingReturn(getTxP(id, txId))
+  } yield (extractTxConfirmations(tx), extractBlockHeight(tx))
+
   def createTxMultiple(txId: String, addresses: Seq[String], amount: BigDecimal)(implicit
     l: Logger[IO]
   ) =
@@ -130,10 +143,10 @@ package object bridge extends ProcessOps {
   def getNewAddress(walletName: String)(implicit l: Logger[IO]) =
     withLoggingReturn(getNewaddressP(walletName))
 
-  def generateToAddress(id: Int, blocks: Int, address: String, walletName: String = "testwallet")(implicit
+  def generateToAddress(nodeId: Int, blocks: Int, address: String, walletName: String = "testwallet")(implicit
     l: Logger[IO]
   ) =
-    withTrace(generateToAddressP(id, blocks, address, walletName))
+    withTrace(generateToAddressP(nodeId, blocks, address, walletName))
 
   def addTemplate(id: Int, sha256: String, min: Long, max: Long)(implicit
     l: Logger[IO]
@@ -186,6 +199,28 @@ package object bridge extends ProcessOps {
     seriesId:      String
   )(implicit l: Logger[IO]) =
     withLogging(redeemAddressTxP(id, redeemAddress, amount, groupId, seriesId))
+
+  def extractTxConfirmations(tx: String) =
+    tx
+      .split("\n")
+      .filter(_.contains("confirmations"))
+      .head
+      .split(":")
+      .last
+      .trim()
+      .replaceAll(",", "")
+      .toInt
+
+  def extractBlockHeight(tx: String) =
+    tx
+      .split("\n")
+      .filter(_.contains("blockheight"))
+      .head
+      .split(":")
+      .last
+      .trim()
+      .replaceAll(",", "")
+      .toInt
 
   def extractGroupId(utxo: String) =
     utxo
@@ -313,7 +348,7 @@ package object bridge extends ProcessOps {
 
   def extractGetTxIdAndAmount(implicit l: Logger[IO]) = for {
     unxpentTx <- withTracingReturn(extractGetTxIdP)
-    _ <- info"Received unspent Tx: ${unxpentTx}"
+    _         <- info"Received unspent Tx: ${unxpentTx}"
     txId <- IO.fromEither(
       parse(unxpentTx).map(x => (x \\ "txid").head.asString.get)
     )
@@ -322,7 +357,7 @@ package object bridge extends ProcessOps {
     )
   } yield (
     txId,
-    btcAmount.toBigDecimal.get - BigDecimal("0.01"),
+    btcAmount.toBigDecimal.get - BigDecimal("0.01"), // why is this subtracted here
     ((btcAmount.toBigDecimal.get - BigDecimal("0.01")) * 100000000L).toLong
   )
 
@@ -768,6 +803,18 @@ package object bridge extends ProcessOps {
     "-create",
     s"in=$txId:0",
     s"outaddr=$amount:$address"
+  )
+
+  def getTxSeq(id: Int, txId: String) = Seq(
+    "exec",
+    "bitcoin01",
+    "bitcoin-cli",
+    "-regtest",
+    "-rpcuser=bitcoin",
+    "-rpcpassword=password",
+    s"-rpcwallet=${userBitcoinWallet(id)}",
+    "gettransaction",
+    txId
   )
 
   def createTxSeqMultiple(txId: String, addresses: Seq[String], amount: BigDecimal) =

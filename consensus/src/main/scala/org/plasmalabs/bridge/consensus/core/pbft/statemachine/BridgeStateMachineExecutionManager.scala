@@ -86,8 +86,7 @@ case class StartMintingRequest(
   fellowship:    Fellowship,
   template:      Template,
   redeemAddress: String,
-  amount:        Int128,
-  toplKeyPair:   StrataKeypair
+  amount:        Int128
 )
 
 trait BridgeStateMachineExecutionManager[F[_]] {
@@ -186,8 +185,7 @@ object BridgeStateMachineExecutionManagerImpl {
                   request.fellowship,
                   request.template,
                   request.redeemAddress,
-                  request.amount,
-                  request.toplKeyPair
+                  request.amount
                 )
                 unspentPlasmaBeforeMint = response._2.filter((txo) =>
                   txo.transactionOutput.value.value.isGroup || txo.transactionOutput.value.value.isSeries || txo.transactionOutput.value.value.isLvl
@@ -205,6 +203,7 @@ object BridgeStateMachineExecutionManagerImpl {
                   case Some(lock) => lock
                   case None       => throw new RuntimeException("changeLock is None, unable to get address")
                 }
+
                 changeAddress <- tba.lockAddress(
                   lockForChange
                 )
@@ -220,15 +219,15 @@ object BridgeStateMachineExecutionManagerImpl {
 
                 _ <- (for {
                   mintingSuccessful <- verifyMintingSpent(
-                    unspentPlasmaBeforeMint,
-                    response._1,
                     changeAddress,
                     groupValueToArrive,
                     seriesValueToArrive
                   ).handleErrorWith { e =>
-                    error"Failed to process minting request, something went wrong verifying the mint: ${e.getMessage}" >> Async[F].pure(false)
+                    error"Failed to process minting request, something went wrong verifying the mint: ${e.getMessage}" >> Async[
+                      F
+                    ].pure(false)
                   }
-                  _ <- Async[F].sleep(500.millis)
+                  _ <- Async[F].sleep(1.second)
                 } yield mintingSuccessful).iterateUntil(_ == true)
                 _ <- info"Processing minting successful, continue with next Request"
               } yield ()
@@ -239,27 +238,14 @@ object BridgeStateMachineExecutionManagerImpl {
               }
           )
 
-        import org.plasmalabs.indexer.services.Txo
         import org.plasmalabs.indexer.services.TxoState
 
         def verifyMintingSpent(
-          unspentPlasmaBeforeMint: Seq[Txo],
-          currentAddress:          LockAddress,
-          changeAddress:           LockAddress,
-          groupValueToArrive:      BigInt,
-          seriesValueToArrive:     BigInt
+          changeAddress:       LockAddress,
+          groupValueToArrive:  BigInt,
+          seriesValueToArrive: BigInt
         ): F[Boolean] =
           for {
-            spentTxos <- getUtxos(
-              currentAddress,
-              utxoAlgebra,
-              TxoState.SPENT
-            )
-
-            spentPlasmaUtxos = spentTxos.filter(spentTxo =>
-              unspentPlasmaBeforeMint.exists(unspentTxo => unspentTxo.outputAddress.id == spentTxo.outputAddress.id)
-            )
-
             arrivedUtxos <- getUtxos(
               changeAddress,
               utxoAlgebra,
@@ -275,7 +261,7 @@ object BridgeStateMachineExecutionManagerImpl {
               .map(txo => int128AsBigInt(valueToQuantitySyntaxOps(txo.transactionOutput.value.value).quantity))
               .sum
 
-          } yield (spentPlasmaUtxos.length == unspentPlasmaBeforeMint.length && seriesSumArrived == seriesValueToArrive && groupSumArrived == groupValueToArrive)
+          } yield (seriesSumArrived == seriesValueToArrive && groupSumArrived == groupValueToArrive)
 
         private def startSession(
           clientNumber: Int,
@@ -467,8 +453,7 @@ object BridgeStateMachineExecutionManagerImpl {
                               defaultFromFellowship,
                               defaultFromTemplate,
                               peginSessionInfo.redeemAddress,
-                              BigInt(value.amount.toByteArray()),
-                              toplKeypair
+                              BigInt(value.amount.toByteArray())
                             )
                           )
                         )

@@ -7,33 +7,25 @@ import org.typelevel.log4cats.syntax._
 import scala.concurrent.duration._
 import org.plasmalabs.bridge.userBitcoinWallet
 import cats.effect.std.Mutex
+import org.plasmalabs.bridge.getCurrentUtxosFromAddress
+import org.plasmalabs.bridge.getNewAddress
+import org.plasmalabs.bridge.mintStrataBlock
 
 trait SuccessfulPeginWithConcurrentSessionsModule {
 
-  // self BridgeIntegrationSpec
   self: BridgeIntegrationSpec =>
 
   def successfulPeginWithConcurrentSessions(numberOfSessions: Int): IO[Unit] = {
     import cats.implicits._
 
     def initBitcoinWalletById(id: Int) = for {
-      _ <- info"initializing Bitcoin Wallet for User ${id}"
       _          <- initUserBitcoinWallet(userBitcoinWallet(id))
       newAddress <- getNewAddress(userBitcoinWallet(id))
-      _          <- generateToAddress(1, 101, newAddress, userBitcoinWallet(id) )
-      _          <- mintStrataBlock(1, 1)
-
-      txIdAndBTCAmount <- extractGetTxIdAndAmount(userBitcoinWallet(id))
-      (txId, btcAmount, btcAmountLong) = txIdAndBTCAmount
-      _ <- info"User ${id}: txId: ${txId}, btcAmount: ${btcAmount}, btcAmountLong: ${btcAmountLong}"
-    } yield (id, newAddress, txId, btcAmount, btcAmountLong)
+      _          <- generateToAddress(1, 10, newAddress, userBitcoinWallet(id))
+      _          <- IO.sleep(10.second)
+    } yield (id, newAddress)
 
     def getSessionById(id: Int) = for {
-      _ <- pwd
-      _ <- mintStrataBlock(
-        1,
-        1
-      )
       _                    <- initStrataWallet(id)
       _                    <- addFellowship(id)
       secret               <- addSecret(id)
@@ -44,30 +36,65 @@ trait SuccessfulPeginWithConcurrentSessionsModule {
         startSessionResponse.minHeight,
         startSessionResponse.maxHeight
       )
+
     } yield startSessionResponse
+
+    def sendBitcoinTransactions(sessionResponses: List[(Int, String, StartPeginSessionResponse)]) =
+      for {
+
+        amountResponses <- sessionResponses.parTraverse { sessionResponseWithId =>
+          for {
+            _ <- info"Getting Amount for User ${sessionResponseWithId._1}"
+            (id, newAddress, sessionResponse) = sessionResponseWithId
+            txIdAndBTCAmount <- extractGetTxIdAndAmount(userBitcoinWallet(id))
+            (txId, btcAmount, btcAmountLong) = txIdAndBTCAmount
+
+            bitcoinTx <- createTx(
+              txId,
+              sessionResponse.escrowAddress,
+              btcAmount
+            )
+            signedTxHex <- signTransaction(bitcoinTx, userBitcoinWallet(id))
+
+          } yield (id, newAddress, sessionResponse, txId, btcAmount, btcAmountLong, signedTxHex)
+        }
+
+        _ <- IO.sleep(10.second)
+
+        _ <- amountResponses.traverse { amountResponse =>
+          for {
+            _ <- info"User ${amountResponse._1} Sending Bitcoin Transaction"
+            _ <- sendTransaction(amountResponse._7)
+          } yield ()
+        }
+
+        newAddress <- getNewAddress
+        _ <- generateToAddress(1, numberOfSessions * 8, newAddress) // here all should be confirmed, maybe TODO: track
+
+        bitcoinTransactionResponses <- amountResponses.parTraverse { amountResponse =>
+          for {
+            confirmationsAndBlockHeight <- getTxConfirmationsAndBlockHeight(amountResponse._1, amountResponse._4)
+            (confirmations, blockHeight) = confirmationsAndBlockHeight
+            (id, newAddress, sessionResponse, txId, btcAmount, btcAmountLong, _) = amountResponse
+          } yield (id, newAddress, sessionResponse, txId, btcAmount, btcAmountLong, confirmations, blockHeight)
+        }
+
+        _ <- info"Created Bitcoin Transactions with blockheights ${bitcoinTransactionResponses.map(_._8)}"
+        _ <- info"Created Bitcoin Transactions with confirmations ${bitcoinTransactionResponses.map(_._7)}"
+
+        _ <- IO.sleep(5.second)
+
+      } yield bitcoinTransactionResponses
 
     def trackPeginSession(
       id:              Int,
       sessionResponse: StartPeginSessionResponse,
       newAddress:      String,
-      btcAmountLong:   Long, 
-      txId: String, 
-      btcAmount:  BigDecimal, 
-      lock: Mutex[IO]
+      btcAmountLong:   Long,
+      lock:            Mutex[IO]
     ) = for {
-      _ <- info"User ${id} will create the following transaction ${createTxSeq(txId, sessionResponse.escrowAddress, btcAmount)}"
-        bitcoinTx <- createTx(
-          txId,
-          sessionResponse.escrowAddress,
-          btcAmount
-        )
-        signedTxHex <- signTransaction(bitcoinTx, userBitcoinWallet(id))
-        _           <- sendTransaction(signedTxHex)
-
-      _           <- IO.sleep(5.second)
 
       _ <- info"Tracking session for User ${id}"
-      _ <- generateToAddress(1, 8, newAddress, userBitcoinWallet(id)) 
       mintingStatusResponse <-
         (for {
           status <- checkMintingStatus(sessionResponse.sessionID)
@@ -78,22 +105,23 @@ trait SuccessfulPeginWithConcurrentSessionsModule {
         } yield status)
           .iterateUntil(_.mintingStatus == "PeginSessionStateMintingTBTC")
 
-      _          <- createVkFile(userVkFile(id))
-      _          <- importVks(id)
+      _ <- createVkFile(userVkFile(id))
+      _ <- importVks(id)
 
       utxo <- lock.lock.surround {
         for {
+          _          <- IO.sleep(3.second)
           _          <- fundRedeemAddressTx(id, mintingStatusResponse.address)
           _          <- proveFundRedeemAddressTx(id, userFundRedeemTx(id), userFundRedeemTxProved(id))
           broadCast1 <- broadcastFundRedeemAddressTx(userFundRedeemTxProved(id))
           _          <- info"User ${id} - Result from broadcast 1 ${broadCast1}"
-          _          <- mintStrataBlock(1, 1)
+          _          <- mintStrataBlock(1, 2)
 
-         utxo <- getCurrentUtxosFromAddress(id, mintingStatusResponse.address)
-         .iterateUntil(_.contains("LVL"))
+          utxo <- getCurrentUtxosFromAddress(id, mintingStatusResponse.address)
+            .iterateUntil(_.contains("LVL"))
         } yield utxo
       }
-      
+
       groupId = extractGroupId(utxo)
       seriesId = extractSeriesId(utxo)
 
@@ -106,6 +134,7 @@ trait SuccessfulPeginWithConcurrentSessionsModule {
         groupId,
         seriesId
       )
+
       _ <- proveFundRedeemAddressTx(
         id,
         userRedeemTx(id),
@@ -116,17 +145,17 @@ trait SuccessfulPeginWithConcurrentSessionsModule {
       _          <- info"User ${id} - Result from broadcast 2 ${broadCast2}"
 
       _ <- List.fill(8)(mintStrataBlock(1, 1)).sequence
+
       _ <- getCurrentUtxosFromAddress(id, currentAddress)
         .iterateUntil(_.contains("Asset"))
 
-      _ <- info"User ${id} - Tracking minting status for successful"
       _ <- generateToAddress(1, 3, newAddress, userBitcoinWallet(id))
       _ <- checkMintingStatus(sessionResponse.sessionID)
         .flatMap(x =>
           generateToAddress(
             1,
             1,
-            newAddress, 
+            newAddress,
             userBitcoinWallet(id)
           ) >> warn"x.mintingStatus = ${x.mintingStatus}" >> IO
             .sleep(5.second) >> IO.pure(x)
@@ -141,39 +170,51 @@ trait SuccessfulPeginWithConcurrentSessionsModule {
     assertIO(
       for {
         _ <- deleteOutputFiles(numberOfSessions)
+        _ <- pwd
+        _ <- mintStrataBlock(
+          1,
+          1
+        )
         lock <- Mutex.apply[IO]
 
-        bitcoinResponses <- (1 to numberOfSessions).toList.parTraverse {
-          id => for {
-            bitcoinResponse <- initBitcoinWalletById(id)
-          } yield bitcoinResponse
-        } // (id, newAddress, txId, btcAmount, btcAmountLong)
+        // initialize bitcoin wallet, generate blocks to fund the wallets and retrieve amounts available
+        bitcoinWallets <- (1 to numberOfSessions).toList.parTraverse { id =>
+          for {
+            bitcoinWallet <- initBitcoinWalletById(id)
+          } yield bitcoinWallet
+        }
 
-        sessionResponses <- bitcoinResponses.parTraverse { bitcoinResponse =>
+        // make the funds of the newly created bitcoin wallets accessible
+        newAddressOfTestWallet <- getNewAddress
+        _                      <- generateToAddress(1, 101, newAddressOfTestWallet)
+
+        _ <- IO.sleep(10.second)
+
+        // start the session for the current wallet, passing down the rest of the bitcoinResponses
+        sessionResponses <- bitcoinWallets.parTraverse { bitcoinResponse =>
           for {
             _ <- info"Getting session for User ${bitcoinResponse._1}"
-            (id, newAddress, txId, btcAmount, btcAmountLong) = bitcoinResponse
-            response <- getSessionById(id)
-          } yield (id, newAddress, txId, btcAmount, btcAmountLong, response)
+            (id, newAddress) = bitcoinResponse
+            sessionResponse <- getSessionById(id)
+          } yield (id, newAddress, sessionResponse)
         }
-        _           <- IO.sleep(5.second)
 
-        _ <- sessionResponses.parTraverse { sessionResponse =>
-          for {
-            _ <- info"Tracking pegin session for User ${sessionResponse._1}"
-            (id, newAddress, txId, btcAmount, btcAmountLong,response) = sessionResponse
+        _ <- mintStrataBlock(1, 1)
 
-            _ <- trackPeginSession(id,response,
-              newAddress,
-              btcAmountLong, 
-              txId, 
-              btcAmount, 
-              lock
-            )
-          } yield ()
+        bitcoinTransactionResponses <- sendBitcoinTransactions(sessionResponses)
+
+        successfulSessions <- bitcoinTransactionResponses.parTraverse { response =>
+          (for {
+            _ <- info"Tracking pegin session for User ${response._1}"
+            (id, newAddress, sessionResponse, _, btcAmount, btcAmountLong, _, _) = response
+            _ <- trackPeginSession(id, sessionResponse, newAddress, btcAmountLong, lock).timeout(250.second)
+          } yield 1).handleErrorWith { error =>
+            error"Error during tracking session: ${error.getMessage()}"
+            IO.pure(0)
+          }
         }
-      } yield (),
-      ()
+      } yield successfulSessions.sum,
+      numberOfSessions
     )
   }
 }

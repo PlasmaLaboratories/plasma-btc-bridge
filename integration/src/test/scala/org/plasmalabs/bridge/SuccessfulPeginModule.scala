@@ -4,7 +4,6 @@ import cats.effect.IO
 import org.typelevel.log4cats.syntax._
 
 import scala.concurrent.duration._
-import org.plasmalabs.bridge.createTxSeq
 
 trait SuccessfulPeginModule {
 
@@ -35,7 +34,6 @@ trait SuccessfulPeginModule {
           startSessionResponse.maxHeight
         )
 
-        _ <- info"User will create the following tx: ${createTxSeq(txId, startSessionResponse.escrowAddress, btcAmount)}"
         bitcoinTx <- createTx(
           txId,
           startSessionResponse.escrowAddress,
@@ -82,7 +80,7 @@ trait SuccessfulPeginModule {
           "redeemTxProved.pbuf"
         )
         _ <- broadcastFundRedeemAddressTx("redeemTxProved.pbuf")
-        _ <- List.fill(8)(mintStrataBlock(1, 1)).sequence
+        _ <- List.fill(10)(mintStrataBlock(1, 1)).sequence
         _ <- getCurrentUtxosFromAddress(1, currentAddress)
           .iterateUntil(_.contains("Asset"))
         _ <- generateToAddress(1, 3, newAddress)

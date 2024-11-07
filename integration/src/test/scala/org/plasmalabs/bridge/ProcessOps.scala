@@ -133,7 +133,7 @@ trait ProcessOps {
     "-rpcuser=bitcoin",
     "-rpcpassword=password",
     "createwallet",
-    s"wallet_name=${walletName}",
+    s"wallet_name=${walletName}"
   )
 
   def getNewaddressSeq(walletName: String = "testwallet") = Seq(
@@ -249,6 +249,16 @@ trait ProcessOps {
         txId,
         address,
         amount
+      ): _*
+    )
+    .spawn[IO]
+
+  def getTxP(id: Int, txId: String) = process
+    .ProcessBuilder(
+      DOCKER_CMD,
+      getTxSeq(
+        id,
+        txId
       ): _*
     )
     .spawn[IO]
