@@ -3,21 +3,17 @@ package org.plasmalabs.bridge
 import cats.effect.IO
 import org.typelevel.log4cats.syntax._
 import scala.concurrent.duration._
+import cats.implicits._
 
 trait SuccessfulPeginWithNonPrimaryFailureModule { self: BridgeIntegrationSpec =>
 
-  def successfulPeginWithNonPrimaryFailure(): IO[Unit] = {
-    import cats.implicits._
-
+  def successfulPeginWithNonPrimaryFailure(): IO[Unit] =
     assertIO(
       for {
         _                <- killFiber(1)
         _                <- killFiber(2)
-        _ <- pwd
-        _ <- mintPlasmaBlock(
-          1,
-          1
-        ) // this will update the current plasma height on the node, node should not work without this
+        _                <- pwd
+        _                <- mintPlasmaBlock(1, 1)
         _                <- initPlasmaWallet(1)
         _                <- addFellowship(1)
         _                <- addSecret(1)
@@ -93,10 +89,8 @@ trait SuccessfulPeginWithNonPrimaryFailureModule { self: BridgeIntegrationSpec =
           .iterateUntil(
             _.mintingStatus == "PeginSessionStateSuccessfulPegin"
           )
-        _ <-
-          info"Session ${startSessionResponse.sessionID} was successfully removed"
+        _ <- info"Session ${startSessionResponse.sessionID} was successfully removed"
       } yield (),
       ()
     )
-  }
 }
