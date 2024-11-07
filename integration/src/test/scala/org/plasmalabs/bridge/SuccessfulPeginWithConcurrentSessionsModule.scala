@@ -15,13 +15,19 @@ trait SuccessfulPeginWithConcurrentSessionsModule {
 
   self: BridgeIntegrationSpec =>
 
+  // successful pegin is already implemented
+  // goal is to have multiple pegins concurrently
+  // optimal would be to have multiple deposit tx to the escrow addresses returned from the session response
+  // from there acknowledge the deposits and switch states of the minting status
+  // redeem funds back to bitcoin
+
   def successfulPeginWithConcurrentSessions(numberOfSessions: Int): IO[Unit] = {
     import cats.implicits._
 
     def initBitcoinWalletById(id: Int) = for {
       _          <- initUserBitcoinWallet(userBitcoinWallet(id))
       newAddress <- getNewAddress(userBitcoinWallet(id))
-      _          <- generateToAddress(1, 10, newAddress, userBitcoinWallet(id))
+      _          <- generateToAddress(1, 2, newAddress, userBitcoinWallet(id)) // minting new blocks
       _          <- IO.sleep(10.second)
     } yield (id, newAddress)
 
@@ -61,7 +67,7 @@ trait SuccessfulPeginWithConcurrentSessionsModule {
 
         _ <- IO.sleep(10.second)
 
-        _ <- amountResponses.traverse { amountResponse =>
+        _ <- amountResponses.parTraverse { amountResponse =>
           for {
             _ <- info"User ${amountResponse._1} Sending Bitcoin Transaction"
             _ <- sendTransaction(amountResponse._7)
@@ -110,7 +116,6 @@ trait SuccessfulPeginWithConcurrentSessionsModule {
 
       utxo <- lock.lock.surround {
         for {
-          _          <- IO.sleep(3.second)
           _          <- fundRedeemAddressTx(id, mintingStatusResponse.address)
           _          <- proveFundRedeemAddressTx(id, userFundRedeemTx(id), userFundRedeemTxProved(id))
           broadCast1 <- broadcastFundRedeemAddressTx(userFundRedeemTxProved(id))
@@ -119,6 +124,10 @@ trait SuccessfulPeginWithConcurrentSessionsModule {
 
           utxo <- getCurrentUtxosFromAddress(id, mintingStatusResponse.address)
             .iterateUntil(_.contains("LVL"))
+          _ <- mintStrataBlock(1, 1)
+
+          _ <- IO.sleep(3.second)
+
         } yield utxo
       }
 

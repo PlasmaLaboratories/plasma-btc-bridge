@@ -71,7 +71,7 @@ class BridgeIntegrationSpec
 
   cleanupDir.test("Bridge should correctly peg-in BTC for multiple concurrent Sessions") { _ =>
     info"Bridge should correctly peg-in BTC for multiple concurrent Sessions" >> successfulPeginWithConcurrentSessions(
-      2
+      3
     )
   }
 
