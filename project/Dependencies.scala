@@ -9,7 +9,6 @@ object Dependencies {
   lazy val slf4jVersion = "2.0.12"
   lazy val mUnitTeVersion = "0.7.29"
 
-
   val akkaSlf4j: Seq[ModuleID] = Seq(
     "org.apache.pekko" %% "pekko-actor-typed" % "1.0.2"
   )
@@ -62,7 +61,7 @@ object Dependencies {
   )
 
   val sqlite: Seq[ModuleID] = Seq(
-    "org.xerial" % "sqlite-jdbc" % "3.45.2.0"
+    "org.xerial" % "sqlite-jdbc" % "3.45.3.0"
   )
 
   lazy val ip4score: Seq[ModuleID] = Seq(
