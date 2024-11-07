@@ -9,7 +9,6 @@ object Dependencies {
   lazy val slf4jVersion = "2.0.12"
   lazy val mUnitTeVersion = "0.7.29"
 
-
   val akkaSlf4j: Seq[ModuleID] = Seq(
     "org.apache.pekko" %% "pekko-actor-typed" % "1.0.2"
   )
@@ -111,7 +110,7 @@ object Dependencies {
   )
 
   lazy val genericCirce: Seq[ModuleID] = Seq(
-    "io.circe" %% "circe-generic" % "0.14.9"
+    "io.circe" %% "circe-generic" % "0.14.10"
   )
 
   lazy val optics: Seq[ModuleID] = Seq(
