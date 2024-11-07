@@ -9,7 +9,6 @@ object Dependencies {
   lazy val slf4jVersion = "2.0.12"
   lazy val mUnitTeVersion = "0.7.29"
 
-
   val akkaSlf4j: Seq[ModuleID] = Seq(
     "org.apache.pekko" %% "pekko-actor-typed" % "1.0.2"
   )
@@ -75,7 +74,7 @@ object Dependencies {
 
   val cats: Seq[ModuleID] = Seq(
     "org.typelevel" %% "cats-core"   % catsCoreVersion,
-    "org.typelevel" %% "cats-effect" % "3.5.1"
+    "org.typelevel" %% "cats-effect" % "3.5.5"
   )
 
   val grpcNetty =
