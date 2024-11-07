@@ -15,12 +15,6 @@ trait SuccessfulPeginWithConcurrentSessionsModule {
 
   self: BridgeIntegrationSpec =>
 
-  // successful pegin is already implemented
-  // goal is to have multiple pegins concurrently
-  // optimal would be to have multiple deposit tx to the escrow addresses returned from the session response
-  // from there acknowledge the deposits and switch states of the minting status
-  // redeem funds back to bitcoin
-
   def successfulPeginWithConcurrentSessions(numberOfSessions: Int): IO[Unit] = {
     import cats.implicits._
 
@@ -153,7 +147,7 @@ trait SuccessfulPeginWithConcurrentSessionsModule {
       broadCast2 <- broadcastFundRedeemAddressTx(userRedeemTxProved(id))
       _          <- info"User ${id} - Result from broadcast 2 ${broadCast2}"
 
-      _ <- List.fill(8)(mintStrataBlock(1, 1)).sequence
+      _ <- List.fill(8)(mintStrataBlock(1, 1)).sequence //
 
       _ <- getCurrentUtxosFromAddress(id, currentAddress)
         .iterateUntil(_.contains("Asset"))
