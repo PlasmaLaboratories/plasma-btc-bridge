@@ -9,7 +9,6 @@ object Dependencies {
   lazy val slf4jVersion = "2.0.12"
   lazy val mUnitTeVersion = "0.7.29"
 
-
   val akkaSlf4j: Seq[ModuleID] = Seq(
     "org.apache.pekko" %% "pekko-actor-typed" % "1.0.2"
   )
@@ -23,8 +22,8 @@ object Dependencies {
   )
 
   val log4cats: Seq[ModuleID] = Seq(
-    "org.typelevel" %% "log4cats-core"  % "2.4.0",
-    "org.typelevel" %% "log4cats-slf4j" % "2.4.0"
+    "org.typelevel" %% "log4cats-core"  % "2.7.0",
+    "org.typelevel" %% "log4cats-slf4j" % "2.7.0"
   )
 
   val bouncycastle: Seq[ModuleID] = Seq(
