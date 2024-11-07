@@ -9,7 +9,6 @@ object Dependencies {
   lazy val slf4jVersion = "2.0.12"
   lazy val mUnitTeVersion = "0.7.29"
 
-
   val akkaSlf4j: Seq[ModuleID] = Seq(
     "org.apache.pekko" %% "pekko-actor-typed" % "1.0.2"
   )
@@ -51,7 +50,7 @@ object Dependencies {
   lazy val monocleVersion = "3.1.0"
 
   lazy val munit: Seq[ModuleID] = Seq(
-    "org.scalameta" %% "munit" % "1.0.0-M10"
+    "org.scalameta" %% "munit" % "1.0.2"
   )
 
   lazy val mUnitTest: Seq[ModuleID] = Seq(
