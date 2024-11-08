@@ -263,6 +263,13 @@ trait ProcessOps {
     )
     .spawn[IO]
 
+  def getBlockheightP = process
+    .ProcessBuilder(
+      DOCKER_CMD,
+      getBlockHeightSeq: _*
+    )
+    .spawn[IO]
+
   def createTxPMultiple(txId: String, addresses: Seq[String], amount: BigDecimal) = process
     .ProcessBuilder(
       DOCKER_CMD,

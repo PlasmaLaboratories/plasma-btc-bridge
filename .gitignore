@@ -23,6 +23,14 @@ integration/groupMintingtx.pbuf
 integration/groupMintingtxProved.pbuf
 integration/groupPolicy.yaml
 integration/key.txt
+integration/key*.txt
+
+integration/fundRedeemTxProved*.pbuf
+integration/fundRedeemTx*.pbuf
+
+integration/redeemTx*.pbuf
+integration/redeemTxProved*.pbuf
+
 integration/redeemTx.pbuf
 integration/seriesMintingTx.pbuf
 integration/seriesMintingTxProved.pbuf

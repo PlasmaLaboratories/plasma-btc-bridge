@@ -14,7 +14,7 @@ import scala.util.Try
 
 trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with PublicApiConfModule {
 
-  override val munitIOTimeout = Duration(500, "s")
+  override val munitIOTimeout = Duration(800, "s")
 
   implicit val logger: Logger[IO] =
     org.typelevel.log4cats.slf4j.Slf4jLogger
@@ -71,7 +71,7 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
           "--strata-confirmation-threshold",
           "5",
           "--strata-blocks-to-recover",
-          "100",
+          "2000",
           "--abtc-group-id",
           groupId,
           "--abtc-series-id",

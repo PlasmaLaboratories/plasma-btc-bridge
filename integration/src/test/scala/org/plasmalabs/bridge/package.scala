@@ -126,6 +126,12 @@ package object bridge extends ProcessOps {
     tx <- withTracingReturn(getTxP(id, txId))
   } yield (extractTxConfirmations(tx), extractBlockHeight(tx))
 
+  def getBitcoinBlockheight(implicit
+    l: Logger[IO]
+  ) = for {
+    height <- withTracingReturn(getBlockheightP)
+  } yield height
+
   def createTxMultiple(txId: String, addresses: Seq[String], amount: BigDecimal)(implicit
     l: Logger[IO]
   ) =
@@ -153,13 +159,13 @@ package object bridge extends ProcessOps {
   ) =
     withLogging(addTemplateP(id, sha256, min, max))
 
-  def importVks(id: Int)(implicit l: Logger[IO]) =
-    withLogging(importVksP(id))
+  def importVks(userId: Int)(implicit l: Logger[IO]) =
+    withLogging(importVksP(userId))
 
-  def fundRedeemAddressTx(id: Int, redeemAddress: String)(implicit
+  def fundRedeemAddressTx(userId: Int, redeemAddress: String)(implicit
     l: Logger[IO]
   ) =
-    withLogging(fundRedeemAddressTxP(id, redeemAddress))
+    withLogging(fundRedeemAddressTxP(userId, redeemAddress))
 
   def proveFundRedeemAddressTx(
     id:          Int,
@@ -815,6 +821,17 @@ package object bridge extends ProcessOps {
     s"-rpcwallet=${userBitcoinWallet(id)}",
     "gettransaction",
     txId
+  )
+
+  def getBlockHeightSeq = Seq(
+    "exec",
+    "bitcoin01",
+    "bitcoin-cli",
+    "-regtest",
+    "-rpcuser=bitcoin",
+    "-rpcpassword=password",
+    s"-rpcwallet=testwallet",
+    "getblockcount"
   )
 
   def createTxSeqMultiple(txId: String, addresses: Seq[String], amount: BigDecimal) =

@@ -217,7 +217,7 @@ object BridgeStateMachineExecutionManagerImpl {
                   .map(txo => int128AsBigInt(valueToQuantitySyntaxOps(txo.transactionOutput.value.value).quantity))
                   .sum
 
-                _ <- (for {
+                _ <- for {
                   mintingSuccessful <- verifyMintingSpent(
                     changeAddress,
                     groupValueToArrive,
@@ -228,7 +228,7 @@ object BridgeStateMachineExecutionManagerImpl {
                     ].pure(false)
                   }
                   _ <- Async[F].sleep(1.second)
-                } yield mintingSuccessful).iterateUntil(_ == true)
+                } yield mintingSuccessful
                 _ <- info"Processing minting successful, continue with next Request"
               } yield ()
             }
