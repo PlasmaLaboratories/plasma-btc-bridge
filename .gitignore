@@ -43,6 +43,8 @@ integration/user-wallet*.json
 integration/plasma-wallet*.json
 integration/node01/
 integration/node02/
+integration-monitor/node01/
+integration-monitor/node02/
 integration/clientConfig*.conf
 integration/clientPrivateKey*.pem
 integration/clientPublicKey*.pem
