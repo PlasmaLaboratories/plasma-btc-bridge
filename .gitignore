@@ -28,6 +28,8 @@ integration/key*.txt
 integration/fundRedeemTxProved*.pbuf
 integration/fundRedeemTx*.pbuf
 
+integration/project/
+
 integration/redeemTx*.pbuf
 integration/redeemTxProved*.pbuf
 
