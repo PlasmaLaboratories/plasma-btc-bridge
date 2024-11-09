@@ -71,7 +71,7 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
           "--plasma-confirmation-threshold",
           "5",
           "--plasma-blocks-to-recover",
-          "2000",
+          "100",
           "--abtc-group-id",
           groupId,
           "--abtc-series-id",

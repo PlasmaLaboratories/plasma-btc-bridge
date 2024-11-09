@@ -830,7 +830,7 @@ package object bridge extends ProcessOps {
     "-regtest",
     "-rpcuser=bitcoin",
     "-rpcpassword=password",
-    s"-rpcwallet=testwallet",
+    "-rpcwallet=testwallet",
     "getblockcount"
   )
 

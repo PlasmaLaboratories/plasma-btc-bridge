@@ -1,18 +1,14 @@
 package org.plasmalabs.bridge
 
 import cats.effect.IO
+import cats.effect.std.Queue
 import org.plasmalabs.bridge.shared.StartPeginSessionResponse
+import org.plasmalabs.bridge.{getCurrentUtxosFromAddress, getNewAddress, mintPlasmaBlock, userBitcoinWallet}
 import org.typelevel.log4cats.syntax._
 
-import scala.concurrent.duration._
-import org.plasmalabs.bridge.userBitcoinWallet
-import org.plasmalabs.bridge.getCurrentUtxosFromAddress
-import org.plasmalabs.bridge.getNewAddress
-import org.plasmalabs.bridge.mintStrataBlock
-import scala.util.Random
-import cats.effect.std.Queue
-
 import java.nio.file.{Files, Paths}
+import scala.concurrent.duration._
+import scala.util.Random
 
 trait SuccessfulPeginWithConcurrentSessionsModule {
 
@@ -41,7 +37,7 @@ trait SuccessfulPeginWithConcurrentSessionsModule {
     } yield (userId, newAddress)
 
     def getSessionById(userId: Int) = for {
-      _                    <- initStrataWallet(userId)
+      _                    <- initPlasmaWallet(userId)
       _                    <- addFellowship(userId)
       userSecret           <- addSecret(userId)
       startSessionResponse <- startSession(userSecret)
@@ -128,13 +124,13 @@ trait SuccessfulPeginWithConcurrentSessionsModule {
           _ <- fundRedeemAddressTx(userId, address)
           _ <- proveFundRedeemAddressTx(userId, userFundRedeemTx(userId), userFundRedeemTxProved(userId))
           _ <- broadcastFundRedeemAddressTx(userFundRedeemTxProved(userId))
-          _ <- mintStrataBlock(1, 2)
+          _ <- mintPlasmaBlock(1, 2)
 
           utxoAttempt <- getCurrentUtxosFromAddress(userId, address)
             .iterateUntil(_.contains("LVL"))
             .timeout(time.second)
 
-          _ <- mintStrataBlock(1, 1)
+          _ <- mintPlasmaBlock(1, 1)
           _ <- IO.sleep(3.second)
         } yield utxoAttempt
 
@@ -157,7 +153,7 @@ trait SuccessfulPeginWithConcurrentSessionsModule {
         (for {
           status <- checkMintingStatus(sessionResponse.sessionID)
           _      <- info"Current minting status: ${status.mintingStatus}"
-          _      <- mintStrataBlock(node = 1, nbBlocks = 1)
+          _      <- mintPlasmaBlock(node = 1, nbBlocks = 1)
           _      <- bitcoinMintingQueue.offer((newAddress, userBitcoinWallet(userId), 1))
 
           _ <- IO.sleep(1.second)
@@ -190,7 +186,7 @@ trait SuccessfulPeginWithConcurrentSessionsModule {
 
       _ <- broadcastFundRedeemAddressTx(userRedeemTxProved(userId))
 
-      _ <- List.fill(8)(mintStrataBlock(1, 1)).sequence
+      _ <- List.fill(8)(mintPlasmaBlock(1, 1)).sequence
 
       _ <- getCurrentUtxosFromAddress(userId, currentAddress)
         .iterateUntil(_.contains("Asset"))
@@ -213,7 +209,7 @@ trait SuccessfulPeginWithConcurrentSessionsModule {
       for {
         _ <- deleteOutputFiles(numberOfSessions)
         _ <- pwd
-        _ <- mintStrataBlock(
+        _ <- mintPlasmaBlock(
           1,
           5
         )

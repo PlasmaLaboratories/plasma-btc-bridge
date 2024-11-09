@@ -147,7 +147,7 @@ object WaitingBTCOps {
         fromFellowship,
         fromTemplate,
         assetMintingStatement._1,
-        toplKeypair.underlying,
+        plasmaKeypair.underlying,
         defaultMintingFee
       )
     } yield (currentAddress, assetMintingStatement._2)
