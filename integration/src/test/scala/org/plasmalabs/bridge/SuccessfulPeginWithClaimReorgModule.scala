@@ -21,7 +21,7 @@ trait SuccessfulPeginWithClaimReorgModule {
         // parse
         ipBitcoin01      <- extractIpBtc(1, bridgeNetwork._1)
         _                <- pwd
-        _                <- initStrataWallet(2)
+        _                <- initPlasmaWallet(2)
         _                <- addFellowship(2)
         secret           <- addSecret(2)
         newAddress       <- getNewAddress
@@ -46,13 +46,13 @@ trait SuccessfulPeginWithClaimReorgModule {
         mintingStatusResponse <- (for {
           status <- checkMintingStatus(startSessionResponse.sessionID)
           _      <- info"Current minting status: ${status.mintingStatus}"
-          _      <- mintStrataBlock(1, 1)
+          _      <- mintPlasmaBlock(1, 1)
           _      <- IO.sleep(1.second)
         } yield status)
           .iterateUntil(
             _.mintingStatus == "PeginSessionStateMintingTBTC"
           )
-        _ <- mintStrataBlock(1, 1)
+        _ <- mintPlasmaBlock(1, 1)
         _ <- createVkFile(vkFile)
         _ <- importVks(2)
         _ <- fundRedeemAddressTx(
@@ -67,7 +67,7 @@ trait SuccessfulPeginWithClaimReorgModule {
         _ <- broadcastFundRedeemAddressTx(
           "fundRedeemTxProved.pbuf"
         )
-        _ <- mintStrataBlock(1, 1)
+        _ <- mintPlasmaBlock(1, 1)
         utxo <- getCurrentUtxosFromAddress(2, mintingStatusResponse.address)
           .iterateUntil(_.contains("LVL"))
         groupId = extractGroupId(utxo)
@@ -90,10 +90,10 @@ trait SuccessfulPeginWithClaimReorgModule {
         )
         // broadcast
         _ <- broadcastFundRedeemAddressTx("redeemTxProved.pbuf")
-        _ <- mintStrataBlock(1, 2)
+        _ <- mintPlasmaBlock(1, 2)
         _ <- getCurrentUtxosFromAddress(2, currentAddress)
           .iterateUntil(_.contains("Asset"))
-        _ <- mintStrataBlock(1, 7)
+        _ <- mintPlasmaBlock(1, 7)
         _ <- generateToAddress(1, 3, newAddress)
         _ <- generateToAddress(2, 8, newAddress)
         // reconnect networks

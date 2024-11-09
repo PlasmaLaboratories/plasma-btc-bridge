@@ -12,7 +12,7 @@ trait FailedPeginNoMintModule {
   def failedPeginNoMint(): IO[Unit] =
     assertIO(
       for {
-        _                <- mintStrataBlock(1, 1)
+        _                <- mintPlasmaBlock(1, 1)
         _                <- IO.sleep(1.second)
         newAddress       <- getNewAddress
         txIdAndBTCAmount <- extractGetTxIdAndAmount

@@ -7,8 +7,8 @@ import org.plasmalabs.bridge.consensus.shared.{
   BTCRetryThreshold,
   BTCWaitExpirationTime,
   PeginSessionInfo,
-  StrataConfirmationThreshold,
-  StrataWaitExpirationTime
+  PlasmaConfirmationThreshold,
+  PlasmaWaitExpirationTime
 }
 import org.plasmalabs.bridge.consensus.subsystems.monitor.{
   EndTransition,
@@ -37,17 +37,17 @@ object MonitorStateMachine {
 
   def make[F[_]: Async: Logger](
     currentBitcoinNetworkHeight: Ref[F, Int],
-    currentStrataNetworkHeight:  Ref[F, Long]
+    currentPlasmaNetworkHeight:  Ref[F, Long]
   )(implicit
-    clientId:                  ClientId,
-    consensusClient:           StateMachineServiceGrpcClient[F],
-    btcWaitExpirationTime:     BTCWaitExpirationTime,
-    toplWaitExpirationTime:    StrataWaitExpirationTime,
-    btcRetryThreshold:         BTCRetryThreshold,
-    btcConfirmationThreshold:  BTCConfirmationThreshold,
-    toplConfirmationThreshold: StrataConfirmationThreshold,
-    groupIdIdentifier:         GroupId,
-    seriesIdIdentifier:        SeriesId
+    clientId:                    ClientId,
+    consensusClient:             StateMachineServiceGrpcClient[F],
+    btcWaitExpirationTime:       BTCWaitExpirationTime,
+    plasmaWaitExpirationTime:    PlasmaWaitExpirationTime,
+    btcRetryThreshold:           BTCRetryThreshold,
+    btcConfirmationThreshold:    BTCConfirmationThreshold,
+    plasmaConfirmationThreshold: PlasmaConfirmationThreshold,
+    groupIdIdentifier:           GroupId,
+    seriesIdIdentifier:          SeriesId
   ) =
     for {
       map <- Ref.of[F, Map[String, PeginStateMachineState]](Map.empty)
@@ -74,19 +74,19 @@ object MonitorStateMachine {
           case _ => fs2.Stream.empty
         }
 
-      private def updateStrataHeight(
+      private def updatePlasmaHeight(
         blockchainEvent: BlockchainEvent
       ): fs2.Stream[F, F[Unit]] =
         blockchainEvent match {
-          case NewStrataBlock(height) =>
+          case NewPlasmaBlock(height) =>
             fs2.Stream(
               for {
-                x <- currentStrataNetworkHeight.get
-                _ <- trace"current topl height is $x"
-                _ <- trace"Updating topl height to $height"
+                x <- currentPlasmaNetworkHeight.get
+                _ <- trace"current plasma height is $x"
+                _ <- trace"Updating plasma height to $height"
                 _ <-
                   if (height > x)
-                    currentStrataNetworkHeight.set(height)
+                    currentPlasmaNetworkHeight.set(height)
                   else Sync[F].unit
               } yield ()
             )
@@ -97,7 +97,7 @@ object MonitorStateMachine {
       def handleBlockchainEventInContext(
         blockchainEvent: BlockchainEvent
       ): fs2.Stream[F, F[Unit]] =
-        updateStrataHeight(blockchainEvent) ++
+        updatePlasmaHeight(blockchainEvent) ++
         updateBTCHeight(blockchainEvent) ++ (for {
           entrySet <- fs2.Stream.eval(map.get)
           entry <- fs2.Stream[F, (String, PeginStateMachineState)](
@@ -146,8 +146,8 @@ object MonitorStateMachine {
             trace"Processed blockchain event ${blockchainEvent.getClass().getSimpleName()} at height ${blockchainEvent.asInstanceOf[NewBTCBlock].height}" >> value
           else if (blockchainEvent.isInstanceOf[SkippedBTCBlock])
             trace"Processed blockchain event ${blockchainEvent.getClass().getSimpleName()} at height ${blockchainEvent.asInstanceOf[SkippedBTCBlock].height}" >> value
-          else if (blockchainEvent.isInstanceOf[NewStrataBlock])
-            trace"Processed blockchain event ${blockchainEvent.getClass().getSimpleName()} at height ${blockchainEvent.asInstanceOf[NewStrataBlock].height}" >> value
+          else if (blockchainEvent.isInstanceOf[NewPlasmaBlock])
+            trace"Processed blockchain event ${blockchainEvent.getClass().getSimpleName()} at height ${blockchainEvent.asInstanceOf[NewPlasmaBlock].height}" >> value
           else
             trace"Processed blockchain event ${blockchainEvent.getClass().getSimpleName()}" >> value
         }

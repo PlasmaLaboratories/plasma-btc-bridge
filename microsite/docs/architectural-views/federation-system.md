@@ -14,14 +14,14 @@ The following diagram shows the architecture of the federation system:
 
 ### brdge-federation
 
-The bridge federation it self is composed by a set of one or more `strata-bridge`
+The bridge federation it self is composed by a set of one or more `plasma-bridge`
 nodes. It has also two properties: `clientCount` and `replicaCount`. The `clientCount`
 is the number of clients that can connect to the federation. The `replicaCount` is the
 number of replicas that the federation has.
 
-### strata-bridge
+### plasma-bridge
 
-The `strata-bridge` is a node that is part of the federation. It is responsible for
+The `plasma-bridge` is a node that is part of the federation. It is responsible for
 reaching consensus on the state of the federation. It is composed by the following:
 
 - **consensus**: This is a subsystem that run autonomously and is responsible for
@@ -71,6 +71,6 @@ The monitor is a client that is responsible for monitoring the blockchain and up
 the state of the federation. It is a PBFT client. It knows all the replicas and interacts
 with them according to the PBFT protocol.
 
-It also knows the Bitcoin network and the Strata network. It monitors them,
+It also knows the Bitcoin network and the Plasma network. It monitors them,
 changes its state accordingly and then updates the state of the federation
 via the `StateMachineService` interface.

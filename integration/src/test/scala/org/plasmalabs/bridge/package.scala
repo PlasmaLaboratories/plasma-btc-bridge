@@ -97,13 +97,13 @@ package object bridge extends ProcessOps {
         }
     } yield output
 
-  def mintStrataBlock(node: Int, nbBlocks: Int)(implicit l: Logger[IO]) =
+  def mintPlasmaBlock(node: Int, nbBlocks: Int)(implicit l: Logger[IO]) =
     withLogging(mintBlockP(node, nbBlocks))
 
-  def mintStrataBlockDocker(node: Int, nbBlocks: Int)(implicit l: Logger[IO]) =
+  def mintPlasmaBlockDocker(node: Int, nbBlocks: Int)(implicit l: Logger[IO]) =
     withLogging(mintBlockDockerP(node, nbBlocks))
 
-  def initStrataWallet(id: Int)(implicit l: Logger[IO]) =
+  def initPlasmaWallet(id: Int)(implicit l: Logger[IO]) =
     withLogging(initUserWalletP(id))
 
   def pwd(implicit l: Logger[IO]) =
@@ -304,7 +304,7 @@ package object bridge extends ProcessOps {
               method = Method.POST,
               Uri
                 .fromString(
-                  "http://127.0.0.1:5000/api/" + BridgeContants.STRATA_MINTING_STATUS
+                  "http://127.0.0.1:5000/api/" + BridgeContants.PLASMA_MINTING_STATUS
                 )
                 .toOption
                 .get
@@ -333,7 +333,7 @@ package object bridge extends ProcessOps {
             method = Method.POST,
             Uri
               .fromString(
-                "http://127.0.0.1:5000/api/" + BridgeContants.STRATA_MINTING_STATUS
+                "http://127.0.0.1:5000/api/" + BridgeContants.PLASMA_MINTING_STATUS
               )
               .toOption
               .get

@@ -1,16 +1,15 @@
 package org.plasmalabs.bridge.consensus.subsystems.monitor
 
+import org.plasmalabs.bridge.consensus.subsystems.monitor.{BitcoinBlockSync, NodeBlockSync}
 import org.plasmalabs.sdk.codecs.AddressCodecs
 import org.plasmalabs.sdk.models.box.Attestation
-import org.plasmalabs.sdk.monitoring.BitcoinMonitor.BitcoinBlockSync
-import org.plasmalabs.sdk.monitoring.NodeMonitor
 import org.plasmalabs.sdk.utils.Encoding
 
 import scala.util.Try
 
 object BlockProcessor {
 
-  private def extractFromStrataTx(proof: Attestation): String = {
+  private def extractFromPlasmaTx(proof: Attestation): String = {
     // The following is possible because we know the exact structure of the attestation
     val attestation = proof.getPredicate
     val preimage = attestation.responses.head.getAnd.left.getDigest.preimage
@@ -21,18 +20,18 @@ object BlockProcessor {
 
   def process[F[_]](
     initialBTCHeight:    Int,
-    initialStrataHeight: Long
-  ): Either[BitcoinBlockSync, NodeMonitor.NodeBlockSync] => fs2.Stream[
+    initialPlasmaHeight: Long
+  ): Either[BitcoinBlockSync, NodeBlockSync] => fs2.Stream[
     F,
     BlockchainEvent
   ] = {
     var btcHeight = initialBTCHeight
-    var toplHeight =
-      initialStrataHeight
+    var plasmaHeight =
+      initialPlasmaHeight
     var btcAscending = false
-    var toplAscending = false
+    var plasmaAscending = false
     def processAux[F[_]](
-      block: Either[BitcoinBlockSync, NodeMonitor.NodeBlockSync]
+      block: Either[BitcoinBlockSync, NodeBlockSync]
     ): fs2.Stream[F, BlockchainEvent] = block match {
       case Left(b) =>
         val allTransactions = fs2.Stream(
@@ -99,7 +98,7 @@ object BlockProcessor {
                   b.height,
                   Encoding.encodeToBase58(input.address.id.value.toByteArray()),
                   input.address.index,
-                  Try(extractFromStrataTx(input.attestation))
+                  Try(extractFromPlasmaTx(input.attestation))
                     .getOrElse(""), // TODO: Make this safer
                   toCurrencyUnit(input.value.value)
                 )
@@ -120,38 +119,38 @@ object BlockProcessor {
             }
           ): _*
         )
-        if (toplHeight == 0)
-          toplHeight = b.height - 1
+        if (plasmaHeight == 0)
+          plasmaHeight = b.height - 1
         val transactions =
-          if (b.height == (toplHeight + 1)) { // going up as expected, include all transaction
-            toplAscending = true
-            fs2.Stream(NewStrataBlock(b.height)) ++ allTransactions
-          } else if (b.height == (toplHeight - 1)) { // going down by one, we ommit transactions
-            toplAscending = false
-            fs2.Stream(NewStrataBlock(b.height))
-          } else if (b.height > (toplHeight + 1)) { // we went up by more than one
-            toplAscending = true
+          if (b.height == (plasmaHeight + 1)) { // going up as expected, include all transaction
+            plasmaAscending = true
+            fs2.Stream(NewPlasmaBlock(b.height)) ++ allTransactions
+          } else if (b.height == (plasmaHeight - 1)) { // going down by one, we ommit transactions
+            plasmaAscending = false
+            fs2.Stream(NewPlasmaBlock(b.height))
+          } else if (b.height > (plasmaHeight + 1)) { // we went up by more than one
+            plasmaAscending = true
             fs2.Stream(
-              SkippedStrataBlock(b.height)
+              SkippedPlasmaBlock(b.height)
             )
-          } else if (b.height < (toplHeight - 1)) { // we went down by more than one, we ommit transactions
-            toplAscending = false
+          } else if (b.height < (plasmaHeight - 1)) { // we went down by more than one, we ommit transactions
+            plasmaAscending = false
             fs2.Stream()
           } else {
             // we stayed the same
-            if (toplAscending) {
+            if (plasmaAscending) {
               // if we are ascending, it means the current block was just unapplied
               // we don't pass the transactions that we have already seen
-              toplAscending = false
-              fs2.Stream(NewStrataBlock(b.height))
+              plasmaAscending = false
+              fs2.Stream(NewPlasmaBlock(b.height))
             } else {
               // if we are descending, it means the current block was just applied
               // we need to pass all transactions
-              toplAscending = true
-              fs2.Stream(NewStrataBlock(b.height)) ++ allTransactions
+              plasmaAscending = true
+              fs2.Stream(NewPlasmaBlock(b.height)) ++ allTransactions
             }
           }
-        toplHeight = b.height
+        plasmaHeight = b.height
         transactions
     }
     processAux

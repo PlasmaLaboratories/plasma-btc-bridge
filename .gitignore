@@ -9,11 +9,11 @@ metals.sbt
 logs/
 static/
 secret.yaml
-strata-wallet*.json
-strata-wallet*.db
+plasma-wallet*.json
+plasma-wallet*.db
 replica*.db
 replicaConfig*.conf
-strata-mnemonic.txt
+plasma-mnemonic.txt
 genesisTxProved.pbuf
 genesisTx.pbuf
 helm/
@@ -55,6 +55,9 @@ integration/consensusPublicKey*.pem
 integration/redeemTxProved.pbuf
 integration/bridge.db
 integration/user-wallet.db
+
+integration-monitor/node01/
+integration-monitor/node02/
 
 .direnv
 /.idea/

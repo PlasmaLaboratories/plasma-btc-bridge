@@ -8,20 +8,20 @@ import { themes as prismThemes } from 'prism-react-renderer';
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
-  title: 'Strata Bridge',
-  tagline: 'Strata Bridge',
+  title: 'Plasma Bridge',
+  tagline: 'Plasma Bridge',
   favicon: 'img/favicon.ico',
 
   // Set the production url of your site here
-  url: 'https://topl.github.io/',
+  url: 'https://plasma.github.io/',
   // Set the /<baseUrl>/ pathname under which your site is served
   // For GitHub pages deployment, it is often '/<projectName>/'
-  baseUrl: '/topl-btc-bridge/',
+  baseUrl: '/plasma-btc-bridge/',
 
   // GitHub pages deployment config.
   // If you aren't using GitHub pages, you don't need these.
-  organizationName: 'StrataLab', // Usually your GitHub org/user name.
-  projectName: 'topl-btc-bridge', // Usually your repo name.
+  organizationName: 'PlasmaLab', // Usually your GitHub org/user name.
+  projectName: 'plasma-btc-bridge', // Usually your repo name.
 
   onBrokenLinks: 'throw',
   onBrokenMarkdownLinks: 'warn',
@@ -58,9 +58,9 @@ const config = {
       // Replace with your project's social card
       image: 'img/docusaurus-social-card.jpg',
       navbar: {
-        title: 'Strata Bridge',
+        title: 'Plasma Bridge',
         logo: {
-          alt: 'Strata Bridge Logo',
+          alt: 'Plasma Bridge Logo',
           src: 'img/logo.svg',
         },
         items: [
@@ -71,7 +71,7 @@ const config = {
             label: 'Architecture',
           },
           {
-            href: 'https://github.com/Topl/topl-btc-bridge',
+            href: 'https://github.com/PlasmaLaboratories/plasma-btc-bridge',
             label: 'GitHub',
             position: 'right',
           },
@@ -94,7 +94,7 @@ const config = {
             items: [
               {
                 label: 'Twitter',
-                href: 'https://twitter.com/topl_protocol',
+                href: 'https://twitter.com/plasma_protocol',
               },
             ],
           },
@@ -103,12 +103,12 @@ const config = {
             items: [
               {
                 label: 'GitHub',
-                href: 'https://github.com/Topl/topl-btc-bridge',
+                href: 'https://github.com/Plasma/plasma-btc-bridge',
               },
             ],
           },
         ],
-        copyright: `Copyright © ${new Date().getFullYear()} Strata, Inc. Built with Docusaurus.`,
+        copyright: `Copyright © ${new Date().getFullYear()} Plasma, Inc. Built with Docusaurus.`,
       },
       prism: {
         theme: prismThemes.github,

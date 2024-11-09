@@ -20,11 +20,11 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
     org.typelevel.log4cats.slf4j.Slf4jLogger
       .getLoggerFromName[IO]("it-test")
 
-  def toplWalletDb(replicaId: Int) =
-    Option(System.getenv(s"STRATA_WALLET_DB_$replicaId")).getOrElse(s"strata-wallet$replicaId.db")
+  def plasmaWalletDb(replicaId: Int) =
+    Option(System.getenv(s"PLASMA_WALLET_DB_$replicaId")).getOrElse(s"plasma-wallet$replicaId.db")
 
-  def toplWalletJson(replicaId: Int) =
-    Option(System.getenv(s"STRATA_WALLET_JSON_$replicaId")).getOrElse(s"strata-wallet$replicaId.json")
+  def plasmaWalletJson(replicaId: Int) =
+    Option(System.getenv(s"PLASMA_WALLET_JSON_$replicaId")).getOrElse(s"plasma-wallet$replicaId.json")
 
   import cats.implicits._
 
@@ -60,17 +60,17 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
           "src/test/resources/wallet.json",
           "--btc-peg-in-seed-file",
           "src/test/resources/pegin-wallet.json",
-          "--strata-wallet-seed-file",
-          toplWalletJson(replicaId),
-          "--strata-wallet-db",
-          toplWalletDb(replicaId),
+          "--plasma-wallet-seed-file",
+          plasmaWalletJson(replicaId),
+          "--plasma-wallet-db",
+          plasmaWalletDb(replicaId),
           "--btc-url",
           "http://localhost",
           "--btc-blocks-to-recover",
           "50",
-          "--strata-confirmation-threshold",
+          "--plasma-confirmation-threshold",
           "5",
-          "--strata-blocks-to-recover",
+          "--plasma-blocks-to-recover",
           "2000",
           "--abtc-group-id",
           groupId,
@@ -111,8 +111,8 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
           }
           _              <- createReplicaConfigurationFiles[IO]()
           _              <- createPublicApiConfigurationFiles[IO]()
-          currentAddress <- currentAddress(toplWalletDb(0))
-          utxo           <- getCurrentUtxosFromAddress(toplWalletDb(0), currentAddress)
+          currentAddress <- currentAddress(plasmaWalletDb(0))
+          utxo           <- getCurrentUtxosFromAddress(plasmaWalletDb(0), currentAddress)
           (groupId, seriesId) = extractIds(utxo)
           _ <- IO(Try(Files.delete(Paths.get("bridge.db"))))
           _ <- IO.asyncForIO.both(
@@ -168,7 +168,7 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
           _          <- initUserBitcoinWallet
           newAddress <- getNewAddress
           _          <- generateToAddress(1, 101, newAddress)
-          _          <- mintStrataBlock(1, 1)
+          _          <- mintPlasmaBlock(1, 1)
         } yield ()).unsafeToFuture()
 
       override def afterAll() =
@@ -194,7 +194,7 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
             fiber02 = fiber02.filter(_._2 != replicaId)
             fiber01 = fiber01.filter(_._2 != replicaId)
           }
-          _ <- info"Killed both consensus and public API fibers for replica $replicaId"
+          _ <- logger.info(s"Killed both consensus and public API fibers for replica $replicaId")
         } yield ()
       )
       .sequence[IO, Unit]
@@ -209,8 +209,8 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
     _ <-
       if (missingReplicas.nonEmpty) {
         for {
-          currentAddress <- currentAddress(toplWalletDb(0))
-          utxo           <- getCurrentUtxosFromAddress(toplWalletDb(0), currentAddress)
+          currentAddress <- currentAddress(plasmaWalletDb(0))
+          utxo           <- getCurrentUtxosFromAddress(plasmaWalletDb(0), currentAddress)
           (groupId, seriesId) = extractIds(utxo)
 
           _ <- IO.asyncForIO.both(
@@ -227,10 +227,10 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
             IO.sleep(10.seconds)
           )
 
-          _ <- info"Restored consensus and public api for ${missingReplicas}"
+          _ <- logger.info(s"Restored consensus and public api for ${missingReplicas}")
         } yield ()
       } else {
-        info"All replicas are still running."
+        logger.info("All replicas are still running.")
       }
   } yield ()
 

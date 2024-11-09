@@ -40,11 +40,11 @@ message SkippedBTCBlock {
   uint32 height = 1;
 }
 
-message SkippedStrataBlock {
+message SkippedPlasmaBlock {
   uint64 height = 1;
 }
 
-message NewStrataBlock {
+message NewPlasmaBlock {
   uint64 height = 1;
 }
 
@@ -62,7 +62,7 @@ message BTCFundsWithdrawn {
 }
 
 message NodeFundsDeposited {
-  uint64 currentStrataBlockHeight = 1;
+  uint64 currentPlasmaBlockHeight = 1;
   string address = 2;
   string utxoTxId = 3;
   uint32 utxoIndex = 4;
@@ -70,7 +70,7 @@ message NodeFundsDeposited {
 }
 
 message NodeFundsWithdrawn {
-  uint64 currentStrataBlockHeight = 1;
+  uint64 currentPlasmaBlockHeight = 1;
   string txId = 2;
   uint32 txIndex = 3;
   string secret = 4;
@@ -81,8 +81,8 @@ message BlockchainEvent {
   oneof event {
     NewBTCBlock newBTCBlock = 1;
     SkippedBTCBlock skippedBTCBlock = 2;
-    SkippedStrataBlock skippedStrataBlock = 3;
-    NewStrataBlock newStrataBlock = 4;
+    SkippedPlasmaBlock skippedPlasmaBlock = 3;
+    NewPlasmaBlock newPlasmaBlock = 4;
     BTCFundsDeposited btcFundsDeposited = 5;
     BTCFundsWithdrawn btcFundsWithdrawn = 6;
     NodeFundsDeposited nodeFundsDeposited = 7;

@@ -5,8 +5,8 @@ import org.plasmalabs.bridge.consensus.shared.{
   BTCConfirmationThreshold,
   BTCRetryThreshold,
   BTCWaitExpirationTime,
-  StrataConfirmationThreshold,
-  StrataWaitExpirationTime
+  PlasmaConfirmationThreshold,
+  PlasmaWaitExpirationTime
 }
 import org.plasmalabs.bridge.consensus.subsystems.monitor.{FSMTransition, PeginStateMachineState}
 import org.plasmalabs.sdk.models.{GroupId, SeriesId}
@@ -24,13 +24,13 @@ object MonitorTransitionRelation
   )(
     t2E: (PeginStateMachineState, BlockchainEvent) => F[Unit]
   )(implicit
-    btcRetryThreshold:         BTCRetryThreshold,
-    btcWaitExpirationTime:     BTCWaitExpirationTime,
-    toplWaitExpirationTime:    StrataWaitExpirationTime,
-    btcConfirmationThreshold:  BTCConfirmationThreshold,
-    toplConfirmationThreshold: StrataConfirmationThreshold,
-    groupId:                   GroupId,
-    seriesId:                  SeriesId
+    btcRetryThreshold:           BTCRetryThreshold,
+    btcWaitExpirationTime:       BTCWaitExpirationTime,
+    plasmaWaitExpirationTime:    PlasmaWaitExpirationTime,
+    btcConfirmationThreshold:    BTCConfirmationThreshold,
+    plasmaConfirmationThreshold: PlasmaConfirmationThreshold,
+    groupId:                     GroupId,
+    seriesId:                    SeriesId
   ): Option[FSMTransition] =
     ((currentState, blockchainEvent) match {
       case (

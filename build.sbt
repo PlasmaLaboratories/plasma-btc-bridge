@@ -4,7 +4,7 @@ import scala.sys.process.Process
 inThisBuild(
   List(
     organization := "org.plasmalabs",
-    homepage := Some(url("https://github.com/StrataLab/plasma-btc-bridge")),
+    homepage := Some(url("https://github.com/PlasmaLaboratories/plasma-btc-bridge")),
     licenses := Seq("MPL2.0" -> url("https://www.mozilla.org/en-US/MPL/2.0/")),
     scalaVersion := "2.13.12"
   )
@@ -93,7 +93,7 @@ lazy val mavenPublishSettings = List(
   organization := "org.plasmalabs",
   version := dynverGitDescribeOutput.value
     .mkVersion(versionFmt, fallbackVersion(dynverCurrentDate.value)),
-  homepage := Some(url("https://github.com/StrataLab/plasma-btc-bridge")),
+  homepage := Some(url("https://github.com/PlasmaLaboratories/plasma-btc-bridge")),
   licenses := List("MPL2.0" -> url("https://www.mozilla.org/en-US/MPL/2.0/")),
   ThisBuild / sonatypeCredentialHost := "s01.oss.sonatype.org",
   sonatypeRepository := "https://s01.oss.sonatype.org/service/local",
@@ -212,6 +212,15 @@ lazy val integration = (project in file("integration"))
     commonSettings,
     libraryDependencies ++= Dependencies.plasmaBtcBridge.consensus ++ Dependencies.plasmaBtcBridge.publicApi ++ Dependencies.plasmaBtcBridge.shared ++ Dependencies.plasmaBtcBridge.test
   )
+
+lazy val `integration-monitor` = (project in file("integration-monitor"))
+  .dependsOn(consensus, plasmaBtcCli) // your current subproject
+  .settings(
+    publish / skip := true,
+    commonSettings,
+    libraryDependencies ++= Dependencies.plasmaBtcBridge.consensus ++ Dependencies.plasmaBtcBridge.shared ++ Dependencies.plasmaBtcBridge.test
+  )
+
 
 lazy val root = project
   .in(file("."))

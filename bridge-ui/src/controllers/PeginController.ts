@@ -40,12 +40,12 @@ export function setupSession(session: SessionInformation, setSession: React.Disp
     const escrowScript = getCookie("escrowScript");
     const currentState = getCookie("currentState");
     const redeemAddress = getCookie("redeemAddress");
-    const toplBridgePKey = getCookie("toplBridgePKey");
+    const plasmaBridgePKey = getCookie("plasmaBridgePKey");
     const redeemTemplate = getCookie("redeemTemplate");
 
-    if (sessionId !== undefined && escrowAddress !== undefined && escrowScript !== undefined && currentState !== undefined && redeemAddress !== undefined && toplBridgePKey !== undefined && redeemTemplate !== undefined) {
+    if (sessionId !== undefined && escrowAddress !== undefined && escrowScript !== undefined && currentState !== undefined && redeemAddress !== undefined && plasmaBridgePKey !== undefined && redeemTemplate !== undefined) {
       console.log("Session exists in cookie")
-      setSession({ isSet: true, sessionID: sessionId, escrowAddress: escrowAddress, escrowScript: escrowScript, currentState: stringToPeginUIState(currentState), redeemAddress: redeemAddress, toplBridgePKey: toplBridgePKey, redeemTemplate: redeemTemplate });
+      setSession({ isSet: true, sessionID: sessionId, escrowAddress: escrowAddress, escrowScript: escrowScript, currentState: stringToPeginUIState(currentState), redeemAddress: redeemAddress, plasmaBridgePKey: plasmaBridgePKey, redeemTemplate: redeemTemplate });
     }
   }
 }
@@ -55,39 +55,39 @@ export function sessionStarted(setSession: React.Dispatch<React.SetStateAction<S
   setCookie("escrowAddress", response.escrowAddress);
   setCookie("escrowScript", response.script);
   setCookie("currentState", "PeginSessionStateWaitingForBTC");
-  setSession({ isSet: true, sessionID: response.sessionID, escrowAddress: response.escrowAddress, escrowScript: response.script, currentState: PeginUIState.SessionStarted, redeemAddress: "", toplBridgePKey: "", redeemTemplate: "" });
+  setSession({ isSet: true, sessionID: response.sessionID, escrowAddress: response.escrowAddress, escrowScript: response.script, currentState: PeginUIState.SessionStarted, redeemAddress: "", plasmaBridgePKey: "", redeemTemplate: "" });
 }
 
 export function btcArrived(setSession: React.Dispatch<React.SetStateAction<SessionInformation>>, session: SessionInformation) {
   setCookie("currentState", "PeginSessionStateMintingTBTC");
-  setSession({ isSet: true, sessionID: session.sessionID, escrowAddress: session.escrowAddress, escrowScript: session.escrowScript, currentState: PeginUIState.MintingTBTC, redeemAddress: "", toplBridgePKey: "", redeemTemplate: "" });
+  setSession({ isSet: true, sessionID: session.sessionID, escrowAddress: session.escrowAddress, escrowScript: session.escrowScript, currentState: PeginUIState.MintingTBTC, redeemAddress: "", plasmaBridgePKey: "", redeemTemplate: "" });
 }
 
 export function mintingBTC(setSession: React.Dispatch<React.SetStateAction<SessionInformation>>, session: SessionInformation) {
   setCookie("currentState", "PeginSessionStateMintingTBTC");
-  setSession({ isSet: true, sessionID: session.sessionID, escrowAddress: session.escrowAddress, escrowScript: session.escrowScript, currentState: PeginUIState.MintingTBTC, redeemAddress: "", toplBridgePKey: "", redeemTemplate: "" });
+  setSession({ isSet: true, sessionID: session.sessionID, escrowAddress: session.escrowAddress, escrowScript: session.escrowScript, currentState: PeginUIState.MintingTBTC, redeemAddress: "", plasmaBridgePKey: "", redeemTemplate: "" });
 }
 
 export function timeOutMintingBTC(setSession: React.Dispatch<React.SetStateAction<SessionInformation>>, session: SessionInformation) {
   setCookie("currentState", "PeginSessionTimeOutMintingTBTC");
-  setSession({ isSet: true, sessionID: session.sessionID, escrowAddress: session.escrowAddress, escrowScript: session.escrowScript, currentState: PeginUIState.TimeOutMintingTBTC, redeemAddress: "", toplBridgePKey: "", redeemTemplate: "" });
+  setSession({ isSet: true, sessionID: session.sessionID, escrowAddress: session.escrowAddress, escrowScript: session.escrowScript, currentState: PeginUIState.TimeOutMintingTBTC, redeemAddress: "", plasmaBridgePKey: "", redeemTemplate: "" });
 }
 
 export function timeOutBTCNotSent(setSession: React.Dispatch<React.SetStateAction<SessionInformation>>, session: SessionInformation) {
   setCookie("currentState", "PeginSessionTimeOutBTCNotSent");
-  setSession({ isSet: true, sessionID: session.sessionID, escrowAddress: session.escrowAddress, escrowScript: session.escrowScript, currentState: PeginUIState.TimeOutBTCNotSent, redeemAddress: "", toplBridgePKey: "", redeemTemplate: "" });
+  setSession({ isSet: true, sessionID: session.sessionID, escrowAddress: session.escrowAddress, escrowScript: session.escrowScript, currentState: PeginUIState.TimeOutBTCNotSent, redeemAddress: "", plasmaBridgePKey: "", redeemTemplate: "" });
 }
 
 
-export function mintedBTC(setSession: React.Dispatch<React.SetStateAction<SessionInformation>>, session: SessionInformation, address: string, toplBridgePKey: string, redeemTemplate: string) {
+export function mintedBTC(setSession: React.Dispatch<React.SetStateAction<SessionInformation>>, session: SessionInformation, address: string, plasmaBridgePKey: string, redeemTemplate: string) {
   setCookie("currentState", "PeginSessionWaitingForRedemption");
   setCookie("redeemAddress", address);
-  setCookie("toplBridgePKey", toplBridgePKey);
+  setCookie("plasmaBridgePKey", plasmaBridgePKey);
   setCookie("redeemTemplate", redeemTemplate);
-  setSession({ isSet: true, sessionID: session.sessionID, escrowAddress: session.escrowAddress, escrowScript: session.escrowScript, currentState: PeginUIState.WaitingForRedemption, redeemAddress: address, toplBridgePKey: toplBridgePKey, redeemTemplate: redeemTemplate });
+  setSession({ isSet: true, sessionID: session.sessionID, escrowAddress: session.escrowAddress, escrowScript: session.escrowScript, currentState: PeginUIState.WaitingForRedemption, redeemAddress: address, plasmaBridgePKey: plasmaBridgePKey, redeemTemplate: redeemTemplate });
 }
 
 export function claimedTBTC(setSession: React.Dispatch<React.SetStateAction<SessionInformation>>, session: SessionInformation) {
   setCookie("currentState", "PeginSessionWaitingForClaim");
-  setSession({ isSet: true, sessionID: session.sessionID, escrowAddress: session.escrowAddress, escrowScript: session.escrowScript, currentState: PeginUIState.WaitingForClaim, redeemAddress: session.redeemAddress, toplBridgePKey: session.toplBridgePKey, redeemTemplate: session.redeemTemplate });
+  setSession({ isSet: true, sessionID: session.sessionID, escrowAddress: session.escrowAddress, escrowScript: session.escrowScript, currentState: PeginUIState.WaitingForClaim, redeemAddress: session.redeemAddress, plasmaBridgePKey: session.plasmaBridgePKey, redeemTemplate: session.redeemTemplate });
 }

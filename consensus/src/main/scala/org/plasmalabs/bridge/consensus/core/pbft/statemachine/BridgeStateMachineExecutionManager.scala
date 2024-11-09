@@ -17,12 +17,13 @@ import org.plasmalabs.bridge.consensus.core.{
   BridgeWalletManager,
   CheckpointInterval,
   CurrentBTCHeightRef,
-  CurrentStrataHeightRef,
+  CurrentPlasmaHeightRef,
   Fellowship,
   LastReplyMap,
+  PBFTInternalGrpcServiceClient,
   PeginWalletManager,
+  PlasmaKeypair,
   PublicApiClientGrpcMap,
-  StrataKeypair,
   Template,
   stateDigest
 }
@@ -42,7 +43,7 @@ import org.plasmalabs.bridge.consensus.shared.{
   Lvl,
   MiscUtils,
   PeginSessionState,
-  StrataWaitExpirationTime
+  PlasmaWaitExpirationTime
 }
 import org.plasmalabs.bridge.consensus.subsystems.monitor.SessionManagerAlgebra
 import org.plasmalabs.bridge.shared.StateMachineRequest.Operation.{
@@ -62,7 +63,6 @@ import org.plasmalabs.bridge.shared.{
   StartSessionOperation,
   StateMachineRequest
 }
-import org.plasmalabs.consensus.core.PBFTInternalGrpcServiceClient
 import org.plasmalabs.sdk.builders.TransactionBuilderApi
 import org.plasmalabs.sdk.dataApi.{
   FellowshipStorageAlgebra,
@@ -112,8 +112,8 @@ object BridgeStateMachineExecutionManagerImpl {
     keyPair:               JKeyPair,
     viewManager:           ViewManager[F],
     walletManagementUtils: WalletManagementUtils[F],
-    toplWalletSeedFile:    String,
-    toplWalletPassword:    String
+    plasmaWalletSeedFile:  String,
+    plasmaWalletPassword:  String
   )(implicit
     pbftProtocolClientGrpc:   PBFTInternalGrpcServiceClient[F],
     replica:                  ReplicaId,
@@ -126,10 +126,10 @@ object BridgeStateMachineExecutionManagerImpl {
     bridgeWalletManager:      BridgeWalletManager[F],
     fellowshipStorageAlgebra: FellowshipStorageAlgebra[F],
     templateStorageAlgebra:   TemplateStorageAlgebra[F],
-    toplWaitExpirationTime:   StrataWaitExpirationTime,
+    plasmaWaitExpirationTime: PlasmaWaitExpirationTime,
     btcWaitExpirationTime:    BTCWaitExpirationTime,
     tba:                      TransactionBuilderApi[F],
-    currentStrataHeight:      CurrentStrataHeightRef[F],
+    currentPlasmaHeight:      CurrentPlasmaHeightRef[F],
     walletApi:                WalletApi[F],
     wsa:                      WalletStateAlgebra[F],
     groupIdIdentifier:        GroupId,
@@ -146,15 +146,15 @@ object BridgeStateMachineExecutionManagerImpl {
   ) = {
     for {
       tKeyPair <- walletManagementUtils.loadKeys(
-        toplWalletSeedFile,
-        toplWalletPassword
+        plasmaWalletSeedFile,
+        plasmaWalletPassword
       )
       state                    <- Ref.of[F, Map[String, PBFTState]](Map.empty)
       queue                    <- Queue.unbounded[F, (Long, StateMachineRequest)]
       startMintingRequestQueue <- Queue.unbounded[F, StartMintingRequest]
       elegibilityManager       <- ExecutionElegibilityManagerImpl.make[F]()
     } yield {
-      implicit val toplKeypair = new StrataKeypair(tKeyPair)
+      implicit val plasmaKeypair = new PlasmaKeypair(tKeyPair)
       new BridgeStateMachineExecutionManager[F] {
 
         def runStream(): fs2.Stream[F, Unit] =

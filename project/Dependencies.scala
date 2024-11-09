@@ -7,6 +7,8 @@ object Dependencies {
   lazy val http4sVersion = "0.23.23"
 
   lazy val slf4jVersion = "2.0.12"
+  lazy val mUnitTeVersion = "0.7.29"
+
 
   val akkaSlf4j: Seq[ModuleID] = Seq(
     "org.apache.pekko" %% "pekko-actor-typed" % "1.0.2"
@@ -50,6 +52,13 @@ object Dependencies {
 
   lazy val munit: Seq[ModuleID] = Seq(
     "org.scalameta" %% "munit" % "1.0.0-M10"
+  )
+
+  lazy val mUnitTest: Seq[ModuleID] = Seq(
+    "org.scalameta" %% "munit"                   % mUnitTeVersion,
+    "org.scalameta" %% "munit-scalacheck"        % mUnitTeVersion,
+    "org.typelevel" %% "munit-cats-effect-3"     % "1.0.7",
+    "org.typelevel" %% "scalacheck-effect-munit" % "1.0.4"
   )
 
   val sqlite: Seq[ModuleID] = Seq(
@@ -127,8 +136,7 @@ object Dependencies {
       grpcNetty ++
       grpcRuntime ++
       sqlite ++
-      akkaSlf4j ++
-      slf4j
+      akkaSlf4j
 
     lazy val publicApi: Seq[ModuleID] =
       scopt ++
@@ -174,5 +182,10 @@ object Dependencies {
         munit ++ munitCatsEffects
       )
         .map(_ % Test)
+  }
+
+  object IntegrationTests {
+    lazy val sources: Seq[ModuleID] = plasmaBtcBridge.consensus
+    lazy val tests: Seq[ModuleID] = (sources ++ mUnitTest).map(_ % Test)
   }
 }
