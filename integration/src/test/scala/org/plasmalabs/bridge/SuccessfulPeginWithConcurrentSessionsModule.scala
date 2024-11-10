@@ -3,7 +3,7 @@ package org.plasmalabs.bridge
 import cats.effect.IO
 import cats.effect.std.Queue
 import org.plasmalabs.bridge.shared.StartPeginSessionResponse
-import org.plasmalabs.bridge.{getCurrentUtxosFromAddress, getNewAddress, mintPlasmaBlock, userBitcoinWallet}
+import org.plasmalabs.bridge.{getCurrentUtxosFromAddress, getNewAddress, mintPlasmaBlock, proveRedeemAddressTx, userBitcoinWallet}
 import org.typelevel.log4cats.syntax._
 
 import java.nio.file.{Files, Paths}
@@ -122,7 +122,7 @@ trait SuccessfulPeginWithConcurrentSessionsModule {
 
           _ <- IO.sleep(Random.between(1, 6).second)
           _ <- fundRedeemAddressTx(userId, address)
-          _ <- proveFundRedeemAddressTx(userId, userFundRedeemTx(userId), userFundRedeemTxProved(userId))
+          _ <- proveFundRedeemAddressTx(userId)
           _ <- broadcastFundRedeemAddressTx(userFundRedeemTxProved(userId))
           _ <- mintPlasmaBlock(1, 2)
 
@@ -178,11 +178,7 @@ trait SuccessfulPeginWithConcurrentSessionsModule {
         seriesId
       )
 
-      _ <- proveFundRedeemAddressTx(
-        userId,
-        userRedeemTx(userId),
-        userRedeemTxProved(userId)
-      )
+      _ <- proveRedeemAddressTx(userId)
 
       _ <- broadcastFundRedeemAddressTx(userRedeemTxProved(userId))
 

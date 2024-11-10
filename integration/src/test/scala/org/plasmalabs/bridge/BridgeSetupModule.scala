@@ -5,6 +5,7 @@ import cats.effect.{ExitCode, IO}
 import fs2.io.{file, process}
 import io.circe.parser._
 import munit.{AnyFixture, CatsEffectSuite, FutureFixture}
+import org.plasmalabs.bridge.{userFundRedeemTx, userFundRedeemTxProved, userRedeemTx, userVkFile}
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
 
@@ -14,7 +15,7 @@ import scala.util.Try
 
 trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with PublicApiConfModule {
 
-  override val munitIOTimeout = Duration(800, "s")
+  override val munitIOTimeout = Duration(400, "s")
 
   implicit val logger: Logger[IO] =
     org.typelevel.log4cats.slf4j.Slf4jLogger
@@ -279,11 +280,16 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
             userWalletDb(2),
             userWalletMnemonic(2),
             userWalletJson(2),
-            vkFile,
-            "fundRedeemTx.pbuf",
-            "fundRedeemTxProved.pbuf",
-            "redeemTx.pbuf",
-            "redeemTxProved.pbuf"
+            userVkFile(1),
+            userVkFile(2),
+            userFundRedeemTx(1),
+            userFundRedeemTx(2),
+            userFundRedeemTxProved(1),
+            userFundRedeemTxProved(2),
+            userRedeemTx(1),
+            userRedeemTx(2),
+            userRedeemTxProved(1),
+            userRedeemTxProved(2)
           ).foreach { case (path) =>
             try
               Files.delete(Paths.get(path))

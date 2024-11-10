@@ -33,7 +33,7 @@ object WaitingBTCOps {
       .head
       .outputAddress
 
-  def computeAssetMintingStatement[F[_]: Async: Logger](
+  private def computeAssetMintingStatement[F[_]: Async: Logger](
     amount:         Int128,
     currentAddress: LockAddress,
     utxoAlgebra:    IndexerQueryAlgebra[F],

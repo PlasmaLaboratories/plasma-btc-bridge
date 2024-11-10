@@ -122,20 +122,15 @@ package object bridge extends ProcessOps {
 
   def getTxConfirmationsAndBlockHeight(id: Int, txId: String)(implicit
     l: Logger[IO]
-  ) = for {
+  ): IO[(Int, Int)] = for {
     tx <- withTracingReturn(getTxP(id, txId))
   } yield (extractTxConfirmations(tx), extractBlockHeight(tx))
 
   def getBitcoinBlockheight(implicit
     l: Logger[IO]
-  ) = for {
+  ): IO[String] = for {
     height <- withTracingReturn(getBlockheightP)
   } yield height
-
-  def createTxMultiple(txId: String, addresses: Seq[String], amount: BigDecimal)(implicit
-    l: Logger[IO]
-  ) =
-    withLoggingReturn(createTxPMultiple(txId, addresses, amount))
 
   def initUserBitcoinWallet(implicit l: Logger[IO]) =
     withLogging(initUserBitcoinWalletP)
@@ -168,13 +163,18 @@ package object bridge extends ProcessOps {
     withLogging(fundRedeemAddressTxP(userId, redeemAddress))
 
   def proveFundRedeemAddressTx(
-    id:          Int,
-    fileToProve: String,
-    provedFile:  String
+    id: Int
   )(implicit
     l: Logger[IO]
   ) =
-    withLogging(proveFundRedeemAddressTxP(id, fileToProve, provedFile))
+    withLogging(proveFundRedeemAddressTxP(id, userFundRedeemTx(id), userFundRedeemTxProved((id))))
+
+  def proveRedeemAddressTx(
+    id: Int
+  )(implicit
+    l: Logger[IO]
+  ) =
+    withLogging(proveFundRedeemAddressTxP(id, userRedeemTx(id), userRedeemTxProved(id)))
 
   def broadcastFundRedeemAddressTx(file: String)(implicit l: Logger[IO]) =
     withLoggingReturn(broadcastFundRedeemAddressTxP(file))
@@ -354,7 +354,6 @@ package object bridge extends ProcessOps {
 
   def extractGetTxIdAndAmount(implicit l: Logger[IO]) = for {
     unxpentTx <- withTracingReturn(extractGetTxIdP)
-    _         <- info"Received unspent Tx: ${unxpentTx}"
     txId <- IO.fromEither(
       parse(unxpentTx).map(x => (x \\ "txid").head.asString.get)
     )
@@ -477,8 +476,6 @@ package object bridge extends ProcessOps {
   def userFundRedeemTx(id: Int) = "fundRedeemTx" + f"$id%02d" + ".pbuf"
 
   def userFundRedeemTxProved(id: Int) = "fundRedeemTxProved" + f"$id%02d" + ".pbuf"
-
-  val vkFile = "key.txt"
 
   // plasma-cli wallet init --network private --password password --newwalletdb user-wallet.db --mnemonicfile user-wallet-mnemonic.txt --output user-wallet.json
 
@@ -833,10 +830,6 @@ package object bridge extends ProcessOps {
     "-rpcwallet=testwallet",
     "getblockcount"
   )
-
-  def createTxSeqMultiple(txId: String, addresses: Seq[String], amount: BigDecimal) =
-    Seq("exec", "bitcoin01", "bitcoin-tx", "-regtest", "-create", s"in=$txId:0") ++
-    addresses.map(addr => s"outaddr=${amount / addresses.length}:$addr")
 
   def getText(p: fs2.io.process.Process[IO]): IO[String] =
     p.stdout

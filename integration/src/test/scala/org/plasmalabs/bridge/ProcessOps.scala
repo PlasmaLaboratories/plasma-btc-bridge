@@ -270,15 +270,4 @@ trait ProcessOps {
     )
     .spawn[IO]
 
-  def createTxPMultiple(txId: String, addresses: Seq[String], amount: BigDecimal) = process
-    .ProcessBuilder(
-      DOCKER_CMD,
-      createTxSeqMultiple(
-        txId,
-        addresses,
-        amount
-      ): _*
-    )
-    .spawn[IO]
-
 }
