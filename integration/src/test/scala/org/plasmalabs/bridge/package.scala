@@ -246,6 +246,15 @@ package object bridge extends ProcessOps {
       .last
       .trim()
 
+  def extractValue(utxo: String) =
+    utxo
+      .split("\n")
+      .filter(_.contains("Value"))
+      .head
+      .split(":")
+      .last
+      .trim()
+
   def extractIpBtc(id: Int, bridgeNetwork: String) = IO.fromEither(
     parse(bridgeNetwork)
       .map(x =>
