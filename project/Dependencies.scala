@@ -61,7 +61,7 @@ object Dependencies {
   )
 
   val sqlite: Seq[ModuleID] = Seq(
-    "org.xerial" % "sqlite-jdbc" % "3.45.2.0"
+    "org.xerial" % "sqlite-jdbc" % "3.45.3.0"
   )
 
   lazy val ip4score: Seq[ModuleID] = Seq(
