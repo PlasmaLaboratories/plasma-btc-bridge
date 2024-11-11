@@ -254,21 +254,21 @@ on:
 
 jobs:
   unit-tests:
-    uses: ./unit_tests.yml
+    uses: ./.github/workflows/unit_tests.yml
     with:
       target-os: '["ubuntu-latest"]'
       java-versions: '["21"]'
 
   integration-tests:
     needs: unit-tests
-    uses: ./integration_tests.yml
+    uses: ./.github/workflows/integration_tests.yml
     with:
       target-os: '["ubuntu-latest"]'
       java-versions: '["21"]'
 
   integration-monitor-tests:
     needs: unit-tests
-    uses: ./integration_monitor_tests.yml
+    uses: ./.github/workflows/integration_monitor_tests.yml
     with:
       target-os: '["ubuntu-latest"]'
       java-versions: '["21"]'
