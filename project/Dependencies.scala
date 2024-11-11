@@ -9,13 +9,12 @@ object Dependencies {
   lazy val slf4jVersion = "2.0.12"
   lazy val mUnitTeVersion = "0.7.29"
 
-
   val akkaSlf4j: Seq[ModuleID] = Seq(
     "org.apache.pekko" %% "pekko-actor-typed" % "1.0.2"
   )
 
   val logback: Seq[ModuleID] = Seq(
-    "ch.qos.logback" % "logback-classic" % "1.4.11"
+    "ch.qos.logback" % "logback-classic" % "1.4.14"
   )
 
   lazy val slf4j: Seq[ModuleID] = Seq(
