@@ -47,7 +47,7 @@ object Dependencies {
 
   lazy val btcVersionZmq = "1.9.8"
 
-  lazy val monocleVersion = "3.1.0"
+  lazy val monocleVersion = "3.3.0"
 
   lazy val munit: Seq[ModuleID] = Seq(
     "org.scalameta" %% "munit" % "1.0.0-M10"
