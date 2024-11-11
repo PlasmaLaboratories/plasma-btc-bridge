@@ -320,6 +320,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
       ) = res
       _           <- requestStateManager.startProcessingEvents()
       _           <- IO.asyncForIO.background(bridgeStateMachineExecutionManager.runStream().compile.drain)
+      _           <- IO.asyncForIO.background(bridgeStateMachineExecutionManager.runMintingStream().compile.drain)
       pbftService <- pbftServiceResource
       nodeQueryAlgebra = NodeQueryAlgebra
         .make[IO](

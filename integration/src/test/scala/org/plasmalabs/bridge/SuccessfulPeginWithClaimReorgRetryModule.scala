@@ -1,9 +1,9 @@
 package org.plasmalabs.bridge
 
 import cats.effect.IO
+import org.plasmalabs.bridge.{checkMintingStatus, userFundRedeemTxProved, userVkFile}
 
 import scala.concurrent.duration._
-import org.plasmalabs.bridge.checkMintingStatus
 
 trait SuccessfulPeginWithClaimReorgRetryModule {
 
@@ -22,17 +22,17 @@ trait SuccessfulPeginWithClaimReorgRetryModule {
         _                <- pwd
         _                <- initPlasmaWallet(2)
         _                <- addFellowship(2)
-        _                <- addSecret(2)
+        secret           <- addSecret(2)
         newAddress       <- getNewAddress
         _                <- generateToAddress(1, 1, newAddress)
         txIdAndBTCAmount <- extractGetTxIdAndAmount
         (txId, btcAmount, btcAmountLong) = txIdAndBTCAmount
-        startSessionResponse <- startSession(2)
+        startSessionResponse <- startSession(secret)
         _                    <- info"minHeight: ${startSessionResponse.minHeight}"
         _                    <- info"maxHeight: ${startSessionResponse.maxHeight}"
         _ <- addTemplate(
           2,
-          shaSecretMap(2),
+          secret,
           startSessionResponse.minHeight,
           startSessionResponse.maxHeight
         )
@@ -53,18 +53,14 @@ trait SuccessfulPeginWithClaimReorgRetryModule {
             _      <- IO.sleep(1.second)
           } yield status)
             .iterateUntil(_.mintingStatus == "PeginSessionStateMintingTBTC")
-        _ <- createVkFile(vkFile)
+        _ <- createVkFile(userVkFile(2))
         _ <- importVks(2)
         _ <- fundRedeemAddressTx(
           2,
           mintingStatusResponse.address
         )
-        _ <- proveFundRedeemAddressTx(
-          2,
-          "fundRedeemTx.pbuf",
-          "fundRedeemTxProved.pbuf"
-        )
-        _ <- broadcastFundRedeemAddressTx("fundRedeemTxProved.pbuf")
+        _ <- proveFundRedeemAddressTx(2)
+        _ <- broadcastFundRedeemAddressTx(userFundRedeemTxProved(2))
         _ <- mintPlasmaBlock(1, 1)
         _ <- IO.sleep(1.second)
         _ <- mintPlasmaBlock(1, 1)
@@ -89,13 +85,9 @@ trait SuccessfulPeginWithClaimReorgRetryModule {
           groupId,
           seriesId
         )
-        _ <- proveFundRedeemAddressTx(
-          2,
-          "redeemTx.pbuf",
-          "redeemTxProved.pbuf"
-        )
+        _ <- proveRedeemAddressTx(2)
         // broadcast
-        _ <- broadcastFundRedeemAddressTx("redeemTxProved.pbuf")
+        _ <- broadcastFundRedeemAddressTx(userRedeemTxProved(2))
         _ <- mintPlasmaBlock(1, 1)
         _ <- getCurrentUtxosFromAddress(2, currentAddress)
           .iterateUntil(_.contains("Asset"))

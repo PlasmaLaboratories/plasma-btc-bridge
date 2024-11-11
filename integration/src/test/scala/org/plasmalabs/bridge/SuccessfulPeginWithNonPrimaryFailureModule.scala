@@ -1,9 +1,11 @@
 package org.plasmalabs.bridge
 
 import cats.effect.IO
-import org.typelevel.log4cats.syntax._
-import scala.concurrent.duration._
 import cats.implicits._
+import org.plasmalabs.bridge.userFundRedeemTxProved
+import org.typelevel.log4cats.syntax._
+
+import scala.concurrent.duration._
 
 trait SuccessfulPeginWithNonPrimaryFailureModule { self: BridgeIntegrationSpec =>
 
@@ -16,14 +18,14 @@ trait SuccessfulPeginWithNonPrimaryFailureModule { self: BridgeIntegrationSpec =
         _                <- mintPlasmaBlock(1, 1)
         _                <- initPlasmaWallet(1)
         _                <- addFellowship(1)
-        _                <- addSecret(1)
+        secret           <- addSecret(1)
         newAddress       <- getNewAddress
         txIdAndBTCAmount <- extractGetTxIdAndAmount
         (txId, btcAmount, btcAmountLong) = txIdAndBTCAmount
-        startSessionResponse <- startSession(1)
+        startSessionResponse <- startSession(secret)
         _ <- addTemplate(
           1,
-          shaSecretMap(1),
+          secret,
           startSessionResponse.minHeight,
           startSessionResponse.maxHeight
         )
@@ -45,15 +47,11 @@ trait SuccessfulPeginWithNonPrimaryFailureModule { self: BridgeIntegrationSpec =
             _      <- IO.sleep(1.second)
           } yield status)
             .iterateUntil(_.mintingStatus == "PeginSessionStateMintingTBTC")
-        _ <- createVkFile(vkFile)
+        _ <- createVkFile(userVkFile(1))
         _ <- importVks(1)
         _ <- fundRedeemAddressTx(1, mintingStatusResponse.address)
-        _ <- proveFundRedeemAddressTx(
-          1,
-          "fundRedeemTx.pbuf",
-          "fundRedeemTxProved.pbuf"
-        )
-        _ <- broadcastFundRedeemAddressTx("fundRedeemTxProved.pbuf")
+        _ <- proveFundRedeemAddressTx(1)
+        _ <- broadcastFundRedeemAddressTx(userFundRedeemTxProved(1))
         _ <- mintPlasmaBlock(1, 1)
         utxo <- getCurrentUtxosFromAddress(1, mintingStatusResponse.address)
           .iterateUntil(_.contains("LVL"))
@@ -67,12 +65,8 @@ trait SuccessfulPeginWithNonPrimaryFailureModule { self: BridgeIntegrationSpec =
           groupId,
           seriesId
         )
-        _ <- proveFundRedeemAddressTx(
-          1,
-          "redeemTx.pbuf",
-          "redeemTxProved.pbuf"
-        )
-        _ <- broadcastFundRedeemAddressTx("redeemTxProved.pbuf")
+        _ <- proveRedeemAddressTx(1)
+        _ <- broadcastFundRedeemAddressTx(userRedeemTxProved(1))
         _ <- List.fill(8)(mintPlasmaBlock(1, 1)).sequence
         _ <- getCurrentUtxosFromAddress(1, currentAddress)
           .iterateUntil(_.contains("Asset"))

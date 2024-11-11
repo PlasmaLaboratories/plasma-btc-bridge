@@ -5,20 +5,24 @@ import fs2.io.process
 
 trait ProcessOps {
 
-  def signTransactionSeq(tx: String) = Seq(
+  def signTransactionSeq(tx: String, walletName: String = "testwallet") = Seq(
     "exec",
     "bitcoin01",
     "bitcoin-cli",
     "-regtest",
     "-rpcuser=bitcoin",
     "-rpcpassword=password",
-    "-rpcwallet=testwallet",
+    s"-rpcwallet=${walletName}",
     "signrawtransactionwithwallet",
     tx
   )
 
   def signTransactionP(tx: String) = process
     .ProcessBuilder(DOCKER_CMD, signTransactionSeq(tx): _*)
+    .spawn[IO]
+
+  def signTransactionP(tx: String, walletName: String) = process
+    .ProcessBuilder(DOCKER_CMD, signTransactionSeq(tx, walletName): _*)
     .spawn[IO]
 
   def sendTransactionP(signedTx: String) = process
@@ -38,7 +42,7 @@ trait ProcessOps {
         "--walletdb",
         userWalletDb(id),
         "--secret",
-        secretMap(id),
+        userSecret(id),
         "--digest",
         "sha256"
       ): _*
@@ -120,7 +124,7 @@ trait ProcessOps {
     )
     .spawn[IO]
 
-  val createWalletSeq = Seq(
+  def createWalletSeq(walletName: String = "testwallet") = Seq(
     "exec",
     "bitcoin01",
     "bitcoin-cli",
@@ -129,26 +133,34 @@ trait ProcessOps {
     "-rpcuser=bitcoin",
     "-rpcpassword=password",
     "createwallet",
-    "wallet_name=testwallet"
+    s"wallet_name=${walletName}"
   )
 
-  val getNewaddressSeq = Seq(
+  def getNewaddressSeq(walletName: String = "testwallet") = Seq(
     "exec",
     "bitcoin01",
     "bitcoin-cli",
     "-rpcuser=bitcoin",
     "-rpcpassword=password",
     "-regtest",
-    "-rpcwallet=testwallet",
+    s"-rpcwallet=${walletName}",
     "getnewaddress"
   )
 
   def getNewaddressP = process
-    .ProcessBuilder(DOCKER_CMD, getNewaddressSeq: _*)
+    .ProcessBuilder(DOCKER_CMD, getNewaddressSeq(): _*)
+    .spawn[IO]
+
+  def getNewaddressP(walletName: String) = process
+    .ProcessBuilder(DOCKER_CMD, getNewaddressSeq(walletName): _*)
     .spawn[IO]
 
   def initUserBitcoinWalletP = process
-    .ProcessBuilder(DOCKER_CMD, createWalletSeq: _*)
+    .ProcessBuilder(DOCKER_CMD, createWalletSeq(): _*)
+    .spawn[IO]
+
+  def initUserBitcoinWalletP(walletName: String) = process
+    .ProcessBuilder(DOCKER_CMD, createWalletSeq(walletName): _*)
     .spawn[IO]
 
   def initUserWalletP(id: Int) = process
@@ -171,37 +183,42 @@ trait ProcessOps {
     )
     .spawn[IO]
 
-  def generateToAddressSeq(nodeId: Int, blocks: Int, address: String) = Seq(
+  def generateToAddressSeq(nodeId: Int, blocks: Int, address: String, walletName: String) = Seq(
     "exec",
     "bitcoin" + f"$nodeId%02d",
     "bitcoin-cli",
     "-regtest",
     "-rpcuser=bitcoin",
     "-rpcpassword=password",
+    s"-rpcwallet=${walletName}",
     "generatetoaddress",
     blocks.toString,
     address
   )
 
-  val extractGetTxIdSeq = Seq(
+  def extractGetTxIdSeq(walletName: String) = Seq(
     "exec",
     "bitcoin01",
     "bitcoin-cli",
     "-rpcuser=bitcoin",
     "-rpcpassword=password",
+    s"-rpcwallet=${walletName}",
     "-regtest",
-    "-rpcwallet=testwallet",
     "listunspent"
   )
 
   def extractGetTxIdP = process
-    .ProcessBuilder(DOCKER_CMD, extractGetTxIdSeq: _*)
+    .ProcessBuilder(DOCKER_CMD, extractGetTxIdSeq("testwallet"): _*)
     .spawn[IO]
 
-  def generateToAddressP(nodeId: Int, blocks: Int, address: String) = process
+  def extractGetTxIdP(walletName: String) = process
+    .ProcessBuilder(DOCKER_CMD, extractGetTxIdSeq(walletName): _*)
+    .spawn[IO]
+
+  def generateToAddressP(nodeId: Int, blocks: Int, address: String, walletName: String) = process
     .ProcessBuilder(
       DOCKER_CMD,
-      generateToAddressSeq(nodeId, blocks, address): _*
+      generateToAddressSeq(nodeId, blocks, address, walletName): _*
     )
     .spawn[IO]
 
@@ -233,6 +250,23 @@ trait ProcessOps {
         address,
         amount
       ): _*
+    )
+    .spawn[IO]
+
+  def getTxP(id: Int, txId: String) = process
+    .ProcessBuilder(
+      DOCKER_CMD,
+      getTxSeq(
+        id,
+        txId
+      ): _*
+    )
+    .spawn[IO]
+
+  def getBlockheightP = process
+    .ProcessBuilder(
+      DOCKER_CMD,
+      getBlockHeightSeq: _*
     )
     .spawn[IO]
 

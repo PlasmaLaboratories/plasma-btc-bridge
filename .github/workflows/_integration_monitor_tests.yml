@@ -1,0 +1,75 @@
+name: Integration Tests Monitor
+on:
+  workflow_call:
+    inputs:
+      target-os:
+        description: "List of operating systems to build on."
+        default: '["ubuntu-latest"]'
+        required: false
+        type: string
+      java-versions:
+        description: "List of Java versions to target."
+        default: '["11"]'
+        required: false
+        type: string
+
+jobs:
+  integration-tests-monitor:
+    name: Integration Tests Monitor
+    strategy:
+      matrix:
+        os: ${{fromJson(inputs.target-os)}}
+        java: ${{fromJson(inputs.java-versions)}}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Echo docker version
+        uses: docker://docker
+        with:
+          args: docker -v
+      - name: Checkout current branch
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: "temurin"
+          java-version: ${{ matrix.java }}
+      - name: Setup Scala
+        uses: olafurpg/setup-scala@v13
+        with:
+          java-version: ${{ matrix.java }}
+      - name: Run integration tests Monitor
+        run: |
+          docker run -d --rm --add-host host.docker.internal:host-gateway -p 18444:18444 -p 18443:18443 -p 28332:28332 --name=bitcoind ruimarinho/bitcoin-core -chain=regtest -zmqpubrawblock=tcp://0.0.0.0:28332 -rpcuser=test -rpcpassword=test -port=18444 -rpcport=18443 -rpcbind=:18443 -rpcallowip=0.0.0.0/0
+          docker run -d --rm --name bitcoind2 --add-host host.docker.internal:host-gateway -p 12224:18444 -p 12223:18443 -p 12222:28332 ruimarinho/bitcoin-core -chain=regtest -zmqpubrawblock=tcp://0.0.0.0:28332 -rpcuser=test -rpcpassword=test -port=18444 -rpcport=18443 -rpcbind=:18443 -rpcallowip=0.0.0.0/0
+          docker run -d --rm --name node -p 9084:9084 docker.io/stratalab/plasma-node:0.0.0-8215-792f55b2
+          ls -lai
+          chmod 777 ./integration-monitor/setupNodeRegtest.sh
+          ./integration-monitor/setupNodeRegtest.sh
+          sbt "integration-monitor / test"
+          docker kill bitcoind
+          docker kill bitcoind2
+          docker kill node
+          docker kill node01
+          docker kill node02
+          docker rm node01
+          docker rm node02
+      - name: Upload Test Results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: it-reports
+          path: integration-monitor/target/test-reports/**/*.xml
+          overwrite: true
+      - uses: actions/download-artifact@v3
+        with:
+          path: target/test-reports/
+          name: unit-test-reports
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: success()
+        with:
+          files: |
+            integration-monitor/target/test-reports/**/*.xml
+          deduplicate_classes_by_file_name: true

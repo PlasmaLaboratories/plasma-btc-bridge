@@ -19,15 +19,15 @@ trait FailedMintingReorgModule {
         _                    <- pwd
         _                    <- initPlasmaWallet(2)
         _                    <- addFellowship(2)
-        _                    <- addSecret(2)
+        secret               <- addSecret(2)
         newAddress           <- getNewAddress
         _                    <- generateToAddress(1, 1, newAddress)
         txIdAndBTCAmount     <- extractGetTxIdAndAmount
         (txId, btcAmount, btcAmountLong) = txIdAndBTCAmount
-        startSessionResponse <- startSession(2)
+        startSessionResponse <- startSession(secret)
         _ <- addTemplate(
           2,
-          shaSecretMap(2),
+          secret,
           startSessionResponse.minHeight,
           startSessionResponse.maxHeight
         )
@@ -49,15 +49,20 @@ trait FailedMintingReorgModule {
           } yield ())
           .sequence
         _ <- info"Session ${startSessionResponse.sessionID} went to PeginSessionMintingTBTCConfirmation"
-        _ <- List.fill(10)(mintPlasmaBlockDocker(2, 1)).sequence
+        _ <- mintPlasmaBlockDocker(
+          2,
+          100
+        ) // (changed to 100 because of new recover threshold) TODO: does this have to be done with List...sequence()?
         _ <- connectBridge(bridgeNetworkAndName._2, "node02")
         _ <- (for {
           status <- checkMintingStatus(startSessionResponse.sessionID)
           _      <- IO.sleep(1.second)
         } yield status)
           .iterateUntil(
-            _.mintingStatus == "PeginSessionStateMintingTBTC"
+            _.mintingStatus == "PeginSessionStateMintingTBTC" // TODO: is this correct? Shouldn't we wait for PeginSessionWaitingForClaim instead?
           )
+
+        // TODO: Reset Wallet state
         _ <-
           info"Session ${startSessionResponse.sessionID} went back to PeginSessionWaitingForClaim again"
       } yield (),

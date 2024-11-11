@@ -6,7 +6,7 @@ import io.grpc.ManagedChannel
 import org.plasmalabs.bridge.consensus.core.managers.{PlasmaWalletAlgebra, TransactionAlgebra, WalletApiHelpers}
 import org.plasmalabs.bridge.consensus.core.{Fellowship, PlasmaKeypair, Template}
 import org.plasmalabs.bridge.consensus.shared.Lvl
-import org.plasmalabs.indexer.services.Txo
+import org.plasmalabs.indexer.services.{Txo, TxoState}
 import org.plasmalabs.sdk.builders.TransactionBuilderApi
 import org.plasmalabs.sdk.dataApi.{IndexerQueryAlgebra, WalletStateAlgebra}
 import org.plasmalabs.sdk.models.LockAddress
@@ -36,11 +36,28 @@ object WaitingBTCOps {
   private def computeAssetMintingStatement[F[_]: Async: Logger](
     amount:         Int128,
     currentAddress: LockAddress,
-    utxoAlgebra:    IndexerQueryAlgebra[F]
+    utxoAlgebra:    IndexerQueryAlgebra[F],
+    txoState:       TxoState = TxoState.UNSPENT
+  ) = for {
+    txos <- getUtxos(currentAddress, utxoAlgebra, txoState)
+  } yield (
+    AssetMintingStatement(
+      getGroupTokeUtxo(txos),
+      getSeriesTokenUtxo(txos),
+      amount
+    ),
+    txos
+  )
+
+  def getUtxos[F[_]: Async: Logger](
+    currentAddress: LockAddress,
+    utxoAlgebra:    IndexerQueryAlgebra[F],
+    txoState:       TxoState = TxoState.UNSPENT
   ) = for {
     txos <- (utxoAlgebra
       .queryUtxo(
-        currentAddress
+        currentAddress,
+        txoState
       )
       .attempt >>= {
       case Left(e) =>
@@ -60,11 +77,7 @@ object WaitingBTCOps {
     })
       .iterateUntil(_.isRight)
       .map(_.toOption.get)
-  } yield AssetMintingStatement(
-    getGroupTokeUtxo(txos),
-    getSeriesTokenUtxo(txos),
-    amount
-  )
+  } yield txos
 
   private def mintTBTC[F[_]: Async](
     redeemAddress:         String,
@@ -113,28 +126,31 @@ object WaitingBTCOps {
     utxoAlgebra:           IndexerQueryAlgebra[F],
     channelResource:       Resource[F, ManagedChannel],
     defaultMintingFee:     Lvl
-  ): F[Unit] = {
+  ): F[(LockAddress, Seq[Txo])] = {
     import cats.implicits._
+
     for {
       currentAddress <- getCurrentAddress[F](
         fromFellowship,
         fromTemplate,
         None
       )
+
       assetMintingStatement <- computeAssetMintingStatement(
         amount,
         currentAddress,
         utxoAlgebra
       )
+
       _ <- mintTBTC(
         redeemAddress,
         fromFellowship,
         fromTemplate,
-        assetMintingStatement,
+        assetMintingStatement._1,
         plasmaKeypair.underlying,
         defaultMintingFee
       )
-    } yield ()
+    } yield (currentAddress, assetMintingStatement._2)
   }
 
 }
