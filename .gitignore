@@ -24,6 +24,7 @@ integration/groupMintingtxProved.pbuf
 integration/groupPolicy.yaml
 integration/key.txt
 integration/key*.txt
+.DS_Store
 
 integration/fundRedeemTxProved*.pbuf
 integration/fundRedeemTx*.pbuf
