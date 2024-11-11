@@ -6,7 +6,7 @@ object Dependencies {
 
   lazy val http4sVersion = "0.23.29"
 
-  lazy val slf4jVersion = "2.0.12"
+  lazy val slf4jVersion = "2.0.16"
   lazy val mUnitTeVersion = "0.7.29"
 
   val akkaSlf4j: Seq[ModuleID] = Seq(
