@@ -4,7 +4,7 @@ object Dependencies {
 
   val catsCoreVersion = "2.10.0"
 
-  lazy val http4sVersion = "0.23.23"
+  lazy val http4sVersion = "0.23.29"
 
   lazy val slf4jVersion = "2.0.12"
   lazy val mUnitTeVersion = "0.7.29"
