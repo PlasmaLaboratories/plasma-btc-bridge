@@ -3,7 +3,7 @@ name: Push Main
 on:
   push:
     branches:
-    - "main"
+    - "*"
     tags: ["*"]
 
 jobs:
@@ -22,6 +22,7 @@ jobs:
     name: Publish Docker Images
     needs: [unit-tests, integration-tests, integration-monitor-tests]
     uses: ./.github/workflows/_publish_docker_images.yml
+    secrets: inherit
 
    
   # deploy-docs:
