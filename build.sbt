@@ -6,7 +6,7 @@ inThisBuild(
     organization := "org.plasmalabs",
     homepage := Some(url("https://github.com/PlasmaLaboratories/plasma-btc-bridge")),
     licenses := Seq("MPL2.0" -> url("https://www.mozilla.org/en-US/MPL/2.0/")),
-    scalaVersion := "2.13.12"
+    scalaVersion := "2.13.15"
   )
 )
 
