@@ -10,9 +10,9 @@ jobs:
     uses: ./.github/workflows/_unit_tests.yml
 
   integration-tests:
-    needs: unit-tests
+    needs: [unit-tests]
     uses: ./.github/workflows/_integration_tests.yml
 
   integration-monitor-tests:
-    needs: unit-tests
+    needs: [unit-tests]
     uses: ./.github/workflows/_integration_monitor_tests.yml
