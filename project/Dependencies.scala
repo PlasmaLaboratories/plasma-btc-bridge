@@ -78,7 +78,7 @@ object Dependencies {
   )
 
   val grpcNetty =
-    Seq("io.grpc" % "grpc-netty-shaded" % "1.62.2")
+    Seq("io.grpc" % "grpc-netty-shaded" % "1.68.1")
 
   val grpcRuntime =
     Seq(
