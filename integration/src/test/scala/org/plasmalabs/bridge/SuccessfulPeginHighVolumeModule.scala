@@ -31,7 +31,6 @@ trait SuccessfulPeginHighVolumeModule {
       _          <- initUserBitcoinWallet(userBitcoinWallet(userId))
       newAddress <- getNewAddress(userBitcoinWallet(userId))
       _          <- bitcoinMintingQueue.offer((newAddress, userBitcoinWallet(userId), 7))
-      _          <- IO.sleep(1.second)
     } yield (userId, newAddress)
 
     def getSessionById(userId: Int) = for {
@@ -48,55 +47,30 @@ trait SuccessfulPeginHighVolumeModule {
 
     } yield startSessionResponse
 
-    def sendBitcoinTransactions(
-      sessionResponses:    List[(Int, String, StartPeginSessionResponse)],
+    def sendBitcoinTransaction(
+      userId: Int, 
+      newAddress: String, 
+      sessionResponse:    StartPeginSessionResponse,
       bitcoinMintingQueue: Queue[IO, (String, String, Int)]
     ) =
       for {
-        amountResponses <- sessionResponses.parTraverse { sessionResponseWithId =>
-          for {
-            _ <- info"Getting Amount for User ${sessionResponseWithId._1}"
-            (userId, newAddress, sessionResponse) = sessionResponseWithId
-            txIdAndBTCAmount <- extractGetTxIdAndAmount(walletName = userBitcoinWallet(userId))
-            (txId, btcAmount, btcAmountLong) = txIdAndBTCAmount
+          txIdAndBTCAmount <- extractGetTxIdAndAmount(walletName = userBitcoinWallet(userId))
+          (txId, btcAmount, btcAmountLong) = txIdAndBTCAmount
 
-            bitcoinTx <- createTx(
-              txId,
-              sessionResponse.escrowAddress,
-              btcAmount
-            )
-            signedTxHex <- signTransaction(bitcoinTx, userBitcoinWallet(userId))
+          bitcoinTx <- createTx(
+            txId,
+            sessionResponse.escrowAddress,
+            btcAmount
+          )
+          signedTxHex <- signTransaction(bitcoinTx, userBitcoinWallet(userId))
 
-          } yield (userId, newAddress, sessionResponse, txId, btcAmount, btcAmountLong, signedTxHex)
-        }
-
-        _ <- amountResponses.traverse { amountResponse =>
-          for {
-            _ <- sendTransaction(amountResponse._7)
-          } yield ()
-        }
+            _ <- sendTransaction(signedTxHex)
 
         _ <- IO.sleep(1.second)
 
-        newAddress <- getNewAddress
-        _          <- bitcoinMintingQueue.offer((newAddress, "testwallet", 50))
+        _          <- bitcoinMintingQueue.offer((newAddress, userBitcoinWallet(userId), 8))
 
-        bitcoinTransactionResponses <- amountResponses.parTraverse { amountResponse =>
-          for {
-            confirmationsAndBlockHeight <- getTxConfirmationsAndBlockHeight(
-              id = amountResponse._1,
-              txId = amountResponse._4
-            )
-            (confirmations, blockHeight) = confirmationsAndBlockHeight
-            (id, newAddress, sessionResponse, txId, btcAmount, btcAmountLong, _) = amountResponse
-
-          } yield (id, newAddress, sessionResponse, txId, btcAmount, btcAmountLong, confirmations, blockHeight)
-        }
-
-        _ <- info"Created Bitcoin Transactions with blockheights ${bitcoinTransactionResponses.map(_._8)}"
-        _ <- debug"Created Bitcoin Transactions with confirmations ${bitcoinTransactionResponses.map(_._7)}"
-
-      } yield bitcoinTransactionResponses
+      } yield (userId, sessionResponse, newAddress, btcAmountLong)
 
     def trackPeginSession(
       userId:              Int,
@@ -117,15 +91,20 @@ trait SuccessfulPeginHighVolumeModule {
 
         } yield status)
           .iterateUntil(_.mintingStatus == "PeginSessionStateMintingTBTC")
-        _ <- info"User ${userId} - Session correctly went to minting tbtc"
 
-        utxos <- getCurrentUtxosFromAddress(userId, mintingStatusResponse.address)
-        value = extractValue(utxos)
-        _ <- info"We have ${utxos} with value ${value} at minting response address"
+        _ <- info"User ${userId} - Session correctly went to minting tbtc after receiving BTC Deposit"
 
-        _ <- info"Current Utxos found for minting address ${mintingStatusResponse.address} with btc value ${"tbd"} and should have ${btcAmountLong}"
+        _ <- (for{
+          utxos <- getCurrentUtxosFromAddress(userId, mintingStatusResponse.address)
+          value = extractValue(utxos)
+          _ <- info"There are utxos with value ${value} at minting response address and are expecting ${btcAmountLong}"
+          _      <- mintPlasmaBlock(node = 1, nbBlocks = 1)
+          _      <- bitcoinMintingQueue.offer((newAddress, userBitcoinWallet(userId), 1))
+          _ <- IO.sleep(1.second)
+        } yield value.toLong).iterateUntil(_ == btcAmountLong)
 
-        _ <- IO.sleep(1.second)
+        _ <- info"User ${userId} - UTXOs at minting response address have the expected value. Removing the Session. "
+
     } yield 1
 
     assertIO(
@@ -134,7 +113,7 @@ trait SuccessfulPeginHighVolumeModule {
         _ <- pwd
         _ <- mintPlasmaBlock(
           1,
-          5
+          3
         )
 
         bitcoinMintingQueue <- Queue.unbounded[IO, (String, String, Int)]
@@ -152,26 +131,25 @@ trait SuccessfulPeginHighVolumeModule {
         _          <- bitcoinMintingQueue.offer((newAddress, "testwallet", 100))
 
         // request a session for each user
-        sessionResponses <- bitcoinWallets.parTraverse { bitcoinResponse =>
-          for {
-            _ <- info"Getting session for User ${bitcoinResponse._1}"
-            (id, newAddress) = bitcoinResponse
-            sessionResponse <- getSessionById(id)
-          } yield (id, newAddress, sessionResponse)
-        }
+        successfulSessions <- bitcoinWallets
+          .grouped(30)
+          .toList
+          .traverse { batch =>
+            batch.parTraverse { bitcoinResponse =>
+              for {
+                _ <- info"Getting session for User ${bitcoinResponse._1}"
+                sessionResponse <- getSessionById(bitcoinResponse._1)
+                (userId, newAddress) = bitcoinResponse
 
-        bitcoinTransactionResponses <- sendBitcoinTransactions(sessionResponses, bitcoinMintingQueue)
+                txResult <- sendBitcoinTransaction(userId, newAddress, sessionResponse, bitcoinMintingQueue)
+                (_, _, _, btcAmountLong) = txResult
+                trackingResult <- trackPeginSession(userId, sessionResponse, newAddress, btcAmountLong, bitcoinMintingQueue)
 
-        successfulSessions <- bitcoinTransactionResponses.parTraverse { response =>
-          (for {
-            _ <- info"Tracking pegin session for User ${response._1}"
-            (id, newAddress, sessionResponse, _, btcAmount, btcAmountLong, _, _) = response
-            _ <- trackPeginSession(id, sessionResponse, newAddress, btcAmountLong, bitcoinMintingQueue)
-          } yield 1).handleErrorWith { error =>
-            error"Error during tracking session: ${error.getMessage()}"
-            IO.pure(0)
+              } yield trackingResult
+            }
           }
-        }
+          .map(_.flatten)
+
       } yield successfulSessions.sum,
       numberOfSessions
     )
