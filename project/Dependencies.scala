@@ -85,7 +85,7 @@ object Dependencies {
       "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion
     )
 
-  lazy val scopt: Seq[ModuleID] = Seq("com.github.scopt" %% "scopt" % "4.0.1")
+  lazy val scopt: Seq[ModuleID] = Seq("com.github.scopt" %% "scopt" % "4.1.0")
 
   lazy val http4s: Seq[ModuleID] = Seq(
     "org.http4s" %% "http4s-ember-client" % http4sVersion,
