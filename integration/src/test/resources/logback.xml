@@ -8,9 +8,21 @@
             <pattern>%d{HH:mm:ss.SSS}| %highlight(%-5level) %cyan(%logger{36}) - %msg%n</pattern>
         </encoder>
     </appender>
-  
-    <appender name="ASYNC" class="ch.qos.logback.classic.AsyncAppender">
+
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <file>target/tests.log</file>
+        <append>false</append>
+        <encoder>
+            <pattern>%logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="ASYNCSTDOUT" class="ch.qos.logback.classic.AsyncAppender">
         <appender-ref ref="STDOUT" />
+    </appender>
+
+    <appender name="ASYNCFILE" class="ch.qos.logback.classic.AsyncAppender">
+        <appender-ref ref="FILE" />
     </appender>
   
     <logger class="io.grpc.netty.shaded.io.grpc.netty.NettyClientHandler" level="WARN" />
@@ -31,6 +43,7 @@
     <logger name="consensus-06" level="DEBUG" />
     <logger name="public-api-06" level="DEBUG" />
     <root level="ERROR">
-        <appender-ref ref="STDOUT" />
+        <appender-ref ref="ASYNCSTDOUT" />
+        <appender-ref ref="ASYNCFILE" />
     </root>
   </configuration>

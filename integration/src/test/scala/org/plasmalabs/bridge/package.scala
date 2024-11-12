@@ -879,4 +879,19 @@ package object bridge extends ProcessOps {
   def sendTransaction(signedTx: String)(implicit l: Logger[IO]) =
     withLoggingReturn(sendTransactionP(signedTx))
 
+  /**
+   * Searches the recorded log file for the given strings.
+   * @param needles A set of strings to search for in the log file
+   * @return true if all strings in `needles` are in the log file; false if at least one string is missing
+   */
+  def searchLogs(needles: Set[String]): IO[Boolean] =
+    fs2.io.file.Files.forIO
+      .readUtf8Lines(fs2.io.file.Path("target/tests.log"))
+      .fold(needles) { case (remainingNeedles, line) =>
+        remainingNeedles.filterNot(line.contains)
+      }
+      .compile
+      .lastOrError
+      .map(_.isEmpty)
+
 }
