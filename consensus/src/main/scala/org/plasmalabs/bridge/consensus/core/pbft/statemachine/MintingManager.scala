@@ -17,6 +17,7 @@ import org.plasmalabs.sdk.models.LockAddress
 import org.plasmalabs.sdk.syntax.{int128AsBigInt, valueToQuantitySyntaxOps}
 import org.plasmalabs.sdk.wallet.WalletApi
 import org.typelevel.log4cats.Logger
+import cats.effect.std.Semaphore
 
 import scala.concurrent.duration._
 import org.plasmalabs.bridge.consensus.core.managers.WalletApiHelpers.getCurrentAddress
@@ -57,6 +58,7 @@ object MintingManagerImpl {
         plasmaWalletPassword
       )
       startMintingRequestQueue <- Queue.unbounded[F, StartMintingRequest]
+      mintingSemaphore         <- Semaphore[F](10)
     } yield {
       implicit val plasmaKeypair = new PlasmaKeypair(tKeyPair)
       new MintingManager[F] {
@@ -80,9 +82,11 @@ object MintingManagerImpl {
                     _ <- Async[F].sleep(3.second)
                     _ <- offer(request)
                   } yield ()
-                case None => for {
-                  _ <- Async[F].start(processMintingRequest(request, currentAddress))
-                } yield ()
+                case None =>
+                  for {
+                    _ <- mintingSemaphore.acquire
+                    _ <- Async[F].start(processMintingRequest(request, currentAddress))
+                  } yield ()
               }
 
             } yield ()
@@ -93,7 +97,7 @@ object MintingManagerImpl {
         } yield ()
 
         private def processMintingRequest(request: StartMintingRequest, currentAddress: LockAddress) = for {
-                  _ <- Sync[F].delay(currentMintingProcessesMap.put(currentAddress, "running"))
+          _ <- Sync[F].delay(currentMintingProcessesMap.put(currentAddress, "running"))
 
           response <- startMintingProcess(
             request.fellowship,
@@ -140,6 +144,7 @@ object MintingManagerImpl {
             )
           } yield mintingSuccessful
           _ <- Sync[F].delay(currentMintingProcessesMap.remove(currentAddress))
+          _ <- mintingSemaphore.release
           _ <- info"Processing minting successful, continue with next Request"
         } yield ()
 
