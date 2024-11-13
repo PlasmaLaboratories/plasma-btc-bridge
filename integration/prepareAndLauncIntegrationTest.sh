@@ -39,7 +39,7 @@ docker run --rm -d --add-host host.docker.internal:host-gateway -p 18446:18444 -
 sudo rm -fr node01
 sudo rm -fr node02
 #rm -fr staking/*
-#docker run --rm -i --user root  -p 9085:9085 -p 9084:9084 -p 9091:9091 -v (pwd)/config:/node -v (pwd)/staking:/staking:rw ghcr.io/stratalab/plasma-node:0.1.0 -- --cli true --config  /node/config.conf < config.txt
+#docker run --rm -i --user root  -p 9085:9085 -p 9084:9084 -p 9091:9091 -v (pwd)/config:/node -v (pwd)/staking:/staking:rw ghcr.io/plasmalaboratories/plasma-node:0.1.2 -- --cli true --config  /node/config.conf < config.txt
 #sudo chown -R mundacho staking/
 mkdir -p node01
 mkdir -p node02
@@ -84,7 +84,7 @@ sleep 25
 # Prepare the environment
 echo "Preparing the environment"
 shopt -s expand_aliases
-alias plasma-cli="cs launch -r https://s01.oss.sonatype.org/content/repositories/releases org.plasmalabs:plasma-cli_2.13:0.1.0 -- "
+alias plasma-cli="cs launch -r https://s01.oss.sonatype.org/content/repositories/releases org.plasmalabs:plasma-cli_2.13:0.1.1 -- "
 export BTC_USER=bitcoin
 export BTC_PASSWORD=password
 export PLASMA_WALLET_DB=plasma-wallet.db
