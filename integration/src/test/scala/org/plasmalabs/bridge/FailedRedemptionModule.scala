@@ -37,7 +37,7 @@ trait FailedRedemptionModule {
         _ <- info"We are in the waiting for redemption state"
         _ <- checkMintingStatus(startSessionResponse.sessionID)
           .flatMap(x =>
-            List.fill(5)(mintPlasmaBlock(1, 1)).sequence >> IO
+            mintPlasmaBlock(1, 100) >> IO
               .sleep(1.second) >> IO.pure(x)
           )
           .iterateUntil(

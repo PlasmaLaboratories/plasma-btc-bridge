@@ -51,8 +51,8 @@ trait FailedMintingReorgModule {
         _ <- info"Session ${startSessionResponse.sessionID} went to PeginSessionMintingTBTCConfirmation"
         _ <- mintPlasmaBlockDocker(
           2,
-          100
-        ) // (changed to 100 because of new recover threshold) TODO: does this have to be done with List...sequence()?
+          500
+        ) // (changed to 500 because of new recover threshold) 
         _ <- connectBridge(bridgeNetworkAndName._2, "node02")
         _ <- (for {
           status <- checkMintingStatus(startSessionResponse.sessionID)
