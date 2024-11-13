@@ -26,6 +26,10 @@ class BridgeIntegrationSpec
     info"Bridge should correctly peg-in BTC" >> successfulPegin()
   }
 
+  cleanupDir.test("Bridge should correctly mint low load") { _ =>
+    info"Bridge should correctly mint low load" >> successfulMintingLowLoad(10)
+  }
+
   cleanupDir.test("Bridge should correctly peg-in BTC if non-primaries replica fails") { _ =>
     info"Bridge should correctly peg-in BTC if non-primaries replica fails" >> successfulPeginWithNonPrimaryFailure()
   }
@@ -34,10 +38,6 @@ class BridgeIntegrationSpec
     info"Bridge should correctly peg-in BTC for multiple concurrent Sessions" >> successfulPeginWithConcurrentSessions(
       3
     )
-  }
-
-  cleanupDir.test("Bridge should correctly mint low load") { _ =>
-    info"Bridge should correctly mint low load" >> successfulMintingLowLoad(10)
   }
 
   cleanupDir.test("Bridge should fail correctly when user does not send BTC") { _ =>
