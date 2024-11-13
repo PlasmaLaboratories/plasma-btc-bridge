@@ -330,8 +330,8 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
             params.plasmaSecureConnection
           )
         )
-
       _ <- IO.asyncForIO.background(bridgeStateMachineExecutionManager.runMintingStream(nodeQueryAlgebra).compile.drain)
+
       btcMonitor <- BitcoinMonitor(
         bitcoindInstance,
         zmqHost = params.zmqHost,

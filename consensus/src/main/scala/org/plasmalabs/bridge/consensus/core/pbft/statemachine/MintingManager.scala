@@ -1,31 +1,27 @@
 package org.plasmalabs.bridge.consensus.core.pbft.statemachine
 
-import cats.effect.kernel.{Async, Resource, Sync}
+import cats.Parallel
+import cats.effect.kernel.{Async, Resource}
 import cats.effect.std.Queue
 import io.grpc.ManagedChannel
+import org.plasmalabs.bridge.consensus.core.PlasmaKeypair
 import org.plasmalabs.bridge.consensus.core.managers.WalletApiHelpers.{getChangeLockPredicate, getCurrentIndices}
 import org.plasmalabs.bridge.consensus.core.managers.WalletManagementUtils
 import org.plasmalabs.bridge.consensus.core.pbft.statemachine.WaitingBTCOps.startMintingProcess
-import org.plasmalabs.bridge.consensus.core.PlasmaKeypair
 import org.plasmalabs.bridge.consensus.shared.Lvl
-import org.plasmalabs.sdk.dataApi.NodeQueryAlgebra
-import org.plasmalabs.sdk.models.transaction.UnspentTransactionOutput
-import cats.Parallel
 import org.plasmalabs.sdk.builders.TransactionBuilderApi
-import org.plasmalabs.sdk.dataApi.{IndexerQueryAlgebra, WalletStateAlgebra}
+import org.plasmalabs.sdk.dataApi.{IndexerQueryAlgebra, NodeQueryAlgebra, WalletStateAlgebra}
 import org.plasmalabs.sdk.models.LockAddress
+import org.plasmalabs.sdk.models.transaction.UnspentTransactionOutput
 import org.plasmalabs.sdk.syntax.{int128AsBigInt, valueToQuantitySyntaxOps}
 import org.plasmalabs.sdk.wallet.WalletApi
 import org.typelevel.log4cats.Logger
-import cats.effect.std.Semaphore
 
 import scala.concurrent.duration._
-import org.plasmalabs.bridge.consensus.core.managers.WalletApiHelpers.getCurrentAddress
-import java.util.concurrent.ConcurrentHashMap
 
 trait MintingManager[F[_]] {
-  def runMintingStream: fs2.Stream[F, Unit]
-  def offer(request: StartMintingRequest): F[Unit]
+  def offer(request:                     StartMintingRequest): F[Unit]
+  def runMintingStream(nodeQueryAlgebra: NodeQueryAlgebra[F]): fs2.Stream[F, Unit]
 }
 
 object MintingManagerImpl {
@@ -36,8 +32,7 @@ object MintingManagerImpl {
   def make[F[_]: Parallel: Async: Logger](
     walletManagementUtils: WalletManagementUtils[F],
     plasmaWalletSeedFile:  String,
-    plasmaWalletPassword:  String,
-    nodeQueryAlgebra:      NodeQueryAlgebra[F]
+    plasmaWalletPassword:  String
   )(implicit
     tba:               TransactionBuilderApi[F],
     walletApi:         WalletApi[F],
@@ -46,58 +41,33 @@ object MintingManagerImpl {
     channelResource:   Resource[F, ManagedChannel],
     defaultMintingFee: Lvl
   ) = {
-    val currentMintingProcessesMap =
-      new ConcurrentHashMap[
-        LockAddress,
-        String
-      ]()
-
     for {
       tKeyPair <- walletManagementUtils.loadKeys(
         plasmaWalletSeedFile,
         plasmaWalletPassword
       )
       startMintingRequestQueue <- Queue.unbounded[F, StartMintingRequest]
-      mintingSemaphore         <- Semaphore[F](10)
     } yield {
       implicit val plasmaKeypair = new PlasmaKeypair(tKeyPair)
       new MintingManager[F] {
-
-        def runMintingStream: fs2.Stream[F, Unit] = fs2.Stream
-          .fromQueueUnterminated(startMintingRequestQueue)
-          .evalMap { request =>
-            for {
-              _ <- info"Processing new minting request"
-
-              currentAddress <- getCurrentAddress[F](
-                request.fellowship,
-                request.template,
-                None
-              )
-
-              currentProcess <- Sync[F].delay(currentMintingProcessesMap.get(currentAddress))
-              x = Option(currentProcess) match {
-                case Some(_) =>
-                  for {
-                    _ <- Async[F].sleep(3.second)
-                    _ <- offer(request)
-                  } yield ()
-                case None =>
-                  for {
-                    _ <- mintingSemaphore.acquire
-                    _ <- Async[F].start(processMintingRequest(request, currentAddress))
-                  } yield ()
-              }
-
-            } yield ()
-          }
 
         def offer(request: StartMintingRequest) = for {
           _ <- startMintingRequestQueue.offer(request)
         } yield ()
 
-        private def processMintingRequest(request: StartMintingRequest, currentAddress: LockAddress) = for {
-          _ <- Sync[F].delay(currentMintingProcessesMap.put(currentAddress, "running"))
+        def runMintingStream(nodeQueryAlgebra: NodeQueryAlgebra[F]): fs2.Stream[F, Unit] = fs2.Stream
+          .fromQueueUnterminated(startMintingRequestQueue)
+          .evalMap { request =>
+            for {
+              _ <- processMintingRequest(nodeQueryAlgebra, request)
+            } yield ()
+          }
+
+        private def processMintingRequest(
+          nodeQueryAlgebra: NodeQueryAlgebra[F],
+          request:          StartMintingRequest
+        ) = for {
+          _ <- info"Starting new minting process"
 
           response <- startMintingProcess(
             request.fellowship,
@@ -143,8 +113,6 @@ object MintingManagerImpl {
               seriesValueToArrive
             )
           } yield mintingSuccessful
-          _ <- Sync[F].delay(currentMintingProcessesMap.remove(currentAddress))
-          _ <- mintingSemaphore.release
           _ <- info"Processing minting successful, continue with next Request"
         } yield ()
 
