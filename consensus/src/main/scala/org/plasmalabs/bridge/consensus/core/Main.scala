@@ -318,9 +318,9 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         pbftServiceResource,
         requestStateManager
       ) = res
-      _           <- requestStateManager.startProcessingEvents()
-      _           <- IO.asyncForIO.background(bridgeStateMachineExecutionManager.runStream().compile.drain)
-      _           <- IO.asyncForIO.background(bridgeStateMachineExecutionManager.runMintingStream().compile.drain)
+      _ <- requestStateManager.startProcessingEvents()
+      _ <- IO.asyncForIO.background(bridgeStateMachineExecutionManager.runStream().compile.drain)
+
       pbftService <- pbftServiceResource
       nodeQueryAlgebra = NodeQueryAlgebra
         .make[IO](
@@ -330,6 +330,8 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
             params.plasmaSecureConnection
           )
         )
+
+      _ <- IO.asyncForIO.background(bridgeStateMachineExecutionManager.runMintingStream(nodeQueryAlgebra).compile.drain)
       btcMonitor <- BitcoinMonitor(
         bitcoindInstance,
         zmqHost = params.zmqHost,

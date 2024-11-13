@@ -246,7 +246,7 @@ package object bridge extends ProcessOps {
       .last
       .trim()
 
-  def extractValue(utxo: String) =
+  def extractValue(utxo: String): Long = 
     utxo
       .split("\n")
       .filter(_.contains("Value"))
@@ -254,6 +254,7 @@ package object bridge extends ProcessOps {
       .split(":")
       .last
       .trim()
+      .toLong
 
   def extractIpBtc(id: Int, bridgeNetwork: String) = IO.fromEither(
     parse(bridgeNetwork)
@@ -277,7 +278,7 @@ package object bridge extends ProcessOps {
       )
   )
 
-  def startSession(sha256: String = "60cd434b2fd6d22cec4cf3c9b16d3f57de4bf4d0bd0da1b16659a76ec7736610") =
+  def startSession(sha256: String = "60cd434b2fd6d22cec4cf3c9b16d3f57de4bf4d0bd0da1b16659a76ec7736610", port: Int=  5000) =
     EmberClientBuilder
       .default[IO]
       .build
@@ -287,7 +288,7 @@ package object bridge extends ProcessOps {
             method = Method.POST,
             Uri
               .fromString(
-                "http://127.0.0.1:5000/api/" + BridgeContants.START_PEGIN_SESSION_PATH
+                s"http://127.0.0.1:${port}/api/" + BridgeContants.START_PEGIN_SESSION_PATH
               )
               .toOption
               .get
@@ -302,7 +303,7 @@ package object bridge extends ProcessOps {
         )
       })
 
-  def checkMintingStatus(sessionId: String)(implicit l: Logger[IO]) =
+  def checkMintingStatus(sessionId: String, port: Int = 5000)(implicit l: Logger[IO]) =
     EmberClientBuilder
       .default[IO]
       .build
@@ -313,7 +314,7 @@ package object bridge extends ProcessOps {
               method = Method.POST,
               Uri
                 .fromString(
-                  "http://127.0.0.1:5000/api/" + BridgeContants.PLASMA_MINTING_STATUS
+                  s"http://127.0.0.1:${port}/api/" + BridgeContants.PLASMA_MINTING_STATUS
                 )
                 .toOption
                 .get
@@ -332,7 +333,7 @@ package object bridge extends ProcessOps {
           }
       })
 
-  def checkStatus(sessionId: String)(implicit l: Logger[IO]) = EmberClientBuilder
+  def checkStatus(sessionId: String, port: Int = 5000)(implicit l: Logger[IO]) = EmberClientBuilder
     .default[IO]
     .build
     .use({ client =>
@@ -342,7 +343,7 @@ package object bridge extends ProcessOps {
             method = Method.POST,
             Uri
               .fromString(
-                "http://127.0.0.1:5000/api/" + BridgeContants.PLASMA_MINTING_STATUS
+                s"http://127.0.0.1:${port}/api/" + BridgeContants.PLASMA_MINTING_STATUS
               )
               .toOption
               .get
@@ -816,6 +817,19 @@ package object bridge extends ProcessOps {
     s"in=$txId:0",
     s"outaddr=$amount:$address"
   )
+
+  def createTxMultipleSeq(txId: String, addresses: Seq[String], amount: BigDecimal) = {
+    val base = Seq(
+    "exec",
+    "bitcoin01",
+    "bitcoin-tx",
+    "-regtest",
+    "-create",
+    s"in=$txId:0") 
+    val outputAddresses =  addresses.map(address => s"outaddr=${amount / addresses.length}:$address")
+    base ++ outputAddresses
+  }
+  
 
   def getTxSeq(id: Int, txId: String) = Seq(
     "exec",

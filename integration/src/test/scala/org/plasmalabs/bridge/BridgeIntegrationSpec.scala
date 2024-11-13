@@ -23,7 +23,7 @@ class BridgeIntegrationSpec
   override def munitFixtures = List(startServer)
 
   cleanupDir.test("Bridge should correctly peg-in a high volume of txs to change addresses") { _ =>
-    info"Bridge should correctly peg-in a high volume of txs to change addresses" >> successfulPeginHighVolume(34)
+    info"Bridge should correctly peg-in a high volume of txs to change addresses" >> successfulPeginHighVolume(50)
   }
 
   // cleanupDir.test("Bridge should correctly peg-in BTC") { _ =>

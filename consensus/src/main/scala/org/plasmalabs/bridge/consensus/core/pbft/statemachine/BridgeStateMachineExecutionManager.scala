@@ -11,7 +11,7 @@ import org.plasmalabs.bridge.consensus.core.managers.WalletApiHelpers.{getChange
 import org.plasmalabs.bridge.consensus.core.managers.WalletManagementUtils
 import org.plasmalabs.bridge.consensus.core.pbft.ViewManager
 import org.plasmalabs.bridge.consensus.core.pbft.statemachine.PBFTEvent
-import org.plasmalabs.bridge.consensus.core.pbft.statemachine.WaitingBTCOps.{getUtxos, startMintingProcess}
+import org.plasmalabs.bridge.consensus.core.pbft.statemachine.WaitingBTCOps.startMintingProcess
 import org.plasmalabs.bridge.consensus.core.{
   BitcoinNetworkIdentifiers,
   BridgeWalletManager,
@@ -27,6 +27,8 @@ import org.plasmalabs.bridge.consensus.core.{
   Template,
   stateDigest
 }
+import org.plasmalabs.sdk.dataApi.NodeQueryAlgebra
+import org.plasmalabs.sdk.models.transaction.UnspentTransactionOutput
 import org.plasmalabs.bridge.consensus.pbft.CheckpointRequest
 import org.plasmalabs.bridge.consensus.service.StateMachineReply.Result
 import org.plasmalabs.bridge.consensus.service.{InvalidInputRes, StartSessionRes, StateMachineReply}
@@ -63,6 +65,7 @@ import org.plasmalabs.bridge.shared.{
   StartSessionOperation,
   StateMachineRequest
 }
+import cats.Parallel
 import org.plasmalabs.sdk.builders.TransactionBuilderApi
 import org.plasmalabs.sdk.dataApi.{
   FellowshipStorageAlgebra,
@@ -98,7 +101,7 @@ trait BridgeStateMachineExecutionManager[F[_]] {
 
   def runStream(): fs2.Stream[F, Unit]
 
-  def runMintingStream(): fs2.Stream[F, Unit]
+  def runMintingStream(nodeQueryAlgebra: NodeQueryAlgebra[F]): fs2.Stream[F, Unit]
 
 }
 
@@ -108,7 +111,7 @@ object BridgeStateMachineExecutionManagerImpl {
   import cats.implicits._
   import WaitingForRedemptionOps._
 
-  def make[F[_]: Async: Logger](
+  def make[F[_]: Parallel: Async: Logger](
     keyPair:               JKeyPair,
     viewManager:           ViewManager[F],
     walletManagementUtils: WalletManagementUtils[F],
@@ -175,7 +178,7 @@ object BridgeStateMachineExecutionManagerImpl {
             )
             .evalMap(x => trace"Executing the request: ${x._2}" >> executeRequestF(x._1, x._2))
 
-        def runMintingStream(): fs2.Stream[F, Unit] = fs2.Stream
+        def runMintingStream(nodeQueryAlgebra: NodeQueryAlgebra[F]): fs2.Stream[F, Unit] = fs2.Stream
           .fromQueueUnterminated(startMintingRequestQueue)
           .evalMap(request =>
             {
@@ -219,15 +222,11 @@ object BridgeStateMachineExecutionManagerImpl {
 
                 _ <- for {
                   mintingSuccessful <- verifyMintingSpent(
+                    nodeQueryAlgebra,
                     changeAddress,
                     groupValueToArrive,
                     seriesValueToArrive
-                  ).handleErrorWith { e =>
-                    error"Failed to process minting request, something went wrong verifying the mint: ${e.getMessage}" >> Async[
-                      F
-                    ].pure(false)
-                  }
-                  _ <- Async[F].sleep(1.second)
+                  )
                 } yield mintingSuccessful
                 _ <- info"Processing minting successful, continue with next Request"
               } yield ()
@@ -238,30 +237,43 @@ object BridgeStateMachineExecutionManagerImpl {
               }
           )
 
-        import org.plasmalabs.indexer.services.TxoState
-
         def verifyMintingSpent(
+          nodeQueryAlgebra:    NodeQueryAlgebra[F],
           changeAddress:       LockAddress,
           groupValueToArrive:  BigInt,
           seriesValueToArrive: BigInt
-        ): F[Boolean] =
-          for {
-            arrivedUtxos <- getUtxos(
-              changeAddress,
-              utxoAlgebra,
-              TxoState.UNSPENT
-            )
+        ): F[Boolean] = {
+          def checkBlocks(depth: Long): F[(Seq[UnspentTransactionOutput], Seq[UnspentTransactionOutput])] =
+            nodeQueryAlgebra.blockByDepth(depth).map {
+              case Some(block) =>
+                val utxosForChangeAddress = block._4
+                  .flatMap(_.outputs)
+                  .filter(_.address == changeAddress)
 
-            groupSumArrived = arrivedUtxos
-              .filter(_.transactionOutput.value.value.isGroup)
-              .map(txo => int128AsBigInt(valueToQuantitySyntaxOps(txo.transactionOutput.value.value).quantity))
-              .sum
-            seriesSumArrived = arrivedUtxos
-              .filter(_.transactionOutput.value.value.isSeries)
-              .map(txo => int128AsBigInt(valueToQuantitySyntaxOps(txo.transactionOutput.value.value).quantity))
-              .sum
+                val seriesTxs = utxosForChangeAddress.filter(_.value.value.isSeries)
+                val groupTxs = utxosForChangeAddress.filter(_.value.value.isGroup)
+                (seriesTxs, groupTxs)
+              case None => (Seq(), Seq())
+            }
 
-          } yield (seriesSumArrived == seriesValueToArrive && groupSumArrived == groupValueToArrive)
+          (for {
+            blockResults <- (1L to 2L).toList.parTraverse(checkBlocks)
+
+            (allSeriesTxs, allGroupTxs) = blockResults.foldLeft(
+              (Seq.empty[UnspentTransactionOutput], Seq.empty[UnspentTransactionOutput])
+            ) { case ((accSeries, accGroup), (series, group)) =>
+              (accSeries ++ series, accGroup ++ group)
+            }
+
+            seriesSumArrived = allSeriesTxs.map(txo => int128AsBigInt(txo.value.value.series.get.quantity)).sum
+            groupSumArrived = allGroupTxs.map(txo => int128AsBigInt(txo.value.value.group.get.quantity)).sum
+
+            _ <- Async[F].sleep(1.second)
+
+          } yield seriesSumArrived == seriesValueToArrive && groupSumArrived == groupValueToArrive)
+            .handleErrorWith(_ => Async[F].pure(false))
+            .iterateUntil(_ == true)
+        }
 
         private def startSession(
           clientNumber: Int,
