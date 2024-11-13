@@ -1,4 +1,4 @@
-FROM ghcr.io/plasmalaboratories/plasma-node:0.1.0
+FROM ghcr.io/plasmalaboratories/plasma-node:0.1.2
 USER root
 RUN curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz" | gzip -d > cs
 RUN chmod +x cs
@@ -7,7 +7,7 @@ RUN cs setup --yes
 ## create alias in profile
 RUN echo "#!/bin/bash" >> /usr/local/bin/plasma-cli
 ## run forwarding the parameters
-RUN echo 'cs launch -r https://s01.oss.sonatype.org/content/repositories/releases org.plasmalabs:plasma-cli_2.13:0.1.0 -- $@' >> /usr/local/bin/plasma-cli
+RUN echo 'cs launch -r https://s01.oss.sonatype.org/content/repositories/releases org.plasmalabs:plasma-cli_2.13:0.1.1 -- $@' >> /usr/local/bin/plasma-cli
 RUN chmod +x /usr/local/bin/plasma-cli
 USER 1001:0
 RUN plasma-cli wallet init --network private --password password --newwalletdb /tmp/wallet.db --mnemonicfile /tmp/mnemonic.txt  -o /tmp/keyfile.json
