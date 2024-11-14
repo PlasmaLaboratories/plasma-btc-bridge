@@ -56,6 +56,9 @@ jobs:
           shopt -s expand_aliases
           mkdir ${{ github.workspace }}/data
           alias plasma-cli="./cs launch -r https://s01.oss.sonatype.org/content/repositories/releases org.plasmalabs:plasma-cli_2.13:0.1.2 -- "
+          sleep 180
+          echo $(docker ps)
+          echo $(docker ps -all)
           plasma-cli node-query mint-block --nb-blocks 1 -h localhost  --port 9084 -s false
           export PLASMA_WALLET_DB=${{ github.workspace }}/data/plasma-wallet.db
           export PLASMA_WALLET_JSON=${{ github.workspace }}/data/plasma-wallet.json
