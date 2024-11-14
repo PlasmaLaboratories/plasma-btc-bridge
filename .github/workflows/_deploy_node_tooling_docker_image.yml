@@ -1,0 +1,42 @@
+name: Deploy Node Tooling Docker Image
+
+on:
+  workflow_dispatch:
+    inputs:
+      imageTag:
+        description: 'Docker Image Tag'
+        required: true
+      registry:
+        description: 'Docker Image Registry'
+        required: true
+        default: 'ghcr.io/plasmalaboratories'
+        type: choice
+        options:
+        - ghcr.io/plasmalaboratories
+        - stratalab
+
+jobs:
+  publish:
+    name: Deploy Node Tooling Docker Image
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Log in to the Github Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image (ghcr)
+        run: |
+          docker build -t ${{ github.event.inputs.registry }}/plasma-node-tooling:${{ github.event.inputs.imageTag }} .
+          docker push  ${{ github.event.inputs.registry }}/node-tooling:${{ github.event.inputs.imageTag }}
