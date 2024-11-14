@@ -149,7 +149,7 @@ object BridgeStateMachineExecutionManagerImpl {
       queue              <- Queue.unbounded[F, (Long, StateMachineRequest)]
       elegibilityManager <- ExecutionElegibilityManagerImpl.make[F]()
       mintingManager <- MintingManagerImpl
-        .make[F](walletManagementUtils, plasmaWalletSeedFile: String, plasmaWalletPassword: String)
+        .make[F](walletManagementUtils, plasmaWalletSeedFile, plasmaWalletPassword)
     } yield {
       implicit val plasmaKeypair = new PlasmaKeypair(tKeyPair)
       new BridgeStateMachineExecutionManager[F] {
