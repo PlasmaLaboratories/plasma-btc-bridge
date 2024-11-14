@@ -63,7 +63,7 @@ object RequestTimerManagerImpl {
       override def hasExpiredTimer(): F[Boolean] =
         expiredTimers.get.flatMap { x =>
           import org.typelevel.log4cats.syntax._
-          if (x.nonEmpty) error"Timer expired: ${x.take(3)}${if (x.size > 3) "..." else "" }" >> x.nonEmpty.pure[F]
+          if (x.nonEmpty) error"Timer expired: ${x.take(3)}${if (x.size > 3) "..." else ""}" >> x.nonEmpty.pure[F]
           else
             x.nonEmpty.pure[F]
         }
