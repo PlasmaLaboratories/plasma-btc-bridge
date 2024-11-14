@@ -11,7 +11,7 @@ case class PlasmaBTCBridgeConsensusParamConfig(
   plasmaWaitExpirationTime:    Int = 2000, // the number of blocks to wait before the user can reclaim their funds
   plasmaConfirmationThreshold: Int = 6, // the number of confirmations required for a peg-out transaction
   checkpointInterval:          Int = 100, // the number of requests between checkpoints
-  requestTimeout:              Int = 45, // the timeout for requests in seconds
+  requestTimeout:              Int = 60, // the timeout for requests in seconds
   viewChangeTimeout:           Int = 5, // the timeout for view changes in seconds
   kWatermark:                  Int = 200, // the gap between the low and high watermark
   btcPegInSeedFile:            String = "pegin-wallet.json",

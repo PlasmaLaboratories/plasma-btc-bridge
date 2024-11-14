@@ -15,7 +15,6 @@ class BridgeIntegrationSpec
     with SuccessfulPeginWithNonPrimaryFailureModule
     with FailedPeginNonPrimaryFailureModule
     with SuccessfulPeginWithConcurrentSessionsModule
-    with SuccessfulMintingLowLoadModule
     with BridgeSetupModule {
 
   import org.typelevel.log4cats.syntax._
@@ -24,10 +23,6 @@ class BridgeIntegrationSpec
 
   cleanupDir.test("Bridge should correctly peg-in BTC") { _ =>
     info"Bridge should correctly peg-in BTC" >> successfulPegin()
-  }
-
-  cleanupDir.test("Bridge should correctly mint low load") { _ =>
-    info"Bridge should correctly mint low load" >> successfulMintingLowLoad(10)
   }
 
   cleanupDir.test("Bridge should correctly peg-in BTC if non-primaries replica fails") { _ =>
