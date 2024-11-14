@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       imageTag:
-        description: 'Docker Image Tag'
+        description: 'Docker Image Tag. Format examples: `0.1.0` `0.1.0-496b5cf`, `latest`, etc.'
         required: true
       registry:
         description: 'Docker Image Registry'
