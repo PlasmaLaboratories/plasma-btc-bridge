@@ -52,11 +52,13 @@ jobs:
           echo "NODE_01=$NODE_01" >> $GITHUB_ENV
           echo "Node01 container id: $NODE_01"
           echo $(docker ps)
+          docker logs --tail 50 node01
           curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz" | gzip -d > cs
           chmod +x cs
           ./cs setup --yes
           shopt -s expand_aliases
           mkdir ${{ github.workspace }}/data
+          docker logs --tail 50 node01
           alias plasma-cli="./cs launch -r https://s01.oss.sonatype.org/content/repositories/releases org.plasmalabs:plasma-cli_2.13:0.1.2 -- "
           sleep 180
           echo $(docker ps)
