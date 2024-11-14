@@ -12,6 +12,7 @@ object Dependencies {
     val btcVersionZmq = "1.9.8"
     val monocleVersion = "3.1.0"
     val plasmaVersion = "0.2.1"
+    val ioGrpcVersion = "1.68.1"
   }
 
   val akkaSlf4j: Seq[ModuleID] = Seq(
@@ -71,7 +72,7 @@ object Dependencies {
   )
 
   val grpcNetty =
-    Seq("io.grpc" % "grpc-netty-shaded" % "1.62.2")
+    Seq("io.grpc" % "grpc-netty-shaded" % ioGrpcVersion)
 
   val grpcRuntime =
     Seq(
