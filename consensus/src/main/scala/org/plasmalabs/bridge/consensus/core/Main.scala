@@ -91,7 +91,6 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
       case Some(config) =>
         runWithArgs(config)
       case None =>
-        println("Invalid arguments")
         IO.consoleForIO.errorln("Invalid arguments") *>
         IO(ExitCode.Error)
     }

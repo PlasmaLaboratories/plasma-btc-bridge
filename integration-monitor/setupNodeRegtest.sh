@@ -24,7 +24,7 @@ node:
 "
 chmod 777 node01/config.yaml
 echo $(pwd)
-export CONTAINER_ID=$(docker run -d --name node01 -p 9185:9085 -p 9184:9084 -p 9191:9091 -v $(pwd)/node01:/node-staking:rw docker.io/stratalab/plasma-node:0.0.0-8215-792f55b2 --  --config=/node-staking/config.yaml --regtest)
+export CONTAINER_ID=$(docker run -d --name node01 -p 9185:9085 -p 9184:9084 -p 9191:9091 -v $(pwd)/node01:/node-staking:rw ghcr.io/plasmalaboratories/plasma-node:0.1.3 --  --config=/node-staking/config.yaml --regtest)
 export IP_CONTAINER=$(docker network inspect bridge | jq  ".[0].Containers.\"$CONTAINER_ID\".IPv4Address" | sed  's:"::g' | sed -n 's:\(.*\)/.*:\1:p')
 echo "IP_CONTAINER: $IP_CONTAINER"
 echo > node02/config.yaml "\
@@ -39,4 +39,4 @@ node:
     known-peers: $IP_CONTAINER:9085
 "
 chmod 777 node02/config.yaml
-docker run -d --name node02 -p 9087:9085 -p 9086:9084 -p 9092:9091 -v $(pwd)/node02:/node-staking docker.io/stratalab/plasma-node:0.0.0-8215-792f55b2 --  --config  /node-staking/config.yaml --regtest
+docker run -d --name node02 -p 9087:9085 -p 9086:9084 -p 9092:9091 -v $(pwd)/node02:/node-staking ghcr.io/plasmalaboratories/plasma-node:0.1.3 --  --config  /node-staking/config.yaml --regtest

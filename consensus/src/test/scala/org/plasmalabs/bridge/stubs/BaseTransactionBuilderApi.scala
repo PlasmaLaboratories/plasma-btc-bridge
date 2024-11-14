@@ -3,13 +3,12 @@ package org.plasmalabs.sdk.cli.mockbase
 import com.google.protobuf.ByteString
 import com.google.protobuf.struct.Struct
 import org.plasmalabs.indexer.services.Txo
+import org.plasmalabs.quivr.models.Int128
 import org.plasmalabs.sdk.builders.{BuilderError, TransactionBuilderApi}
-import org.plasmalabs.sdk.models.Event.{GroupPolicy, SeriesPolicy}
-import org.plasmalabs.sdk.models.box.{AssetMintingStatement, Attestation, FungibilityType, Lock, QuantityDescriptorType}
+import org.plasmalabs.sdk.models._
+import org.plasmalabs.sdk.models.box.{Attestation, FungibilityType, Lock, QuantityDescriptorType}
 import org.plasmalabs.sdk.models.transaction.{IoTransaction, UnspentTransactionOutput}
-import org.plasmalabs.sdk.models.{Datum, GroupId, LockAddress, SeriesId, TransactionOutputAddress}
 import org.plasmalabs.sdk.syntax.ValueTypeIdentifier
-import quivr.models.Int128
 
 class BaseTransactionBuilderApi[F[_]] extends TransactionBuilderApi[F] {
 
@@ -117,7 +116,13 @@ class BaseTransactionBuilderApi[F[_]] extends TransactionBuilderApi[F] {
     amount:      Int128
   ): F[UnspentTransactionOutput] = ???
 
-  override def datum(): F[Datum.IoTransaction] = ???
+  override def datum(
+    groupPolicies:       Seq[GroupPolicy],
+    seriesPolicies:      Seq[SeriesPolicy],
+    mintingStatements:   Seq[AssetMintingStatement],
+    mergingStatements:   Seq[AssetMergingStatement],
+    splittingStatements: Seq[AssetSplittingStatement]
+  ): F[Datum.IoTransaction] = ???
 
   override def buildSimpleLvlTransaction(
     lvlTxos:                Seq[Txo],

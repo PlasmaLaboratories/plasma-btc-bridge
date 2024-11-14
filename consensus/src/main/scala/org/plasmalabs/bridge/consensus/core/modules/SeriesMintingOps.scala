@@ -3,14 +3,14 @@ package org.plasmalabs.bridge.consensus.core.modules
 import cats.effect.kernel.Sync
 import org.plasmalabs.bridge.consensus.core.managers.CreateTxError
 import org.plasmalabs.indexer.services.Txo
+import org.plasmalabs.quivr.models.KeyPair
 import org.plasmalabs.sdk.builders.TransactionBuilderApi
 import org.plasmalabs.sdk.dataApi.WalletStateAlgebra
+import org.plasmalabs.sdk.models._
 import org.plasmalabs.sdk.models.box.Lock
 import org.plasmalabs.sdk.models.transaction.IoTransaction
-import org.plasmalabs.sdk.models.{Event, Indices, LockAddress}
 import org.plasmalabs.sdk.utils.Encoding
 import org.plasmalabs.sdk.wallet.WalletApi
-import quivr.models.KeyPair
 
 import TransactionBuilderApi.implicits._
 
@@ -27,7 +27,7 @@ object SeriesMintingOps {
     fee:                    Long,
     someNextIndices:        Option[Indices],
     keyPair:                KeyPair,
-    seriesPolicy:           Event.SeriesPolicy
+    seriesPolicy:           SeriesPolicy
   )(implicit
     tba: TransactionBuilderApi[G],
     wsa: WalletStateAlgebra[G],
@@ -80,7 +80,7 @@ object SeriesMintingOps {
     fee:                    Long,
     someNextIndices:        Option[Indices],
     keyPair:                KeyPair,
-    seriesPolicy:           Event.SeriesPolicy,
+    seriesPolicy:           SeriesPolicy,
     changeLock:             Option[Lock]
   )(implicit
     tba: TransactionBuilderApi[G],
