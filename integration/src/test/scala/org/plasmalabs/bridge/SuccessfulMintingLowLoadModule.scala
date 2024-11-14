@@ -167,7 +167,7 @@ trait SuccessfulMintingLowLoadModule {
         _ <- IO.asyncForIO.start(mockBitcoinMintingStream(bitcoinMintingQueue, newAddress).compile.drain)
 
         successfulSessions <- (1 to numberOfSessions)
-          .grouped(10)
+          .grouped(5)
           .toList
           .traverse { batch =>
             for {

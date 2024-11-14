@@ -821,12 +821,6 @@ package object bridge extends ProcessOps {
     s"outaddr=$amount:$address"
   )
 
-  def createTxMultipleSeq(txId: String, addresses: Seq[String], amount: BigDecimal) = {
-    val base = Seq("exec", "bitcoin01", "bitcoin-tx", "-regtest", "-create", s"in=$txId:0")
-    val outputAddresses = addresses.map(address => s"outaddr=${amount / addresses.length}:$address")
-    base ++ outputAddresses
-  }
-
   def getTxSeq(id: Int, txId: String) = Seq(
     "exec",
     "bitcoin01",

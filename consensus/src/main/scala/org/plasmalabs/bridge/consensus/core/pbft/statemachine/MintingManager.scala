@@ -1,6 +1,5 @@
 package org.plasmalabs.bridge.consensus.core.pbft.statemachine
 
-import cats.Parallel
 import cats.effect.kernel.{Async, Resource}
 import cats.effect.std.Queue
 import io.grpc.ManagedChannel
@@ -29,7 +28,7 @@ object MintingManagerImpl {
   import org.typelevel.log4cats.syntax._
   import cats.implicits._
 
-  def make[F[_]: Parallel: Async: Logger](
+  def make[F[_]: Async: Logger](
     walletManagementUtils: WalletManagementUtils[F],
     plasmaWalletSeedFile:  String,
     plasmaWalletPassword:  String
@@ -136,7 +135,7 @@ object MintingManagerImpl {
             }
 
           (for {
-            blockResults <- (1L to 3L).toList.parTraverse(checkBlocks)
+            blockResults <- (1L to 5L).toList.traverse(checkBlocks)
 
             (allSeriesTxs, allGroupTxs) = blockResults.foldLeft(
               (Seq.empty[UnspentTransactionOutput], Seq.empty[UnspentTransactionOutput])
@@ -157,5 +156,4 @@ object MintingManagerImpl {
       }
     }
   }
-
 }

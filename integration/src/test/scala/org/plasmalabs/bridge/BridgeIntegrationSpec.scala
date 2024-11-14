@@ -15,6 +15,7 @@ class BridgeIntegrationSpec
     with SuccessfulPeginWithNonPrimaryFailureModule
     with FailedPeginNonPrimaryFailureModule
     with SuccessfulPeginWithConcurrentSessionsModule
+    with SuccessfulMintingLowLoadModule
     with BridgeSetupModule {
 
   import org.typelevel.log4cats.syntax._
@@ -33,6 +34,10 @@ class BridgeIntegrationSpec
     info"Bridge should correctly peg-in BTC for multiple concurrent Sessions" >> successfulPeginWithConcurrentSessions(
       3
     )
+  }
+
+  cleanupDir.test("Bridge should correctly mint for multiple sequential deposits") { _ =>
+    info"Bridge should correctly mint for multiple sequential deposits" >> successfulMintingLowLoad(5)
   }
 
   cleanupDir.test("Bridge should fail correctly when user does not send BTC") { _ =>
