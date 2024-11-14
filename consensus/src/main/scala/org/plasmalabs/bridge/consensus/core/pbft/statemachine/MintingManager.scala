@@ -50,7 +50,7 @@ object MintingManagerImpl {
       implicit val plasmaKeypair = new PlasmaKeypair(tKeyPair)
       new MintingManager[F] {
 
-        def offer(request: StartMintingRequest) = for {
+        def offer(request: StartMintingRequest): F[Unit] = for {
           _ <- startMintingRequestQueue.offer(request)
         } yield ()
 
@@ -65,7 +65,7 @@ object MintingManagerImpl {
         private def processMintingRequest(
           nodeQueryAlgebra: NodeQueryAlgebra[F],
           request:          StartMintingRequest
-        ) = for {
+        ): F[Unit] = for {
           _ <- info"Starting new minting process"
 
           response <- startMintingProcess(
@@ -78,9 +78,9 @@ object MintingManagerImpl {
             txo.transactionOutput.value.value.isGroup || txo.transactionOutput.value.value.isSeries || txo.transactionOutput.value.value.isLvl
           )
           changeLock <- for {
-            someNextIndices <- getCurrentIndices(request.fellowship, request.template, None)
+            someCurrentIndeces <- getCurrentIndices(request.fellowship, request.template, None)
             changeLock <- getChangeLockPredicate[F](
-              someNextIndices,
+              someCurrentIndeces,
               request.fellowship,
               request.template
             )

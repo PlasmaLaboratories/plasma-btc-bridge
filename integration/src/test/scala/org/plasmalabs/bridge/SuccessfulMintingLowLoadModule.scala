@@ -57,7 +57,7 @@ trait SuccessfulMintingLowLoadModule {
   private def getSessionById(userId: Int): IO[(String, String)] = {
     def retry(userSecret: String): IO[StartPeginSessionResponse] =
       (for {
-        startSessionResponse <- startSession(userSecret, 5000 + (userId % 7) * 2)
+        startSessionResponse <- startSession(userSecret, port = 5000 + (userId % 7) * 2)
       } yield startSessionResponse).handleErrorWith { _ =>
         IO.sleep(1.second) >> retry(userSecret)
       }
@@ -112,7 +112,7 @@ trait SuccessfulMintingLowLoadModule {
     _ <- info"User ${userId} - Tracking minting"
     mintingStatusResponse <-
       (for {
-        status <- checkMintingStatus(sessionID, 5000 + (userId % 7) * 2)
+        status <- checkMintingStatus(sessionID, port = 5000 + (userId % 7) * 2)
         _      <- info"User ${userId} - Current minting status: ${status.mintingStatus}"
         _      <- IO.sleep(3.second)
 

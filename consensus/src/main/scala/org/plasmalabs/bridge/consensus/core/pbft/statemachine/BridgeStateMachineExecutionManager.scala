@@ -1,6 +1,5 @@
 package org.plasmalabs.bridge.consensus.core.pbft.statemachine
 
-import cats.Parallel
 import cats.effect.kernel.{Async, Ref, Resource, Sync}
 import cats.effect.std.Queue
 import com.google.protobuf.ByteString
@@ -105,7 +104,7 @@ object BridgeStateMachineExecutionManagerImpl {
   import cats.implicits._
   import WaitingForRedemptionOps._
 
-  def make[F[_]: Parallel: Async: Logger](
+  def make[F[_]: Async: Logger](
     keyPair:               JKeyPair,
     viewManager:           ViewManager[F],
     walletManagementUtils: WalletManagementUtils[F],
