@@ -14,6 +14,22 @@ on:
         options:
         - ghcr.io/plasmalaboratories
         - stratalab
+      image:
+        description: 'Docker Image to publish'
+        required: true
+        default: 'plasma-node-tooling'
+        type: choice
+        options:
+        - plasma-node-tooling
+        - bitcoin-zmq
+      imageDirectory:
+        description: 'Docker Image Directory'
+        required: true
+        default: './docker/node'
+        type: choice
+        options:
+        - ./docker/node
+        - ./docker/bitcoin
 
 jobs:
   publish:
@@ -36,7 +52,8 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push Docker image (ghcr)
+      - name: Build and push Docker Image
         run: |
-          docker build -t ${{ github.event.inputs.registry }}/plasma-node-tooling:${{ github.event.inputs.imageTag }} .
-          docker push  ${{ github.event.inputs.registry }}/node-tooling:${{ github.event.inputs.imageTag }}
+          docker build -t ${{ github.event.inputs.registry }}/${{ github.event.inputs.image }}:${{ github.event.inputs.imageTag }} .
+          docker push  ${{ github.event.inputs.registry }}/${{ github.event.inputs.image }}:${{ github.event.inputs.imageTag }}
+        working-directory: ${{ github.event.inputs.imageDirectory }}
