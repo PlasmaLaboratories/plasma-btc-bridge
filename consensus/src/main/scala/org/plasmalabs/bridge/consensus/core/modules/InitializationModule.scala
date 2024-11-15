@@ -111,66 +111,6 @@ object InitializationModule {
       ) >> checkForLvls(fromFellowship, fromTemplate)
     }
 
-    private def checkIfGroupTokenMinted(
-      fromFellowship: Fellowship,
-      fromTemplate:   Template
-    ): F[Unit] = for {
-      newTxos <- getTxos(fromFellowship, fromTemplate)
-      _ <-
-        if (newTxos.filter(_.transactionOutput.value.value.isGroup).nonEmpty) {
-          info"Group Token minted successfully" >> currentState
-            .update(
-              _.copy(
-                currentStatus = Some("Group Token minted"),
-                currentError = None,
-                isReady = false
-              )
-            )
-        } else {
-          info"Group Token not minted, checking txos in 5 seconds" >> currentState
-            .update(
-              _.copy(
-                currentStatus = Some("Waiting for group tokens..."),
-                currentError = None,
-                isReady = false
-              )
-            ) >> Async[F].sleep(5.second) >> checkIfGroupTokenMinted(
-            fromFellowship,
-            fromTemplate
-          )
-        }
-    } yield ()
-
-    private def checkIfSeriesTokenMinted(
-      fromFellowship: Fellowship,
-      fromTemplate:   Template
-    ): F[Unit] = for {
-      newTxos <- getTxos(fromFellowship, fromTemplate)
-      _ <-
-        if (newTxos.filter(_.transactionOutput.value.value.isSeries).nonEmpty) {
-          info"Series Token minted successfully" >> currentState
-            .update(
-              _.copy(
-                currentStatus = Some("Series Token minted"),
-                currentError = None,
-                isReady = true
-              )
-            )
-        } else {
-          info"Series Token not minted, checking txos in 5 seconds" >> currentState
-            .update(
-              _.copy(
-                currentStatus = Some("Waiting for series tokens..."),
-                currentError = None,
-                isReady = false
-              )
-            ) >> Async[F].sleep(5.second) >> checkIfSeriesTokenMinted(
-            fromFellowship,
-            fromTemplate
-          )
-        }
-    } yield ()
-
     private def checkForGroupToken(
       fromFellowship: Fellowship,
       fromTemplate:   Template,
