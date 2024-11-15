@@ -7,9 +7,13 @@ import io.grpc.ManagedChannel
 import org.bitcoins.core.currency.{CurrencyUnit, Satoshis}
 import org.bitcoins.rpc.client.common.BitcoindRpcClient
 import org.plasmalabs.bridge.consensus.core.controllers.StartSessionController
-import org.plasmalabs.bridge.consensus.core.managers.WalletManagementUtils
+import org.plasmalabs.bridge.consensus.core.managers.{
+  MintingManagerAlgebraImpl,
+  StartMintingRequest,
+  WalletManagementUtils
+}
 import org.plasmalabs.bridge.consensus.core.pbft.ViewManager
-import org.plasmalabs.bridge.consensus.core.pbft.statemachine.{MintingManagerImpl, PBFTEvent}
+import org.plasmalabs.bridge.consensus.core.pbft.statemachine.PBFTEvent
 import org.plasmalabs.bridge.consensus.core.{
   BitcoinNetworkIdentifiers,
   BridgeWalletManager,
@@ -70,31 +74,41 @@ import org.plasmalabs.sdk.dataApi.{
   WalletStateAlgebra
 }
 import org.plasmalabs.sdk.models.{GroupId, SeriesId}
+import org.plasmalabs.sdk.syntax.bigIntAsInt128
 import org.plasmalabs.sdk.utils.Encoding
 import org.plasmalabs.sdk.wallet.WalletApi
 import org.typelevel.log4cats.Logger
-import quivr.models.Int128
 import scodec.bits.ByteVector
 
 import java.security.{KeyPair => JKeyPair}
 import java.util.UUID
 
-case class StartMintingRequest(
-  fellowship:    Fellowship,
-  template:      Template,
-  redeemAddress: String,
-  amount:        Int128
-)
-
 trait BridgeStateMachineExecutionManager[F[_]] {
 
+  /**
+   * Expected Outcome: Execute the checkpoint or start pegin request for current replica.
+   * @param sequenceNumber
+   * For the current request.
+   *
+   * @param request
+   * Containing a timestamp, clientNumber, signature, operation.
+   */
   def executeRequest(
     sequenceNumber: Long,
     request:        org.plasmalabs.bridge.shared.StateMachineRequest
   ): F[Unit]
 
+  /**
+   * Expected Outcome: Starts the stream for the elegibility manager that appends, updates or executes the requests.
+   */
   def runStream(): fs2.Stream[F, Unit]
 
+  /**
+   * Expected Outcome: Starts the minting stream on the existing mintingManager
+   *
+   * @param nodeQueryAlgebra
+   *   To query our node scanning the blocks with new utxos.
+   */
   def runMintingStream(nodeQueryAlgebra: NodeQueryAlgebra[F]): fs2.Stream[F, Unit]
 }
 
@@ -148,8 +162,8 @@ object BridgeStateMachineExecutionManagerImpl {
       state              <- Ref.of[F, Map[String, PBFTState]](Map.empty)
       queue              <- Queue.unbounded[F, (Long, StateMachineRequest)]
       elegibilityManager <- ExecutionElegibilityManagerImpl.make[F]()
-      mintingManager <- MintingManagerImpl
-        .make[F](walletManagementUtils, plasmaWalletSeedFile, plasmaWalletPassword)
+      mintingManagerAlgebra <- MintingManagerAlgebraImpl
+        .make[F]()
     } yield {
       implicit val plasmaKeypair = new PlasmaKeypair(tKeyPair)
       new BridgeStateMachineExecutionManager[F] {
@@ -172,8 +186,10 @@ object BridgeStateMachineExecutionManagerImpl {
             )
             .evalMap(x => trace"Executing the request: ${x._2}" >> executeRequestF(x._1, x._2))
 
-        def runMintingStream(nodeQueryAlgebra: NodeQueryAlgebra[F]): fs2.Stream[F, Unit] =
-          mintingManager.runMintingStream(nodeQueryAlgebra)
+        def runMintingStream(nodeQueryAlgebra: NodeQueryAlgebra[F]): fs2.Stream[F, Unit] = {
+          implicit val nqa = nodeQueryAlgebra
+          mintingManagerAlgebra.runMintingStream()
+        }
 
         private def startSession(
           clientNumber: Int,
@@ -346,7 +362,6 @@ object BridgeStateMachineExecutionManagerImpl {
             case PostDepositBTC(
                   value
                 ) =>
-              import org.plasmalabs.sdk.syntax._
               for {
                 _ <- debug"handling PostDepositBTC ${value.sessionId}"
                 someSessionInfo <- standardResponse(
@@ -360,7 +375,7 @@ object BridgeStateMachineExecutionManagerImpl {
                       MiscUtils.sessionInfoPeginPrism
                         .getOption(sessionInfo)
                         .map(peginSessionInfo =>
-                          mintingManager.offer(
+                          mintingManagerAlgebra.offer(
                             StartMintingRequest(
                               defaultFromFellowship,
                               defaultFromTemplate,

@@ -1,13 +1,13 @@
-package org.plasmalabs.bridge.consensus.core.pbft.statemachine
+package org.plasmalabs.bridge.consensus.core.managers
 
 import cats.effect.kernel.{Async, Resource}
 import cats.effect.std.Queue
 import io.grpc.ManagedChannel
-import org.plasmalabs.bridge.consensus.core.PlasmaKeypair
 import org.plasmalabs.bridge.consensus.core.managers.WalletApiHelpers.{getChangeLockPredicate, getCurrentIndices}
-import org.plasmalabs.bridge.consensus.core.managers.WalletManagementUtils
 import org.plasmalabs.bridge.consensus.core.pbft.statemachine.WaitingBTCOps.startMintingProcess
+import org.plasmalabs.bridge.consensus.core.{Fellowship, PlasmaKeypair, Template}
 import org.plasmalabs.bridge.consensus.shared.Lvl
+import org.plasmalabs.bridge.shared.{BridgeError, UnknownError}
 import org.plasmalabs.sdk.builders.TransactionBuilderApi
 import org.plasmalabs.sdk.dataApi.{IndexerQueryAlgebra, NodeQueryAlgebra, WalletStateAlgebra}
 import org.plasmalabs.sdk.models.LockAddress
@@ -15,23 +15,55 @@ import org.plasmalabs.sdk.models.transaction.UnspentTransactionOutput
 import org.plasmalabs.sdk.syntax.{int128AsBigInt, valueToQuantitySyntaxOps}
 import org.plasmalabs.sdk.wallet.WalletApi
 import org.typelevel.log4cats.Logger
+import quivr.models.Int128
 
 import scala.concurrent.duration._
 
-trait MintingManager[F[_]] {
-  def offer(request:                     StartMintingRequest): F[Unit]
-  def runMintingStream(nodeQueryAlgebra: NodeQueryAlgebra[F]): fs2.Stream[F, Unit]
+case class StartMintingRequest(
+  fellowship:    Fellowship,
+  template:      Template,
+  redeemAddress: String,
+  amount:        Int128
+)
+
+case class StartedMintingResponse(
+  changeAddress:       LockAddress,
+  groupValueToArrive:  BigInt,
+  seriesValueToArrive: BigInt
+)
+
+trait MintingManagerAlgebra[F[_]] {
+
+  /**
+   * Expected Outcome: Append a new request to the minting queue.
+   *
+   * @param request
+   *   Containing fellowship, template, redeemAddress and amount.
+   */
+  def offer(request: StartMintingRequest): F[Unit]
+
+  /**
+   * Expected Outcome:
+   * Creates stream from unbounded queue to process minting requests one by one.
+   * Processing the minting process fails if not able to get the changeLock. If getting the changeAddress is successful we start the minting Process for
+   * the current request.
+   * Continues with next request if funds are correctly minted and arrive at the change address in the correct amounts or certain amount of time passes.
+   *
+   * @param nodeQueryAlgebra
+   *   Used for checking the last two blocks if UTXOs arrived after starting the minting process.
+   */
+  def runMintingStream()(implicit
+    plasmaKeypair:    PlasmaKeypair,
+    nodeQueryAlgebra: NodeQueryAlgebra[F]
+  ): fs2.Stream[F, Unit]
 }
 
-object MintingManagerImpl {
+object MintingManagerAlgebraImpl {
 
   import org.typelevel.log4cats.syntax._
   import cats.implicits._
 
   def make[F[_]: Async: Logger](
-    walletManagementUtils: WalletManagementUtils[F],
-    plasmaWalletSeedFile:  String,
-    plasmaWalletPassword:  String
   )(implicit
     tba:               TransactionBuilderApi[F],
     walletApi:         WalletApi[F],
@@ -39,44 +71,47 @@ object MintingManagerImpl {
     utxoAlgebra:       IndexerQueryAlgebra[F],
     channelResource:   Resource[F, ManagedChannel],
     defaultMintingFee: Lvl
-  ) = {
+  ): F[MintingManagerAlgebra[F]] = {
+
     for {
-      tKeyPair <- walletManagementUtils.loadKeys(
-        plasmaWalletSeedFile,
-        plasmaWalletPassword
-      )
       startMintingRequestQueue <- Queue.unbounded[F, StartMintingRequest]
     } yield {
-      implicit val plasmaKeypair = new PlasmaKeypair(tKeyPair)
-      new MintingManager[F] {
+      val verifyingTimeout = 15.second
+
+      new MintingManagerAlgebra[F] {
 
         def offer(request: StartMintingRequest): F[Unit] = for {
           _ <- startMintingRequestQueue.offer(request)
+
         } yield ()
 
-        def runMintingStream(nodeQueryAlgebra: NodeQueryAlgebra[F]): fs2.Stream[F, Unit] = fs2.Stream
+        def runMintingStream()(implicit
+          plasmaKeypair:    PlasmaKeypair,
+          nodeQueryAlgebra: NodeQueryAlgebra[F]
+        ): fs2.Stream[F, Unit] = fs2.Stream
           .fromQueueUnterminated(startMintingRequestQueue)
           .evalMap { request =>
             for {
-              _ <- processMintingRequest(nodeQueryAlgebra, request)
+              mintingResponse <- processMintingRequest(request)
+              _ <- mintingResponse match {
+                case Right(response) =>
+                  Async[F].race(
+                    verifyMintingSpent(
+                      response.changeAddress,
+                      response.groupValueToArrive,
+                      response.seriesValueToArrive
+                    ),
+                    Async[F].sleep(verifyingTimeout) >> error"Started the minting process but failed to verify it."
+                  )
+                case Left(error) =>
+                  error"Minting process failed: ${error.getMessage()}".void
+              }
             } yield ()
           }
 
         private def processMintingRequest(
-          nodeQueryAlgebra: NodeQueryAlgebra[F],
-          request:          StartMintingRequest
-        ): F[Unit] = for {
-          _ <- info"Starting new minting process"
-
-          response <- startMintingProcess(
-            request.fellowship,
-            request.template,
-            request.redeemAddress,
-            request.amount
-          )
-          unspentPlasmaBeforeMint = response._2.filter((txo) =>
-            txo.transactionOutput.value.value.isGroup || txo.transactionOutput.value.value.isSeries || txo.transactionOutput.value.value.isLvl
-          )
+          request: StartMintingRequest
+        )(implicit plasmaKeypair: PlasmaKeypair): F[Either[BridgeError, StartedMintingResponse]] = for {
           changeLock <- for {
             someCurrentIndeces <- getCurrentIndices(request.fellowship, request.template, None)
             changeLock <- getChangeLockPredicate[F](
@@ -88,11 +123,21 @@ object MintingManagerImpl {
 
           lockForChange = changeLock match {
             case Some(lock) => lock
-            case None       => throw new RuntimeException("changeLock is None, unable to get address")
+            case None       => return Async[F].pure(Left(UnknownError("ChangeLock is None, unable to get address.")))
           }
 
           changeAddress <- tba.lockAddress(
             lockForChange
+          )
+
+          response <- startMintingProcess(
+            request.fellowship,
+            request.template,
+            request.redeemAddress,
+            request.amount
+          )
+          unspentPlasmaBeforeMint = response._2.filter((txo) =>
+            txo.transactionOutput.value.value.isGroup || txo.transactionOutput.value.value.isSeries || txo.transactionOutput.value.value.isLvl
           )
 
           groupValueToArrive = unspentPlasmaBeforeMint
@@ -104,24 +149,16 @@ object MintingManagerImpl {
             .map(txo => int128AsBigInt(valueToQuantitySyntaxOps(txo.transactionOutput.value.value).quantity))
             .sum
 
-          _ <- for {
-            mintingSuccessful <- verifyMintingSpent(
-              nodeQueryAlgebra,
-              changeAddress,
-              groupValueToArrive,
-              seriesValueToArrive
-            )
-          } yield mintingSuccessful
-          _ <- info"Processing minting successful, continue with next Request"
-        } yield ()
+        } yield Right(StartedMintingResponse(changeAddress, groupValueToArrive, seriesValueToArrive))
 
         private def verifyMintingSpent(
-          nodeQueryAlgebra:    NodeQueryAlgebra[F],
           changeAddress:       LockAddress,
           groupValueToArrive:  BigInt,
           seriesValueToArrive: BigInt
-        ): F[Boolean] = {
-          def checkBlocks(depth: Long): F[(Seq[UnspentTransactionOutput], Seq[UnspentTransactionOutput])] =
+        )(implicit nodeQueryAlgebra: NodeQueryAlgebra[F]): F[Boolean] = {
+          def checkBlocksForUtxosOnChangeAddress(
+            depth: Long
+          ): F[(Seq[UnspentTransactionOutput], Seq[UnspentTransactionOutput])] =
             nodeQueryAlgebra.blockByDepth(depth).map {
               case Some(block) =>
                 val utxosForChangeAddress = block._4
@@ -135,7 +172,7 @@ object MintingManagerImpl {
             }
 
           (for {
-            blockResults <- (1L to 5L).toList.traverse(checkBlocks)
+            blockResults <- (1L to 5L).toList.traverse(checkBlocksForUtxosOnChangeAddress)
 
             (allSeriesTxs, allGroupTxs) = blockResults.foldLeft(
               (Seq.empty[UnspentTransactionOutput], Seq.empty[UnspentTransactionOutput])

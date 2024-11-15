@@ -1,5 +1,6 @@
 package org.plasmalabs.bridge.consensus.core.pbft
 
+import cats.data.OptionT
 import cats.effect.kernel.{Async, Ref}
 import cats.effect.std.Queue
 import org.plasmalabs.bridge.shared.ClientId
@@ -60,13 +61,17 @@ object RequestTimerManagerImpl {
           _ <- expiredTimers.update(_ - timerIdentifier)
         } yield ()
 
-      override def hasExpiredTimer(): F[Boolean] =
-        expiredTimers.get.flatMap { x =>
-          import org.typelevel.log4cats.syntax._
-          if (x.nonEmpty) error"Timer expired: ${x.take(3)}${if (x.size > 3) "..." else ""}" >> x.nonEmpty.pure[F]
-          else
-            x.nonEmpty.pure[F]
-        }
+      override def hasExpiredTimer(): F[Boolean] = {
+        import org.typelevel.log4cats.syntax._
+        for {
+          setExpired <- expiredTimers.get
+          _ <- OptionT
+            .whenF(setExpired.size > 0)(
+              error"Timer expired: ${setExpired.take(3)}${if (setExpired.size > 3) "..." else ""}"
+            )
+            .getOrElse(Async[F].unit)
+        } yield setExpired.nonEmpty
+      }
 
       def resetAllTimers(): F[Unit] =
         for {
