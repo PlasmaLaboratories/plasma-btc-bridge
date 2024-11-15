@@ -20,7 +20,7 @@ object Dependencies {
   )
 
   val logback: Seq[ModuleID] = Seq(
-    "ch.qos.logback" % "logback-classic" % "1.4.11"
+    "ch.qos.logback" % "logback-classic" % "1.4.14"
   )
 
   val slf4j: Seq[ModuleID] = Seq(
