@@ -104,7 +104,7 @@ object Dependencies {
   )
 
   val genericCirce: Seq[ModuleID] = Seq(
-    "io.circe" %% "circe-generic" % "0.14.9"
+    "io.circe" %% "circe-generic" % "0.14.10"
   )
 
   val optics: Seq[ModuleID] = Seq(
