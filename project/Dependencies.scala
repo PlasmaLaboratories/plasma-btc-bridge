@@ -28,7 +28,7 @@ object Dependencies {
   )
 
   val log4cats: Seq[ModuleID] = Seq(
-    "org.typelevel" %% "log4cats-core"  % "2.4.0",
+    "org.typelevel" %% "log4cats-core"  % "2.7.0",
     "org.typelevel" %% "log4cats-slf4j" % "2.4.0"
   )
 
