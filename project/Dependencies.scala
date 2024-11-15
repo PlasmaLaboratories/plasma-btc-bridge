@@ -63,7 +63,7 @@ object Dependencies {
   )
 
   val munitCatsEffects: Seq[ModuleID] = Seq(
-    "org.typelevel" %% "munit-cats-effect" % "2.0.0-M4"
+    "org.typelevel" %% "munit-cats-effect" % "2.0.0"
   )
 
   val cats: Seq[ModuleID] = Seq(
