@@ -7,6 +7,7 @@ object Dependencies {
     val catsCoreVersion = "2.12.0"
     val http4sVersion = "0.23.29"
     val slf4jVersion = "2.0.16"
+    val mUnitTeVersion = "0.7.29"
     val bitcoinsVersion = "1.9.9"
     val btcVersionZmq = "1.9.8"
     val monocleVersion = "3.1.0"
@@ -143,8 +144,8 @@ object Dependencies {
       grpcRuntime ++
       bouncycastle
 
-    val test: Seq[ModuleID] = mUnit.map(_ % Test)
 
+    val test: Seq[ModuleID] = mUnit.map(_ % Test)
   }
 
   object plasmaBtcCli {
