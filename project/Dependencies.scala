@@ -5,7 +5,7 @@ object Dependencies {
 
   object Versions {
     val catsCoreVersion = "2.10.0"
-    val http4sVersion = "0.23.23"
+    val http4sVersion = "0.23.29"
     val slf4jVersion = "2.0.12"
     val mUnitTeVersion = "0.7.29"
     val bitcoinsVersion = "1.9.9"
