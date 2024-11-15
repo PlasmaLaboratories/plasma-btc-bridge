@@ -41,13 +41,12 @@ jobs:
           echo "    staker-count: 2" >> node01/config.yaml
           echo "    local-staker-index: 0" >> node01/config.yaml
           echo "    timestamp: 0" >> node01/config.yaml
-          echo "    regtest-enabled: true" >> node01/config.yaml
           echo "    stakes: [10000, 10000]" >> node01/config.yaml
           docker network ls
           export BRIDGE=`docker network ls | head -3 | tail -1 | awk -e '{print $2}'`
           echo "BRIDGE=$BRIDGE" >> $GITHUB_ENV
           echo "BRIDGE NETWORK: $BRIDGE"
-          export NODE_01=`docker run --rm -d --network=$BRIDGE --name node01 -p 9085:9085 -p 9084:9084 -p 9091:9091 -v ${{ github.workspace }}/node01:/staking:rw stratalab/plasma-node-tooling:0.1.0 --  --config  /staking/config.yaml --regtest`
+          export NODE_01=`docker run --rm -d --network=$BRIDGE --name node01 -p 9085:9085 -p 9084:9084 -p 9091:9091 -v ${{ github.workspace }}/node01:/staking:rw stratalab/plasma-node-tooling:0.1.3 --  --config  /staking/config.yaml --block-regtest-permission true`
           echo "NODE_01=$NODE_01" >> $GITHUB_ENV
           echo "Node01 container id: $NODE_01"
           curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz" | gzip -d > cs
@@ -55,7 +54,7 @@ jobs:
           ./cs setup --yes
           shopt -s expand_aliases
           mkdir ${{ github.workspace }}/data
-          alias plasma-cli="./cs launch -r https://s01.oss.sonatype.org/content/repositories/releases org.plasmalabs:plasma-cli_2.13:0.1.1 -- "
+          alias plasma-cli="./cs launch -r https://s01.oss.sonatype.org/content/repositories/releases org.plasmalabs:plasma-cli_2.13:0.1.2 -- "
           plasma-cli node-query mint-block --nb-blocks 1 -h localhost  --port 9084 -s false
           export PLASMA_WALLET_DB=${{ github.workspace }}/data/plasma-wallet.db
           export PLASMA_WALLET_JSON=${{ github.workspace }}/data/plasma-wallet.json
@@ -106,11 +105,10 @@ jobs:
           echo "    staker-count: 2" >> node02/config.yaml
           echo "    local-staker-index: 1" >> node02/config.yaml
           echo "    timestamp: 0" >> node02/config.yaml
-          echo "    regtest-enabled: true" >> node02/config.yaml
           echo "    stakes: [10000, 10000]" >> node02/config.yaml
           export IP_CONTAINER=`docker network inspect $BRIDGE | jq  ".[0].Containers.\"$NODE_01\".IPv4Address" | sed  's:"::g' | sed -n 's:\(.*\)/.*:\1:p'`
           echo "IP_CONTAINER: $IP_CONTAINER"
-          export NODE_02=`docker run --rm -d  --network=$BRIDGE --name node02 -e NODE_P2P_KNOWN_PEERS=$IP_CONTAINER:9085 -p 9087:9085 -p 9086:9084 -p 9092:9091 -v $(pwd)/node02:/staking:rw stratalab/plasma-node-tooling:0.1.0 --  --config  /staking/config.yaml --regtest`
+          export NODE_02=`docker run --rm -d  --network=$BRIDGE --name node02 -e NODE_P2P_KNOWN_PEERS=$IP_CONTAINER:9085 -p 9087:9085 -p 9086:9084 -p 9092:9091 -v $(pwd)/node02:/staking:rw stratalab/plasma-node-tooling:0.1.3 --  --config  /staking/config.yaml --block-regtest-permission true`
           sbt coverage integration/test coverageReport
           docker stop $NODE_01
           docker stop $NODE_02

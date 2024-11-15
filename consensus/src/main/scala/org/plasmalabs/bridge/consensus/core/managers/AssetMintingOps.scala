@@ -6,14 +6,14 @@ import com.google.protobuf.struct.Struct
 import io.circe.Json
 import org.plasmalabs.bridge.consensus.shared.Lvl
 import org.plasmalabs.indexer.services.Txo
+import org.plasmalabs.quivr.models.KeyPair
 import org.plasmalabs.sdk.builders.TransactionBuilderApi
 import org.plasmalabs.sdk.dataApi.WalletStateAlgebra
-import org.plasmalabs.sdk.models.box.{AssetMintingStatement, Lock}
+import org.plasmalabs.sdk.models.box.Lock
 import org.plasmalabs.sdk.models.transaction.IoTransaction
-import org.plasmalabs.sdk.models.{Indices, LockAddress}
+import org.plasmalabs.sdk.models.{AssetMintingStatement, Indices, LockAddress}
 import org.plasmalabs.sdk.utils.Encoding
 import org.plasmalabs.sdk.wallet.WalletApi
-import quivr.models.KeyPair
 
 import TransactionBuilderApi.implicits._
 

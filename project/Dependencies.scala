@@ -1,14 +1,19 @@
+import Dependencies.Versions._
 import sbt._
 
 object Dependencies {
 
-  val catsCoreVersion = "2.10.0"
-
-  lazy val http4sVersion = "0.23.23"
-
-  lazy val slf4jVersion = "2.0.12"
-  lazy val mUnitTeVersion = "0.7.29"
-
+  object Versions {
+    val catsCoreVersion = "2.10.0"
+    val http4sVersion = "0.23.23"
+    val slf4jVersion = "2.0.12"
+    val mUnitTeVersion = "0.7.29"
+    val bitcoinsVersion = "1.9.9"
+    val btcVersionZmq = "1.9.8"
+    val monocleVersion = "3.1.0"
+    val plasmaVersion = "0.2.1"
+    val ioGrpcVersion = "1.68.1"
+  }
 
   val akkaSlf4j: Seq[ModuleID] = Seq(
     "org.apache.pekko" %% "pekko-actor-typed" % "1.0.2"
@@ -18,7 +23,7 @@ object Dependencies {
     "ch.qos.logback" % "logback-classic" % "1.4.11"
   )
 
-  lazy val slf4j: Seq[ModuleID] = Seq(
+  val slf4j: Seq[ModuleID] = Seq(
     "org.slf4j" % "slf4j-api" % slf4jVersion
   )
 
@@ -32,25 +37,13 @@ object Dependencies {
     "org.bouncycastle" % "bcpkix-jdk15on" % "1.68"
   )
 
-  lazy val plasmaOrg = "org.plasmalabs"
+  val plasma: Seq[ModuleID] = Seq(
+    "org.plasmalabs" %% "plasma-sdk"  % plasmaVersion,
+    "org.plasmalabs" %% "crypto"      % plasmaVersion,
+    "org.plasmalabs" %% "service-kit" % plasmaVersion
+  )
 
-  lazy val plasmaVersion = "0.1.0"
-
-  val plasmaSdk = plasmaOrg %% "plasma-sdk" % plasmaVersion
-
-  val plasmaCrypto = plasmaOrg %% "crypto" % plasmaVersion
-
-  val plasmaServiceKit = plasmaOrg %% "service-kit" % plasmaVersion
-
-  val plasma: Seq[ModuleID] = Seq(plasmaSdk, plasmaCrypto, plasmaServiceKit)
-
-  lazy val bitcoinsVersion = "1.9.9"
-
-  lazy val btcVersionZmq = "1.9.8"
-
-  lazy val monocleVersion = "3.1.0"
-
-  lazy val munit: Seq[ModuleID] = Seq(
+  val munit: Seq[ModuleID] = Seq(
     "org.scalameta" %% "munit" % "1.0.0-M10"
   )
 
@@ -65,11 +58,11 @@ object Dependencies {
     "org.xerial" % "sqlite-jdbc" % "3.45.2.0"
   )
 
-  lazy val ip4score: Seq[ModuleID] = Seq(
+  val ip4score: Seq[ModuleID] = Seq(
     "com.comcast" %% "ip4s-core" % "3.6.0"
   )
 
-  lazy val munitCatsEffects: Seq[ModuleID] = Seq(
+  val munitCatsEffects: Seq[ModuleID] = Seq(
     "org.typelevel" %% "munit-cats-effect" % "2.0.0-M4"
   )
 
@@ -79,23 +72,23 @@ object Dependencies {
   )
 
   val grpcNetty =
-    Seq("io.grpc" % "grpc-netty-shaded" % "1.62.2")
+    Seq("io.grpc" % "grpc-netty-shaded" % ioGrpcVersion)
 
   val grpcRuntime =
     Seq(
       "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion
     )
 
-  lazy val scopt: Seq[ModuleID] = Seq("com.github.scopt" %% "scopt" % "4.0.1")
+  val scopt: Seq[ModuleID] = Seq("com.github.scopt" %% "scopt" % "4.0.1")
 
-  lazy val http4s: Seq[ModuleID] = Seq(
+  val http4s: Seq[ModuleID] = Seq(
     "org.http4s" %% "http4s-ember-client" % http4sVersion,
     "org.http4s" %% "http4s-dsl"          % http4sVersion,
     "org.http4s" %% "http4s-circe"        % http4sVersion,
     "org.http4s" %% "http4s-ember-server" % http4sVersion
   )
 
-  lazy val bitcoinS: Seq[ModuleID] = Seq(
+  val bitcoinS: Seq[ModuleID] = Seq(
     "org.bitcoin-s" %% "bitcoin-s-bitcoind-rpc" % bitcoinsVersion,
     "org.bitcoin-s" %% "bitcoin-s-core"         % bitcoinsVersion,
     "org.bitcoin-s" %% "bitcoin-s-chain"        % bitcoinsVersion,
@@ -110,22 +103,22 @@ object Dependencies {
     "org.bitcoin-s" %% "bitcoin-s-zmq"          % btcVersionZmq
   )
 
-  lazy val genericCirce: Seq[ModuleID] = Seq(
+  val genericCirce: Seq[ModuleID] = Seq(
     "io.circe" %% "circe-generic" % "0.14.9"
   )
 
-  lazy val optics: Seq[ModuleID] = Seq(
+  val optics: Seq[ModuleID] = Seq(
     "dev.optics" %% "monocle-core"  % monocleVersion,
     "dev.optics" %% "monocle-macro" % monocleVersion
   )
 
-  lazy val config: Seq[ModuleID] = Seq(
+  val config: Seq[ModuleID] = Seq(
     "com.typesafe" % "config" % "1.4.3"
   )
 
   object plasmaBtcBridge {
 
-    lazy val consensus: Seq[ModuleID] =
+    val consensus: Seq[ModuleID] =
       plasma ++
       scopt ++
       cats ++
@@ -138,7 +131,7 @@ object Dependencies {
       sqlite ++
       akkaSlf4j
 
-    lazy val publicApi: Seq[ModuleID] =
+    val publicApi: Seq[ModuleID] =
       scopt ++
       ip4score ++
       cats ++
@@ -152,14 +145,14 @@ object Dependencies {
       logback ++
       genericCirce
 
-    lazy val shared: Seq[ModuleID] =
+    val shared: Seq[ModuleID] =
       grpcNetty ++
       log4cats ++
       cats ++
       grpcRuntime ++
       bouncycastle
 
-    lazy val test: Seq[ModuleID] =
+    val test: Seq[ModuleID] =
       (
         munit ++ munitCatsEffects
       )
@@ -168,7 +161,7 @@ object Dependencies {
 
   object plasmaBtcCli {
 
-    lazy val main: Seq[ModuleID] =
+    val main: Seq[ModuleID] =
       plasma ++
       scopt ++
       cats ++
@@ -177,7 +170,7 @@ object Dependencies {
       http4s ++
       bitcoinS
 
-    lazy val test: Seq[ModuleID] =
+    val test: Seq[ModuleID] =
       (
         munit ++ munitCatsEffects
       )
@@ -185,7 +178,7 @@ object Dependencies {
   }
 
   object IntegrationTests {
-    lazy val sources: Seq[ModuleID] = plasmaBtcBridge.consensus
-    lazy val tests: Seq[ModuleID] = (sources ++ mUnitTest).map(_ % Test)
+    val sources: Seq[ModuleID] = plasmaBtcBridge.consensus
+    val tests: Seq[ModuleID] = (sources ++ mUnitTest).map(_ % Test)
   }
 }

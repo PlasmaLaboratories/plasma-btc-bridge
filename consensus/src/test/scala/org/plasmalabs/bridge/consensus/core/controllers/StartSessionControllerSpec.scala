@@ -35,7 +35,7 @@ class StartSessionControllerSpec
     with RpcChannelResource
     with SharedData {
 
-  val tmpDirectory = FunFixture[Path](
+  private val tmpDirectory = FunFixture[Path](
     setup = { _ =>
       try
         Files.delete(Paths.get(plasmaWalletDb))

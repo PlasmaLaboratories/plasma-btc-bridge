@@ -5,13 +5,13 @@ import org.bitcoins.rpc.client.common.BitcoindRpcClient
 import org.plasmalabs.bridge.consensus.core.managers.WalletApiHelpers
 import org.plasmalabs.bridge.consensus.core.{Fellowship, SystemGlobalState, Template}
 import org.plasmalabs.indexer.services.Txo
+import org.plasmalabs.quivr.models.Int128
 import org.plasmalabs.sdk.builders.TransactionBuilderApi
 import org.plasmalabs.sdk.dataApi.{IndexerQueryAlgebra, WalletStateAlgebra}
 import org.plasmalabs.sdk.models.{GroupId, SeriesId}
 import org.plasmalabs.sdk.syntax._
 import org.plasmalabs.sdk.utils.Encoding
 import org.typelevel.log4cats.Logger
-import quivr.models.Int128
 
 import scala.concurrent.duration._
 
