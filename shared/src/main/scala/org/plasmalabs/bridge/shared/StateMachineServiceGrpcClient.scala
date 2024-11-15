@@ -82,7 +82,6 @@ object StateMachineServiceGrpcClientImpl {
   import org.plasmalabs.bridge.shared.implicits._
   import scala.concurrent.duration._
 
-
   def makeContainer[F[_]: Parallel: Async: Logger](
     currentViewRef: Ref[F, Long],
     keyPair:        KeyPair,
@@ -98,7 +97,7 @@ object StateMachineServiceGrpcClientImpl {
         BridgeError,
         BridgeResponse
       ], LongAdder]
-    ],
+    ]
   )(implicit replicaCount: ReplicaCount, stateMachineConf: StateMachineServiceGrpcClientRetryConfig) = {
     for {
       idClientList <- (for {
@@ -286,32 +285,33 @@ object StateMachineServiceGrpcClientImpl {
 
       def retryWithBackoff(
         replica: StateMachineServiceFs2Grpc[F, Metadata],
-        request: StateMachineRequest,
+        request: StateMachineRequest
       ): F[Empty] = {
         def retry(
-            remainingRetries: Int,
-            currentDelay: FiniteDuration
-        ): F[Empty] = {
+          remainingRetries: Int,
+          currentDelay:     FiniteDuration
+        ): F[Empty] =
           for {
             someResult <- replica
-            .executeRequest(request, new Metadata())
-            .handleErrorWith { _ =>
-              if (remainingRetries <= 0) {
-                for {
-                  _ <- error"Max retries (${stateMachineConf.retryPolicy.maxRetries}) reached for request ${request.timestamp}"
-                  result <- Empty().pure[F]
-                } yield result
-              } else {
-                for {
-                  _ <- info"Attempt failed for request ${request.timestamp}. Retrying in ${currentDelay.toMillis}ms. Remaining retries: $remainingRetries"
-                  _ <- Async[F].sleep(currentDelay)
-                  result <- retry(remainingRetries - 1, currentDelay * stateMachineConf.retryPolicy.delayMultiplier)
-                } yield result
+              .executeRequest(request, new Metadata())
+              .handleErrorWith { _ =>
+                if (remainingRetries <= 0) {
+                  for {
+                    _ <-
+                      error"Max retries (${stateMachineConf.retryPolicy.maxRetries}) reached for request ${request.timestamp}"
+                    result <- Empty().pure[F]
+                  } yield result
+                } else {
+                  for {
+                    _ <-
+                      info"Attempt failed for request ${request.timestamp}. Retrying in ${currentDelay.toMillis}ms. Remaining retries: $remainingRetries"
+                    _      <- Async[F].sleep(currentDelay)
+                    result <- retry(remainingRetries - 1, currentDelay * stateMachineConf.retryPolicy.delayMultiplier)
+                  } yield result
+                }
               }
-            }
           } yield someResult
-          
-        }
+
         for {
           result <- retry(stateMachineConf.retryPolicy.maxRetries, stateMachineConf.retryPolicy.initialDelay)
         } yield result
@@ -319,9 +319,8 @@ object StateMachineServiceGrpcClientImpl {
 
       def executeRequest(
         request: StateMachineRequest
-      ): F[Either[BridgeError, BridgeResponse]] = {
-
-      for {
+      ): F[Either[BridgeError, BridgeResponse]] =
+        for {
           _ <- info"Sending request to backend"
           // create a new vote table for this request
           _ <- Sync[F].delay(
@@ -347,16 +346,16 @@ object StateMachineServiceGrpcClientImpl {
           _ <- info"Current primary is $currentPrimary"
           _ <- retryWithBackoff(
             replicaMap(currentPrimary),
-            request,
+            request
           )
           _ <- trace"Waiting for response from backend"
           replicasWithoutPrimary = replicaMap.filter(_._1 != currentPrimary).values.toList
           someResponse <- Async[F].race(
             Async[F].sleep(stateMachineConf.primaryResponseWait) >> // wait for response
             error"The request ${request.timestamp} timed out, contacting other replicas" >> // timeout
-            replicasWithoutPrimary.parTraverse{
-            replica => retryWithBackoff(replica, request)
-          } >>
+            replicasWithoutPrimary.parTraverse { replica =>
+              retryWithBackoff(replica, request)
+            } >>
             Async[F].sleep(stateMachineConf.otherReplicasResponseWait) >> // wait for response
             (TimeoutError("Timeout waiting for response"): BridgeError)
               .pure[F],
@@ -364,11 +363,9 @@ object StateMachineServiceGrpcClientImpl {
           )
 
         } yield someResponse match {
-          case Left(error) => Left(error)
+          case Left(error)     => Left(error)
           case Right(response) => response
         }
-      }
-        
 
       def prepareRequest(
         operation: StateMachineRequest.Operation

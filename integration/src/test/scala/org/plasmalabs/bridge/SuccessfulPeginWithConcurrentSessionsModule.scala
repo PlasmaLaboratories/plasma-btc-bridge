@@ -3,7 +3,13 @@ package org.plasmalabs.bridge
 import cats.effect.IO
 import cats.effect.std.Queue
 import org.plasmalabs.bridge.shared.StartPeginSessionResponse
-import org.plasmalabs.bridge.{getCurrentUtxosFromAddress, getNewAddress, mintPlasmaBlock, proveRedeemAddressTx, userBitcoinWallet}
+import org.plasmalabs.bridge.{
+  getCurrentUtxosFromAddress,
+  getNewAddress,
+  mintPlasmaBlock,
+  proveRedeemAddressTx,
+  userBitcoinWallet
+}
 import org.typelevel.log4cats.syntax._
 
 import java.nio.file.{Files, Paths}
