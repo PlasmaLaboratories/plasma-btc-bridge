@@ -15,7 +15,7 @@ import org.plasmalabs.sdk.models.transaction.UnspentTransactionOutput
 import org.plasmalabs.sdk.syntax.{int128AsBigInt, valueToQuantitySyntaxOps}
 import org.plasmalabs.sdk.wallet.WalletApi
 import org.typelevel.log4cats.Logger
-import quivr.models.Int128
+import quivr.models.{Int128}
 
 import scala.concurrent.duration._
 
