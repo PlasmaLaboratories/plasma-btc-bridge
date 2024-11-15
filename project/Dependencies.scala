@@ -16,7 +16,7 @@ object Dependencies {
   }
 
   val akkaSlf4j: Seq[ModuleID] = Seq(
-    "org.apache.pekko" %% "pekko-actor-typed" % "1.0.2"
+    "org.apache.pekko" %% "pekko-actor-typed" % "1.0.3"
   )
 
   val logback: Seq[ModuleID] = Seq(
