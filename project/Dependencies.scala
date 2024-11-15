@@ -44,7 +44,7 @@ object Dependencies {
   )
 
   val munit: Seq[ModuleID] = Seq(
-    "org.scalameta" %% "munit" % "1.0.0-M10"
+    "org.scalameta" %% "munit" % "1.0.2"
   )
 
   lazy val mUnitTest: Seq[ModuleID] = Seq(
