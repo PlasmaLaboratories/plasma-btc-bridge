@@ -157,11 +157,16 @@ object MintingManagerAlgebraImpl {
         } yield (seriesSumArrived >= seriesValueToArrive && groupSumArrived >= groupValueToArrive))
           .handleErrorWith(_ => Async[F].pure(false))
 
-        def loop(retriesLeft: Int): F[Boolean] = (for {
-          success <- verifyUtxosMatch
-        } yield (success, retriesLeft - 1)).iterateUntil(response => response._1 == true || response._2 < 0).map(_._1)
+        def retry(retriesLeft: Int): F[Boolean] =
+          if (retriesLeft < 0) Async[F].pure(false)
+          else {
+            verifyUtxosMatch.flatMap {
+              case true  => Async[F].pure(true)
+              case false => retry(retriesLeft - 1)
+            }
+          }
 
-        loop(maxRetries)
+        retry(maxRetries)
       }
     }
 }
