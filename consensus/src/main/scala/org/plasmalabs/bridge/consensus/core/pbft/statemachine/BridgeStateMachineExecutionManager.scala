@@ -29,8 +29,6 @@ import org.plasmalabs.bridge.consensus.core.{
   Template,
   stateDigest
 }
-import org.plasmalabs.quivr.models.{Int128}
-
 import org.plasmalabs.bridge.consensus.pbft.CheckpointRequest
 import org.plasmalabs.bridge.consensus.service.StateMachineReply.Result
 import org.plasmalabs.bridge.consensus.service.{InvalidInputRes, StartSessionRes, StateMachineReply}
@@ -67,6 +65,7 @@ import org.plasmalabs.bridge.shared.{
   StartSessionOperation,
   StateMachineRequest
 }
+import org.plasmalabs.quivr.models.Int128
 import org.plasmalabs.sdk.builders.TransactionBuilderApi
 import org.plasmalabs.sdk.dataApi.{
   FellowshipStorageAlgebra,

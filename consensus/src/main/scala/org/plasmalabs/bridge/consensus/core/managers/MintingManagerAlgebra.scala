@@ -8,15 +8,14 @@ import org.plasmalabs.bridge.consensus.core.pbft.statemachine.WaitingBTCOps.star
 import org.plasmalabs.bridge.consensus.core.{Fellowship, PlasmaKeypair, Template}
 import org.plasmalabs.bridge.consensus.shared.Lvl
 import org.plasmalabs.bridge.shared.{BridgeError, UnknownError}
+import org.plasmalabs.quivr.models.Int128
 import org.plasmalabs.sdk.builders.TransactionBuilderApi
 import org.plasmalabs.sdk.dataApi.{IndexerQueryAlgebra, NodeQueryAlgebra, WalletStateAlgebra}
 import org.plasmalabs.sdk.models.LockAddress
 import org.plasmalabs.sdk.models.transaction.UnspentTransactionOutput
-import org.plasmalabs.sdk.syntax.{int128AsBigInt}
+import org.plasmalabs.sdk.syntax.int128AsBigInt
 import org.plasmalabs.sdk.wallet.WalletApi
 import org.typelevel.log4cats.Logger
-import org.plasmalabs.quivr.models.{Int128}
-
 
 import scala.concurrent.duration._
 
