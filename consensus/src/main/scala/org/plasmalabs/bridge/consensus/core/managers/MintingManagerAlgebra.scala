@@ -123,15 +123,11 @@ object MintingManagerAlgebraImpl {
           ).map(_._2).attempt
         ).leftMap(th => UnknownError(th.getMessage): BridgeError)
 
-        unspentPlasmaBeforeMint = txos.filter(txo =>
-          txo.transactionOutput.value.value.isGroup || txo.transactionOutput.value.value.isSeries
-        )
-
-        groupValueToArrive = unspentPlasmaBeforeMint
+        groupValueToArrive = txos
           .filter(_.transactionOutput.value.value.isGroup)
           .map(txo => int128AsBigInt(txo.transactionOutput.value.value.group.get.quantity))
           .sum
-        seriesValueToArrive = unspentPlasmaBeforeMint
+        seriesValueToArrive = txos
           .filter(_.transactionOutput.value.value.isSeries)
           .map(txo => int128AsBigInt(txo.transactionOutput.value.value.series.get.quantity))
           .sum
