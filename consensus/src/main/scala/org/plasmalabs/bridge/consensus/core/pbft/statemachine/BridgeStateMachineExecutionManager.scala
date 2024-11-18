@@ -63,14 +63,14 @@ import org.plasmalabs.bridge.shared.{
   ReplicaCount,
   ReplicaId,
   StartSessionOperation,
-  StateMachineRequest
+  StateMachineRequest,
+  ValidationPolicy
 }
 import org.plasmalabs.quivr.models.Int128
 import org.plasmalabs.sdk.builders.TransactionBuilderApi
 import org.plasmalabs.sdk.dataApi.{
   FellowshipStorageAlgebra,
   IndexerQueryAlgebra,
-  NodeQueryAlgebra,
   TemplateStorageAlgebra,
   WalletStateAlgebra
 }
@@ -105,11 +105,8 @@ trait BridgeStateMachineExecutionManager[F[_]] {
 
   /**
    * Expected Outcome: Creates the minting stream on the existing mintingManager
-   *
-   * @param nodeQueryAlgebra
-   *   To query our node scanning the blocks with new utxos.
    */
-  def mintingStream(nodeQueryAlgebra: NodeQueryAlgebra[F]): fs2.Stream[F, Unit]
+  def mintingStream()(implicit mintingManagerPolicy: ValidationPolicy): fs2.Stream[F, Unit]
 }
 
 object BridgeStateMachineExecutionManagerImpl {
@@ -188,10 +185,8 @@ object BridgeStateMachineExecutionManagerImpl {
             )
             .evalMap(x => trace"Executing the request: ${x._2}" >> executeRequestF(x._1, x._2))
 
-        def mintingStream(nodeQueryAlgebra: NodeQueryAlgebra[F]): fs2.Stream[F, Unit] = {
-          implicit val nqa = nodeQueryAlgebra
-          mintingManagerAlgebra.mintingStream()
-        }
+        def mintingStream()(implicit mintingManagerPolicy: ValidationPolicy): fs2.Stream[F, Unit] =
+          mintingManagerAlgebra.mintingStream(mintingManagerPolicy)
 
         private def startSession(
           clientNumber: Int,
@@ -379,6 +374,8 @@ object BridgeStateMachineExecutionManagerImpl {
                         .map(peginSessionInfo =>
                           startMintingRequestQueue.offer(
                             StartMintingRequest(
+                              request.timestamp,
+                              request.clientNumber,
                               defaultFromFellowship,
                               defaultFromTemplate,
                               peginSessionInfo.redeemAddress,

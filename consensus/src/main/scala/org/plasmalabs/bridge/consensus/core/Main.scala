@@ -26,22 +26,7 @@ import org.plasmalabs.bridge.consensus.shared.BTCRetryThreshold
 import org.plasmalabs.bridge.consensus.shared.persistence.{StorageApi, StorageApiImpl}
 import org.plasmalabs.bridge.consensus.shared.utils.ConfUtils._
 import org.plasmalabs.bridge.consensus.subsystems.monitor.{BitcoinMonitor, BlockProcessor, NodeMonitor, SessionEvent}
-import org.plasmalabs.bridge.shared.{
-  BridgeCryptoUtils,
-  BridgeError,
-  BridgeResponse,
-  ClientCount,
-  ClientId,
-  ConsensusClientMessageId,
-  ReplicaCount,
-  ReplicaId,
-  ReplicaNode,
-  ResponseGrpcServiceServer,
-  RetryPolicy,
-  StateMachineServiceGrpcClient,
-  StateMachineServiceGrpcClientImpl,
-  StateMachineServiceGrpcClientRetryConfig
-}
+import org.plasmalabs.bridge.shared.{BridgeCryptoUtils, BridgeError, BridgeResponse, ClientCount, ClientId, ConsensusClientMessageId, ReplicaCount, ReplicaId, ReplicaNode, ResponseGrpcServiceServer, RetryPolicy, StateMachineServiceGrpcClient, StateMachineServiceGrpcClientImpl, StateMachineServiceGrpcClientRetryConfig, ValidationPolicy}
 import org.plasmalabs.sdk.dataApi.NodeQueryAlgebra
 import org.plasmalabs.sdk.models.{GroupId, SeriesId}
 import org.plasmalabs.sdk.utils.Encoding
@@ -264,6 +249,12 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         ConsensusClientMessageId,
         ConcurrentHashMap[Int, Int]
       ]()
+
+    implicit val mintingManagerPolicy = ValidationPolicy(
+      validate = conf.getBoolean("bridge.replica.clients.pbftInternal.validationPolicy.validate"),
+      maxRetries = conf.getInt("bridge.replica.clients.pbftInternal.validationPolicy.maxRetries")
+    )
+
     for {
       replicaKeyPair <- BridgeCryptoUtils
         .getKeyPair[IO](privateKeyFile)
@@ -319,6 +310,9 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
       ) = res
       _ <- requestStateManager.startProcessingEvents()
       _ <- IO.asyncForIO.background(bridgeStateMachineExecutionManager.runStream().compile.drain)
+      _ <- IO.asyncForIO.background(
+        bridgeStateMachineExecutionManager.mintingStream().compile.drain
+      )
 
       pbftService <- pbftServiceResource
       nodeQueryAlgebra = NodeQueryAlgebra
@@ -329,7 +323,6 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
             params.plasmaSecureConnection
           )
         )
-      _ <- IO.asyncForIO.background(bridgeStateMachineExecutionManager.mintingStream(nodeQueryAlgebra).compile.drain)
 
       btcMonitor <- BitcoinMonitor(
         bitcoindInstance,
