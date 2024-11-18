@@ -104,12 +104,12 @@ trait BridgeStateMachineExecutionManager[F[_]] {
   def runStream(): fs2.Stream[F, Unit]
 
   /**
-   * Expected Outcome: Starts the minting stream on the existing mintingManager
+   * Expected Outcome: Creates the minting stream on the existing mintingManager
    *
    * @param nodeQueryAlgebra
    *   To query our node scanning the blocks with new utxos.
    */
-  def runMintingStream(nodeQueryAlgebra: NodeQueryAlgebra[F]): fs2.Stream[F, Unit]
+  def mintingStream(nodeQueryAlgebra: NodeQueryAlgebra[F]): fs2.Stream[F, Unit]
 }
 
 object BridgeStateMachineExecutionManagerImpl {
@@ -159,11 +159,13 @@ object BridgeStateMachineExecutionManagerImpl {
         plasmaWalletSeedFile,
         plasmaWalletPassword
       )
-      state              <- Ref.of[F, Map[String, PBFTState]](Map.empty)
-      queue              <- Queue.unbounded[F, (Long, StateMachineRequest)]
-      elegibilityManager <- ExecutionElegibilityManagerImpl.make[F]()
-      mintingManagerAlgebra <- MintingManagerAlgebraImpl
-        .make[F]()
+      state                    <- Ref.of[F, Map[String, PBFTState]](Map.empty)
+      queue                    <- Queue.unbounded[F, (Long, StateMachineRequest)]
+      elegibilityManager       <- ExecutionElegibilityManagerImpl.make[F]()
+      startMintingRequestQueue <- Queue.unbounded[F, StartMintingRequest]
+
+      mintingManagerAlgebra = MintingManagerAlgebraImpl
+        .make[F](startMintingRequestQueue)
     } yield {
       implicit val plasmaKeypair = new PlasmaKeypair(tKeyPair)
       new BridgeStateMachineExecutionManager[F] {
@@ -186,9 +188,9 @@ object BridgeStateMachineExecutionManagerImpl {
             )
             .evalMap(x => trace"Executing the request: ${x._2}" >> executeRequestF(x._1, x._2))
 
-        def runMintingStream(nodeQueryAlgebra: NodeQueryAlgebra[F]): fs2.Stream[F, Unit] = {
+        def mintingStream(nodeQueryAlgebra: NodeQueryAlgebra[F]): fs2.Stream[F, Unit] = {
           implicit val nqa = nodeQueryAlgebra
-          mintingManagerAlgebra.runMintingStream()
+          mintingManagerAlgebra.mintingStream()
         }
 
         private def startSession(
@@ -375,7 +377,7 @@ object BridgeStateMachineExecutionManagerImpl {
                       MiscUtils.sessionInfoPeginPrism
                         .getOption(sessionInfo)
                         .map(peginSessionInfo =>
-                          mintingManagerAlgebra.offer(
+                          startMintingRequestQueue.offer(
                             StartMintingRequest(
                               defaultFromFellowship,
                               defaultFromTemplate,
