@@ -12,9 +12,11 @@ import org.plasmalabs.sdk.builders.TransactionBuilderApi
 import org.plasmalabs.sdk.dataApi.{IndexerQueryAlgebra, NodeQueryAlgebra, WalletStateAlgebra}
 import org.plasmalabs.sdk.models.LockAddress
 import org.plasmalabs.sdk.models.transaction.UnspentTransactionOutput
-import org.plasmalabs.sdk.syntax.{bigIntAsInt128, int128AsBigInt}
+import org.plasmalabs.sdk.syntax.{int128AsBigInt}
 import org.plasmalabs.sdk.wallet.WalletApi
 import org.typelevel.log4cats.Logger
+import org.plasmalabs.quivr.models.{Int128}
+
 
 import scala.concurrent.duration._
 
@@ -22,7 +24,7 @@ case class StartMintingRequest(
   fellowship:    Fellowship,
   template:      Template,
   redeemAddress: String,
-  amount:        Array[Byte]
+  amount:        Int128
 )
 
 case class StartedMintingResponse(
@@ -115,7 +117,7 @@ object MintingManagerAlgebraImpl {
             request.fellowship,
             request.template,
             request.redeemAddress,
-            BigInt(request.amount)
+            request.amount
           )
 
           changeLock <- for {
