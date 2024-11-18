@@ -12,7 +12,7 @@ import org.plasmalabs.sdk.builders.TransactionBuilderApi
 import org.plasmalabs.sdk.dataApi.{IndexerQueryAlgebra, NodeQueryAlgebra, WalletStateAlgebra}
 import org.plasmalabs.sdk.models.LockAddress
 import org.plasmalabs.sdk.models.transaction.UnspentTransactionOutput
-import org.plasmalabs.sdk.syntax.{int128AsBigInt, bigIntAsInt128}
+import org.plasmalabs.sdk.syntax.{bigIntAsInt128, int128AsBigInt}
 import org.plasmalabs.sdk.wallet.WalletApi
 import org.typelevel.log4cats.Logger
 
@@ -118,7 +118,6 @@ object MintingManagerAlgebraImpl {
             BigInt(request.amount)
           )
 
-
           changeLock <- for {
             someCurrentIndeces <- getCurrentIndices(request.fellowship, request.template, None)
             changeLock <- getChangeLockPredicate[F](
@@ -137,7 +136,6 @@ object MintingManagerAlgebraImpl {
             lockForChange
           )
 
-          
           unspentPlasmaBeforeMint = response._2.filter((txo) =>
             txo.transactionOutput.value.value.isGroup || txo.transactionOutput.value.value.isSeries || txo.transactionOutput.value.value.isLvl
           )
