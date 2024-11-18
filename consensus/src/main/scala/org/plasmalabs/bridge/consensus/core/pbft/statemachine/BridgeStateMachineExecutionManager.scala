@@ -106,7 +106,7 @@ trait BridgeStateMachineExecutionManager[F[_]] {
   /**
    * Expected Outcome: Creates the minting stream on the existing mintingManager
    */
-  def mintingStream()(implicit mintingManagerPolicy: ValidationPolicy): fs2.Stream[F, Unit]
+  def mintingStream(mintingManagerPolicy: ValidationPolicy): fs2.Stream[F, Unit]
 }
 
 object BridgeStateMachineExecutionManagerImpl {
@@ -185,7 +185,7 @@ object BridgeStateMachineExecutionManagerImpl {
             )
             .evalMap(x => trace"Executing the request: ${x._2}" >> executeRequestF(x._1, x._2))
 
-        def mintingStream()(implicit mintingManagerPolicy: ValidationPolicy): fs2.Stream[F, Unit] =
+        def mintingStream(mintingManagerPolicy: ValidationPolicy): fs2.Stream[F, Unit] =
           mintingManagerAlgebra.mintingStream(mintingManagerPolicy)
 
         private def startSession(

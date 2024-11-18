@@ -86,7 +86,7 @@ ${clientsConfString(replicaCount)}
 |       }
 |     }
 |     mintingPolicy = {
-|         validate = true
+|         validate = "true"
 |         maxRetries = 5
 |     }
 |    }

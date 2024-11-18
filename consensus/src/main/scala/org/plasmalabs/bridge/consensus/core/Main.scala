@@ -266,9 +266,9 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         ConcurrentHashMap[Int, Int]
       ]()
 
-    implicit val mintingManagerPolicy = ValidationPolicy(
-      validate = conf.getBoolean("bridge.replica.clients.pbftInternal.validationPolicy.validate"),
-      maxRetries = conf.getInt("bridge.replica.clients.pbftInternal.validationPolicy.maxRetries")
+    val mintingManagerPolicy = ValidationPolicy(
+      validate = conf.getBoolean("bridge.replica.clients.mintingPolicy.validate"),
+      maxRetries = conf.getInt("bridge.replica.clients.mintingPolicy.maxRetries")
     )
 
     for {
@@ -327,7 +327,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
       _ <- requestStateManager.startProcessingEvents()
       _ <- IO.asyncForIO.background(bridgeStateMachineExecutionManager.runStream().compile.drain)
       _ <- IO.asyncForIO.background(
-        bridgeStateMachineExecutionManager.mintingStream().compile.drain
+        bridgeStateMachineExecutionManager.mintingStream(mintingManagerPolicy).compile.drain
       )
 
       pbftService <- pbftServiceResource
