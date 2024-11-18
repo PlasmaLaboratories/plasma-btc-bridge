@@ -6,7 +6,7 @@ inThisBuild(
     organization := "org.plasmalabs",
     homepage := Some(url("https://github.com/PlasmaLaboratories/plasma-btc-bridge")),
     licenses := Seq("MPL2.0" -> url("https://www.mozilla.org/en-US/MPL/2.0/")),
-    scalaVersion := "2.13.12"
+    scalaVersion := "2.13.15"
   )
 )
 
@@ -22,6 +22,7 @@ lazy val commonScalacOptions = Seq(
 lazy val commonSettings = Seq(
   fork := true,
   scalacOptions ++= commonScalacOptions,
+  semanticdbVersion := scalafixSemanticdb.revision,
   semanticdbEnabled := true, // enable SemanticDB for Scalafix
   Test / testOptions ++= Seq(
     Tests.Argument(TestFrameworks.ScalaCheck, "-verbosity", "2"),
@@ -52,7 +53,7 @@ lazy val commonDockerSettings = List(
   Docker / version := dynverGitDescribeOutput.value
     .mkVersion(versionFmt, fallbackVersion(dynverCurrentDate.value)),
   dockerAliases := dockerAliases.value.flatMap { alias =>
-    if (sys.env.get("RELEASE_PUBLISH").getOrElse("false").toBoolean)
+    if (sys.env.getOrElse("RELEASE_PUBLISH", "false").toBoolean)
       Seq(
         alias.withRegistryHost(Some("ghcr.io/plasmalaboratories")),
         alias.withRegistryHost(Some("docker.io/stratalab"))
@@ -134,7 +135,7 @@ lazy val shared = (project in file("shared"))
 
 lazy val consensus = (project in file("consensus"))
   .settings(
-    if (sys.env.get("DOCKER_PUBLISH").getOrElse("false").toBoolean)
+    if (sys.env.getOrElse("DOCKER_PUBLISH", "false").toBoolean)
       dockerPublishSettingsConsensus
     else mavenPublishSettings,
     commonSettings,
@@ -149,7 +150,7 @@ lazy val consensus = (project in file("consensus"))
 lazy val publicApi =
   (project in file("public-api"))
     .settings(
-      if (sys.env.get("DOCKER_PUBLISH").getOrElse("false").toBoolean)
+      if (sys.env.getOrElse("DOCKER_PUBLISH", "false").toBoolean)
         dockerPublishSettingsPublicApi
       else mavenPublishSettings,
       commonSettings,

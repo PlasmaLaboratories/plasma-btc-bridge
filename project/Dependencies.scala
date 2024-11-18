@@ -4,9 +4,9 @@ import sbt._
 object Dependencies {
 
   object Versions {
-    val catsCoreVersion = "2.10.0"
-    val http4sVersion = "0.23.23"
-    val slf4jVersion = "2.0.12"
+    val catsCoreVersion = "2.12.0"
+    val http4sVersion = "0.23.29"
+    val slf4jVersion = "2.0.16"
     val mUnitTeVersion = "0.7.29"
     val bitcoinsVersion = "1.9.9"
     val btcVersionZmq = "1.9.8"
@@ -20,7 +20,7 @@ object Dependencies {
   )
 
   val logback: Seq[ModuleID] = Seq(
-    "ch.qos.logback" % "logback-classic" % "1.4.11"
+    "ch.qos.logback" % "logback-classic" % "1.4.14"
   )
 
   val slf4j: Seq[ModuleID] = Seq(
@@ -28,8 +28,8 @@ object Dependencies {
   )
 
   val log4cats: Seq[ModuleID] = Seq(
-    "org.typelevel" %% "log4cats-core"  % "2.4.0",
-    "org.typelevel" %% "log4cats-slf4j" % "2.4.0"
+    "org.typelevel" %% "log4cats-core"  % "2.7.0",
+    "org.typelevel" %% "log4cats-slf4j" % "2.7.0"
   )
 
   val bouncycastle: Seq[ModuleID] = Seq(
@@ -43,27 +43,19 @@ object Dependencies {
     "org.plasmalabs" %% "service-kit" % plasmaVersion
   )
 
-  val munit: Seq[ModuleID] = Seq(
-    "org.scalameta" %% "munit" % "1.0.0-M10"
-  )
-
-  lazy val mUnitTest: Seq[ModuleID] = Seq(
-    "org.scalameta" %% "munit"                   % mUnitTeVersion,
-    "org.scalameta" %% "munit-scalacheck"        % mUnitTeVersion,
-    "org.typelevel" %% "munit-cats-effect-3"     % "1.0.7",
+  val mUnit: Seq[ModuleID] = Seq(
+    "org.scalameta" %% "munit"                   % "1.0.2",
+    "org.scalameta" %% "munit-scalacheck"        % "1.0.0",
+    "org.typelevel" %% "munit-cats-effect"       % "2.0.0",
     "org.typelevel" %% "scalacheck-effect-munit" % "1.0.4"
   )
 
   val sqlite: Seq[ModuleID] = Seq(
-    "org.xerial" % "sqlite-jdbc" % "3.45.2.0"
+    "org.xerial" % "sqlite-jdbc" % "3.45.3.0"
   )
 
   val ip4score: Seq[ModuleID] = Seq(
     "com.comcast" %% "ip4s-core" % "3.6.0"
-  )
-
-  val munitCatsEffects: Seq[ModuleID] = Seq(
-    "org.typelevel" %% "munit-cats-effect" % "2.0.0-M4"
   )
 
   val cats: Seq[ModuleID] = Seq(
@@ -71,15 +63,15 @@ object Dependencies {
     "org.typelevel" %% "cats-effect" % "3.5.1"
   )
 
-  val grpcNetty =
+  val grpcNetty: Seq[ModuleID] =
     Seq("io.grpc" % "grpc-netty-shaded" % ioGrpcVersion)
 
-  val grpcRuntime =
+  val grpcRuntime: Seq[ModuleID] =
     Seq(
       "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion
     )
 
-  val scopt: Seq[ModuleID] = Seq("com.github.scopt" %% "scopt" % "4.0.1")
+  val scopt: Seq[ModuleID] = Seq("com.github.scopt" %% "scopt" % "4.1.0")
 
   val http4s: Seq[ModuleID] = Seq(
     "org.http4s" %% "http4s-ember-client" % http4sVersion,
@@ -104,7 +96,7 @@ object Dependencies {
   )
 
   val genericCirce: Seq[ModuleID] = Seq(
-    "io.circe" %% "circe-generic" % "0.14.9"
+    "io.circe" %% "circe-generic" % "0.14.10"
   )
 
   val optics: Seq[ModuleID] = Seq(
@@ -152,11 +144,8 @@ object Dependencies {
       grpcRuntime ++
       bouncycastle
 
-    val test: Seq[ModuleID] =
-      (
-        munit ++ munitCatsEffects
-      )
-        .map(_ % Test)
+
+    val test: Seq[ModuleID] = mUnit.map(_ % Test)
   }
 
   object plasmaBtcCli {
@@ -170,15 +159,12 @@ object Dependencies {
       http4s ++
       bitcoinS
 
-    val test: Seq[ModuleID] =
-      (
-        munit ++ munitCatsEffects
-      )
-        .map(_ % Test)
+    val test: Seq[ModuleID] = mUnit.map(_ % Test)
+
   }
 
   object IntegrationTests {
     val sources: Seq[ModuleID] = plasmaBtcBridge.consensus
-    val tests: Seq[ModuleID] = (sources ++ mUnitTest).map(_ % Test)
+    val tests: Seq[ModuleID] = (sources ++ mUnit).map(_ % Test)
   }
 }
