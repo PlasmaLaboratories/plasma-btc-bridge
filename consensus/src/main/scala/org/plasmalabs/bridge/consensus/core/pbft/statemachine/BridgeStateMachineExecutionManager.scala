@@ -65,6 +65,7 @@ import org.plasmalabs.bridge.shared.{
   StartSessionOperation,
   StateMachineRequest
 }
+import org.plasmalabs.quivr.models.Int128
 import org.plasmalabs.sdk.builders.TransactionBuilderApi
 import org.plasmalabs.sdk.dataApi.{
   FellowshipStorageAlgebra,

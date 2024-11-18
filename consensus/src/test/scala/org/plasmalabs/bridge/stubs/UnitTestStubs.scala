@@ -5,6 +5,7 @@ import cats.effect.IO
 import com.google.protobuf.ByteString
 import org.plasmalabs.bridge.consensus.core.managers.WalletManagementUtils
 import org.plasmalabs.indexer.services.{Txo, TxoState}
+import org.plasmalabs.quivr.models.{Int128, Proposition}
 import org.plasmalabs.sdk.codecs.AddressCodecs
 import org.plasmalabs.sdk.dataApi.IndexerQueryAlgebra
 import org.plasmalabs.sdk.models.box.{Attestation, Challenge, FungibilityType, Lock, QuantityDescriptorType, Value}
@@ -13,7 +14,6 @@ import org.plasmalabs.sdk.models.{Datum, GroupId, LockAddress, SeriesId, Transac
 import org.plasmalabs.sdk.servicekit.WalletKeyApi
 import org.plasmalabs.sdk.utils.Encoding
 import org.plasmalabs.sdk.wallet.WalletApi
-import quivr.models.{Int128, Proposition}
 
 object UnitTestStubs {
 

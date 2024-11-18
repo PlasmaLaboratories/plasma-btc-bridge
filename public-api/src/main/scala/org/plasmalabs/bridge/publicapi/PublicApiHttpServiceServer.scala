@@ -14,12 +14,14 @@ import org.plasmalabs.bridge.shared.{
   MintingStatusOperation,
   MintingStatusRequest,
   MintingStatusResponse,
+  PBFTInternalResponse,
   SessionNotFoundError,
   StartPeginSessionRequest,
   StartPeginSessionResponse,
   StartSessionOperation,
   StateMachineServiceGrpcClient,
-  TimeoutError
+  TimeoutError,
+  UnknownError
 }
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
@@ -88,6 +90,8 @@ object PublicApiHttpServiceServer {
                   .iterator,
                 1024
               )
+            case PBFTInternalResponse =>
+              fs2.Stream.raiseError[IO](UnknownError("toEntity receives a PBFTInternalResponse"))
           })
 
         override def headers: Headers = Headers(

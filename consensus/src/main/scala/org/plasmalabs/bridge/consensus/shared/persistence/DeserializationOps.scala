@@ -34,7 +34,7 @@ import org.plasmalabs.bridge.consensus.subsystems.monitor.{
   SkippedBTCBlock,
   SkippedPlasmaBlock
 }
-import quivr.models.Int128
+import org.plasmalabs.quivr.models.Int128
 import scodec.bits.ByteVector
 
 trait DeserializationOps {

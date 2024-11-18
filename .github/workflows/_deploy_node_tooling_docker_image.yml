@@ -1,0 +1,59 @@
+name: Deploy Node Tooling Docker Image
+
+on:
+  workflow_dispatch:
+    inputs:
+      imageTag:
+        description: 'Docker Image Tag. Format examples: `0.1.0` `0.1.0-496b5cf`, `latest`, etc.'
+        required: true
+      registry:
+        description: 'Docker Image Registry'
+        required: true
+        default: 'ghcr.io/plasmalaboratories'
+        type: choice
+        options:
+        - ghcr.io/plasmalaboratories
+        - stratalab
+      image:
+        description: 'Docker Image to publish'
+        required: true
+        default: 'plasma-node-tooling'
+        type: choice
+        options:
+        - plasma-node-tooling
+        - bitcoin-zmq
+      imageDirectory:
+        description: 'Docker Image Directory'
+        required: true
+        default: './docker/node'
+        type: choice
+        options:
+        - ./docker/node
+        - ./docker/bitcoin
+
+jobs:
+  publish:
+    name: Deploy Node Tooling Docker Image
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Log in to the Github Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker Image
+        run: |
+          docker build -t ${{ github.event.inputs.registry }}/${{ github.event.inputs.image }}:${{ github.event.inputs.imageTag }} .
+          docker push  ${{ github.event.inputs.registry }}/${{ github.event.inputs.image }}:${{ github.event.inputs.imageTag }}
+        working-directory: ${{ github.event.inputs.imageDirectory }}

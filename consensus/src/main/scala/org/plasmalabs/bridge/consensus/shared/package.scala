@@ -1,6 +1,6 @@
 package org.plasmalabs.bridge.consensus
 
-import quivr.models.Int128
+import org.plasmalabs.quivr.models.Int128
 
 package object shared {
 

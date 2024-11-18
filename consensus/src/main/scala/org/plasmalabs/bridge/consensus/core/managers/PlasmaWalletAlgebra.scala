@@ -8,6 +8,7 @@ import org.plasmalabs.bridge.consensus.core.{Fellowship, PlasmaNetworkIdentifier
 import org.plasmalabs.bridge.consensus.shared.Lvl
 import org.plasmalabs.bridge.shared.{InvalidHash, InvalidInput, InvalidKey}
 import org.plasmalabs.indexer.services.Txo
+import org.plasmalabs.quivr.models.{KeyPair, VerificationKey}
 import org.plasmalabs.sdk.builders.TransactionBuilderApi
 import org.plasmalabs.sdk.codecs.AddressCodecs
 import org.plasmalabs.sdk.constants.NetworkConstants
@@ -19,12 +20,10 @@ import org.plasmalabs.sdk.dataApi.{
   WalletStateAlgebra,
   WalletTemplate
 }
-import org.plasmalabs.sdk.models.box.AssetMintingStatement
 import org.plasmalabs.sdk.models.transaction.IoTransaction
-import org.plasmalabs.sdk.models.{LockAddress, LockId}
+import org.plasmalabs.sdk.models.{AssetMintingStatement, LockAddress, LockId}
 import org.plasmalabs.sdk.utils.Encoding
 import org.plasmalabs.sdk.wallet.WalletApi
-import quivr.models.{KeyPair, VerificationKey}
 
 object PlasmaWalletAlgebra {
 
