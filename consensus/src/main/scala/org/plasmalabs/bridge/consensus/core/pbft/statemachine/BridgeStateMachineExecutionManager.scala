@@ -74,7 +74,6 @@ import org.plasmalabs.sdk.dataApi.{
   WalletStateAlgebra
 }
 import org.plasmalabs.sdk.models.{GroupId, SeriesId}
-import org.plasmalabs.sdk.syntax.bigIntAsInt128
 import org.plasmalabs.sdk.utils.Encoding
 import org.plasmalabs.sdk.wallet.WalletApi
 import org.typelevel.log4cats.Logger
@@ -380,7 +379,7 @@ object BridgeStateMachineExecutionManagerImpl {
                               defaultFromFellowship,
                               defaultFromTemplate,
                               peginSessionInfo.redeemAddress,
-                              BigInt(value.amount.toByteArray())
+                              value.amount.toByteArray()
                             )
                           )
                         )

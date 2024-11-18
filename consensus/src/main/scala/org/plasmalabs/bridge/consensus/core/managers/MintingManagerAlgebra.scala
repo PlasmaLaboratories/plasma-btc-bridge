@@ -12,10 +12,9 @@ import org.plasmalabs.sdk.builders.TransactionBuilderApi
 import org.plasmalabs.sdk.dataApi.{IndexerQueryAlgebra, NodeQueryAlgebra, WalletStateAlgebra}
 import org.plasmalabs.sdk.models.LockAddress
 import org.plasmalabs.sdk.models.transaction.UnspentTransactionOutput
-import org.plasmalabs.sdk.syntax.{int128AsBigInt, valueToQuantitySyntaxOps}
+import org.plasmalabs.sdk.syntax.{int128AsBigInt, bigIntAsInt128}
 import org.plasmalabs.sdk.wallet.WalletApi
 import org.typelevel.log4cats.Logger
-import quivr.models.{Int128}
 
 import scala.concurrent.duration._
 
@@ -23,7 +22,7 @@ case class StartMintingRequest(
   fellowship:    Fellowship,
   template:      Template,
   redeemAddress: String,
-  amount:        Int128
+  amount:        Array[Byte]
 )
 
 case class StartedMintingResponse(
@@ -76,7 +75,7 @@ object MintingManagerAlgebraImpl {
     for {
       startMintingRequestQueue <- Queue.unbounded[F, StartMintingRequest]
     } yield {
-      val verifyingTimeout = 15.second
+      val verifyingTimeout = 1.minute
 
       new MintingManagerAlgebra[F] {
 
@@ -112,6 +111,14 @@ object MintingManagerAlgebraImpl {
         private def processMintingRequest(
           request: StartMintingRequest
         )(implicit plasmaKeypair: PlasmaKeypair): F[Either[BridgeError, StartedMintingResponse]] = for {
+          response <- startMintingProcess(
+            request.fellowship,
+            request.template,
+            request.redeemAddress,
+            BigInt(request.amount)
+          )
+
+
           changeLock <- for {
             someCurrentIndeces <- getCurrentIndices(request.fellowship, request.template, None)
             changeLock <- getChangeLockPredicate[F](
@@ -130,23 +137,18 @@ object MintingManagerAlgebraImpl {
             lockForChange
           )
 
-          response <- startMintingProcess(
-            request.fellowship,
-            request.template,
-            request.redeemAddress,
-            request.amount
-          )
+          
           unspentPlasmaBeforeMint = response._2.filter((txo) =>
             txo.transactionOutput.value.value.isGroup || txo.transactionOutput.value.value.isSeries || txo.transactionOutput.value.value.isLvl
           )
 
           groupValueToArrive = unspentPlasmaBeforeMint
             .filter(_.transactionOutput.value.value.isGroup)
-            .map(txo => int128AsBigInt(valueToQuantitySyntaxOps(txo.transactionOutput.value.value).quantity))
+            .map(txo => int128AsBigInt(txo.transactionOutput.value.value.group.get.quantity))
             .sum
           seriesValueToArrive = unspentPlasmaBeforeMint
             .filter(_.transactionOutput.value.value.isSeries)
-            .map(txo => int128AsBigInt(valueToQuantitySyntaxOps(txo.transactionOutput.value.value).quantity))
+            .map(txo => int128AsBigInt(txo.transactionOutput.value.value.series.get.quantity))
             .sum
 
         } yield Right(StartedMintingResponse(changeAddress, groupValueToArrive, seriesValueToArrive))
