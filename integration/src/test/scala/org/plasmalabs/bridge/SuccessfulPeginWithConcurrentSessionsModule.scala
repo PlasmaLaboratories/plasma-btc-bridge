@@ -3,7 +3,13 @@ package org.plasmalabs.bridge
 import cats.effect.IO
 import cats.effect.std.Queue
 import org.plasmalabs.bridge.shared.StartPeginSessionResponse
-import org.plasmalabs.bridge.{getCurrentUtxosFromAddress, getNewAddress, mintPlasmaBlock, proveRedeemAddressTx, userBitcoinWallet}
+import org.plasmalabs.bridge.{
+  getCurrentUtxosFromAddress,
+  getNewAddress,
+  mintPlasmaBlock,
+  proveRedeemAddressTx,
+  userBitcoinWallet
+}
 import org.typelevel.log4cats.syntax._
 
 import java.nio.file.{Files, Paths}
@@ -220,14 +226,13 @@ trait SuccessfulPeginWithConcurrentSessionsModule {
           } yield bitcoinWallet
         }
 
-        // make funds accessible by minting 100 blocks
         newAddress <- getNewAddress
         _          <- bitcoinMintingQueue.offer((newAddress, "testwallet", 100))
 
         // request a session for each user
         sessionResponses <- bitcoinWallets.parTraverse { bitcoinResponse =>
           for {
-            _ <- info"Getting session for User ${bitcoinResponse._1}"
+            _ <- info"User ${bitcoinResponse._1} - Getting session"
             (id, newAddress) = bitcoinResponse
             sessionResponse <- getSessionById(id)
           } yield (id, newAddress, sessionResponse)

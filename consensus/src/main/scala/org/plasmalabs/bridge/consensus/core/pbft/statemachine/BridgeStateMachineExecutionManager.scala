@@ -7,11 +7,13 @@ import io.grpc.ManagedChannel
 import org.bitcoins.core.currency.{CurrencyUnit, Satoshis}
 import org.bitcoins.rpc.client.common.BitcoindRpcClient
 import org.plasmalabs.bridge.consensus.core.controllers.StartSessionController
-import org.plasmalabs.bridge.consensus.core.managers.WalletApiHelpers.{getChangeLockPredicate, getCurrentIndices}
-import org.plasmalabs.bridge.consensus.core.managers.WalletManagementUtils
+import org.plasmalabs.bridge.consensus.core.managers.{
+  MintingManagerAlgebraImpl,
+  StartMintingRequest,
+  WalletManagementUtils
+}
 import org.plasmalabs.bridge.consensus.core.pbft.ViewManager
 import org.plasmalabs.bridge.consensus.core.pbft.statemachine.PBFTEvent
-import org.plasmalabs.bridge.consensus.core.pbft.statemachine.WaitingBTCOps.{getUtxos, startMintingProcess}
 import org.plasmalabs.bridge.consensus.core.{
   BitcoinNetworkIdentifiers,
   BridgeWalletManager,
@@ -61,7 +63,8 @@ import org.plasmalabs.bridge.shared.{
   ReplicaCount,
   ReplicaId,
   StartSessionOperation,
-  StateMachineRequest
+  StateMachineRequest,
+  ValidationPolicy
 }
 import org.plasmalabs.quivr.models.Int128
 import org.plasmalabs.sdk.builders.TransactionBuilderApi
@@ -71,8 +74,7 @@ import org.plasmalabs.sdk.dataApi.{
   TemplateStorageAlgebra,
   WalletStateAlgebra
 }
-import org.plasmalabs.sdk.models.{GroupId, LockAddress, SeriesId}
-import org.plasmalabs.sdk.syntax.{int128AsBigInt, valueToQuantitySyntaxOps}
+import org.plasmalabs.sdk.models.{GroupId, SeriesId}
 import org.plasmalabs.sdk.utils.Encoding
 import org.plasmalabs.sdk.wallet.WalletApi
 import org.typelevel.log4cats.Logger
@@ -80,26 +82,31 @@ import scodec.bits.ByteVector
 
 import java.security.{KeyPair => JKeyPair}
 import java.util.UUID
-import scala.concurrent.duration._
-
-case class StartMintingRequest(
-  fellowship:    Fellowship,
-  template:      Template,
-  redeemAddress: String,
-  amount:        Int128
-)
 
 trait BridgeStateMachineExecutionManager[F[_]] {
 
+  /**
+   * Expected Outcome: Execute the checkpoint or start pegin request for current replica.
+   * @param sequenceNumber
+   * For the current request.
+   *
+   * @param request
+   * Containing a timestamp, clientNumber, signature, operation.
+   */
   def executeRequest(
     sequenceNumber: Long,
     request:        org.plasmalabs.bridge.shared.StateMachineRequest
   ): F[Unit]
 
+  /**
+   * Expected Outcome: Starts the stream for the elegibility manager that appends, updates or executes the requests.
+   */
   def runStream(): fs2.Stream[F, Unit]
 
-  def runMintingStream(): fs2.Stream[F, Unit]
-
+  /**
+   * Expected Outcome: Creates the minting stream on the existing mintingManager
+   */
+  def mintingStream(mintingManagerPolicy: ValidationPolicy): fs2.Stream[F, Unit]
 }
 
 object BridgeStateMachineExecutionManagerImpl {
@@ -151,8 +158,11 @@ object BridgeStateMachineExecutionManagerImpl {
       )
       state                    <- Ref.of[F, Map[String, PBFTState]](Map.empty)
       queue                    <- Queue.unbounded[F, (Long, StateMachineRequest)]
-      startMintingRequestQueue <- Queue.unbounded[F, StartMintingRequest]
       elegibilityManager       <- ExecutionElegibilityManagerImpl.make[F]()
+      startMintingRequestQueue <- Queue.unbounded[F, StartMintingRequest]
+
+      mintingManagerAlgebra = MintingManagerAlgebraImpl
+        .make[F](startMintingRequestQueue)
     } yield {
       implicit val plasmaKeypair = new PlasmaKeypair(tKeyPair)
       new BridgeStateMachineExecutionManager[F] {
@@ -175,93 +185,8 @@ object BridgeStateMachineExecutionManagerImpl {
             )
             .evalMap(x => trace"Executing the request: ${x._2}" >> executeRequestF(x._1, x._2))
 
-        def runMintingStream(): fs2.Stream[F, Unit] = fs2.Stream
-          .fromQueueUnterminated(startMintingRequestQueue)
-          .evalMap(request =>
-            {
-              for {
-                _ <- info"Processing new minting request"
-                response <- startMintingProcess(
-                  request.fellowship,
-                  request.template,
-                  request.redeemAddress,
-                  request.amount
-                )
-                unspentPlasmaBeforeMint = response._2.filter((txo) =>
-                  txo.transactionOutput.value.value.isGroup || txo.transactionOutput.value.value.isSeries || txo.transactionOutput.value.value.isLvl
-                )
-                changeLock <- for {
-                  someNextIndices <- getCurrentIndices(request.fellowship, request.template, None)
-                  changeLock <- getChangeLockPredicate[F](
-                    someNextIndices,
-                    request.fellowship,
-                    request.template
-                  )
-                } yield (changeLock)
-
-                lockForChange = changeLock match {
-                  case Some(lock) => lock
-                  case None       => throw new RuntimeException("changeLock is None, unable to get address")
-                }
-
-                changeAddress <- tba.lockAddress(
-                  lockForChange
-                )
-
-                groupValueToArrive = unspentPlasmaBeforeMint
-                  .filter(_.transactionOutput.value.value.isGroup)
-                  .map(txo => int128AsBigInt(valueToQuantitySyntaxOps(txo.transactionOutput.value.value).quantity))
-                  .sum
-                seriesValueToArrive = unspentPlasmaBeforeMint
-                  .filter(_.transactionOutput.value.value.isSeries)
-                  .map(txo => int128AsBigInt(valueToQuantitySyntaxOps(txo.transactionOutput.value.value).quantity))
-                  .sum
-
-                _ <- for {
-                  mintingSuccessful <- verifyMintingSpent(
-                    changeAddress,
-                    groupValueToArrive,
-                    seriesValueToArrive
-                  ).handleErrorWith { e =>
-                    error"Failed to process minting request, something went wrong verifying the mint: ${e.getMessage}" >> Async[
-                      F
-                    ].pure(false)
-                  }
-                  _ <- Async[F].sleep(1.second)
-                } yield mintingSuccessful
-                _ <- info"Processing minting successful, continue with next Request"
-              } yield ()
-            }
-              .handleErrorWith { error =>
-                error"Failed to process minting request: $error" >>
-                Async[F].unit
-              }
-          )
-
-        import org.plasmalabs.indexer.services.TxoState
-
-        def verifyMintingSpent(
-          changeAddress:       LockAddress,
-          groupValueToArrive:  BigInt,
-          seriesValueToArrive: BigInt
-        ): F[Boolean] =
-          for {
-            arrivedUtxos <- getUtxos(
-              changeAddress,
-              utxoAlgebra,
-              TxoState.UNSPENT
-            )
-
-            groupSumArrived = arrivedUtxos
-              .filter(_.transactionOutput.value.value.isGroup)
-              .map(txo => int128AsBigInt(valueToQuantitySyntaxOps(txo.transactionOutput.value.value).quantity))
-              .sum
-            seriesSumArrived = arrivedUtxos
-              .filter(_.transactionOutput.value.value.isSeries)
-              .map(txo => int128AsBigInt(valueToQuantitySyntaxOps(txo.transactionOutput.value.value).quantity))
-              .sum
-
-          } yield (seriesSumArrived == seriesValueToArrive && groupSumArrived == groupValueToArrive)
+        def mintingStream(mintingManagerPolicy: ValidationPolicy): fs2.Stream[F, Unit] =
+          mintingManagerAlgebra.mintingStream(mintingManagerPolicy)
 
         private def startSession(
           clientNumber: Int,
@@ -434,7 +359,6 @@ object BridgeStateMachineExecutionManagerImpl {
             case PostDepositBTC(
                   value
                 ) =>
-              import org.plasmalabs.sdk.syntax._
               for {
                 _ <- debug"handling PostDepositBTC ${value.sessionId}"
                 someSessionInfo <- standardResponse(
@@ -450,10 +374,12 @@ object BridgeStateMachineExecutionManagerImpl {
                         .map(peginSessionInfo =>
                           startMintingRequestQueue.offer(
                             StartMintingRequest(
+                              request.timestamp,
+                              request.clientNumber,
                               defaultFromFellowship,
                               defaultFromTemplate,
                               peginSessionInfo.redeemAddress,
-                              BigInt(value.amount.toByteArray())
+                              Int128(value.amount)
                             )
                           )
                         )

@@ -85,6 +85,10 @@ ${clientsConfString(replicaCount)}
 |         delayMultiplier = 1
 |       }
 |     }
+|     mintingPolicy = {
+|         validate = "true"
+|         maxRetries = 5
+|     }
 |    }
 |  }
 |}

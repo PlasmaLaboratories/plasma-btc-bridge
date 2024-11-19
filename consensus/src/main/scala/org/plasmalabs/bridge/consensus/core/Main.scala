@@ -40,7 +40,8 @@ import org.plasmalabs.bridge.shared.{
   RetryPolicy,
   StateMachineServiceGrpcClient,
   StateMachineServiceGrpcClientImpl,
-  StateMachineServiceGrpcClientRetryConfig
+  StateMachineServiceGrpcClientRetryConfig,
+  ValidationPolicy
 }
 import org.plasmalabs.sdk.dataApi.NodeQueryAlgebra
 import org.plasmalabs.sdk.models.{GroupId, SeriesId}
@@ -264,6 +265,12 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         ConsensusClientMessageId,
         ConcurrentHashMap[Int, Int]
       ]()
+
+    val mintingManagerPolicy = ValidationPolicy(
+      validate = conf.getBoolean("bridge.replica.clients.mintingPolicy.validate"),
+      maxRetries = conf.getInt("bridge.replica.clients.mintingPolicy.maxRetries")
+    )
+
     for {
       replicaKeyPair <- BridgeCryptoUtils
         .getKeyPair[IO](privateKeyFile)
@@ -317,9 +324,12 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         pbftServiceResource,
         requestStateManager
       ) = res
-      _           <- requestStateManager.startProcessingEvents()
-      _           <- IO.asyncForIO.background(bridgeStateMachineExecutionManager.runStream().compile.drain)
-      _           <- IO.asyncForIO.background(bridgeStateMachineExecutionManager.runMintingStream().compile.drain)
+      _ <- requestStateManager.startProcessingEvents()
+      _ <- IO.asyncForIO.background(bridgeStateMachineExecutionManager.runStream().compile.drain)
+      _ <- IO.asyncForIO.background(
+        bridgeStateMachineExecutionManager.mintingStream(mintingManagerPolicy).compile.drain
+      )
+
       pbftService <- pbftServiceResource
       nodeQueryAlgebra = NodeQueryAlgebra
         .make[IO](
@@ -329,6 +339,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
             params.plasmaSecureConnection
           )
         )
+
       btcMonitor <- BitcoinMonitor(
         bitcoindInstance,
         zmqHost = params.zmqHost,

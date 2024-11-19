@@ -13,3 +13,8 @@ case class StateMachineServiceGrpcClientRetryConfig(
   otherReplicasResponseWait: FiniteDuration,
   retryPolicy: RetryPolicy
 )
+
+case class ValidationPolicy(
+  validate: Boolean,
+  maxRetries: Int,
+)
