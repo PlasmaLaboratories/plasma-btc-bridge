@@ -38,7 +38,20 @@ trait FailedPeginNoMintModule {
           )
         _ <-
           info"Session ${startSessionResponse.sessionID} was successfully removed"
+        _ <-
+          searchLogs(sessionStateTransitionLogNeedles(startSessionResponse.sessionID)).assertEquals(Set.empty[String])
       } yield (),
       ()
     )
+
+  private def sessionStateTransitionLogNeedles(sessionID: String): Set[String] =
+    List("consensus-00", "consensus-01", "consensus-02", "consensus-03", "consensus-04", "consensus-05", "consensus-06")
+      .flatMap(instanceName =>
+        List(
+          s"$instanceName - Transitioning session $sessionID from MWaitingForBTCDeposit to MConfirmingBTCDeposit",
+          s"$instanceName - Transitioning session $sessionID from MConfirmingBTCDeposit to MMintingTBTC",
+          s"$instanceName - Session $sessionID ended successfully",
+        )
+      )
+      .toSet
 }

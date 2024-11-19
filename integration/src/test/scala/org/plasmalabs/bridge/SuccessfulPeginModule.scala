@@ -90,7 +90,8 @@ trait SuccessfulPeginModule {
             _.mintingStatus == "PeginSessionStateSuccessfulPegin"
           )
         _ <- info"Session ${startSessionResponse.sessionID} was successfully removed"
-        _ <- assertIO(searchLogs(sessionStateTransitionLogNeedles(startSessionResponse.sessionID)), true)
+        _ <-
+          searchLogs(sessionStateTransitionLogNeedles(startSessionResponse.sessionID)).assertEquals(Set.empty[String])
       } yield (),
       ()
     )
@@ -113,6 +114,5 @@ trait SuccessfulPeginModule {
         )
       )
       .toSet
-
 
 }
