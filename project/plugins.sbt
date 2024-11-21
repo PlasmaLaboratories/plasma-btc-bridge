@@ -6,5 +6,5 @@ Seq(
   "com.github.sbt"          % "sbt-native-packager"       % "1.10.4",
   "com.github.sbt"          % "sbt-ci-release"            % "1.9.0",
   "org.scoverage"           % "sbt-scoverage"             % "2.2.2",
-  "org.typelevel"           % "sbt-fs2-grpc"              % "2.7.20",
+  "org.typelevel"           % "sbt-fs2-grpc"              % "2.7.21",
 ).map(addSbtPlugin)
