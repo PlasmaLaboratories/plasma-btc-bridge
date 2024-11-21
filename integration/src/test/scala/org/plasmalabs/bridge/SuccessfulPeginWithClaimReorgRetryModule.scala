@@ -124,9 +124,30 @@ trait SuccessfulPeginWithClaimReorgRetryModule {
           )
         _ <-
           info"Session ${startSessionResponse.sessionID} went back to PeginSessionWaitingForClaim again"
+        _ <-
+          searchLogs(sessionStateTransitionLogNeedles(startSessionResponse.sessionID)).assertEquals(Set.empty[String])
       } yield (),
       ()
     )
   }
+
+  private def sessionStateTransitionLogNeedles(sessionID: String): Set[String] =
+    List("consensus-00", "consensus-01", "consensus-02", "consensus-03", "consensus-04", "consensus-05", "consensus-06")
+      .flatMap(instanceName =>
+        List(
+          s"$instanceName - Transitioning session $sessionID from MWaitingForBTCDeposit to MConfirmingBTCDeposit",
+          s"$instanceName - Transitioning session $sessionID from MConfirmingBTCDeposit to MMintingTBTC",
+          s"$instanceName - Transitioning session $sessionID from MMintingTBTC to MConfirmingTBTCMint",
+          // TODO: MWaitingForRedemption?
+          s"$instanceName - Transitioning session $sessionID from MConfirmingTBTCMint to MConfirmingRedemption",
+          s"$instanceName - Transitioning session $sessionID from MConfirmingRedemption to MWaitingForClaim",
+          // TODO: Why does this transition take place?
+          s"$instanceName - Transitioning session $sessionID from MWaitingForClaim to MWaitingForClaim",
+          s"$instanceName - Transitioning session $sessionID from MWaitingForClaim to MConfirmingBTCClaim",
+          s"$instanceName - Transitioning session $sessionID from MConfirmingBTCClaim to MWaitingForClaim",
+          s"$instanceName - Session $sessionID ended successfully",
+        )
+      )
+      .toSet
 
 }
