@@ -23,7 +23,7 @@ import org.bitcoins.core.protocol.{Bech32Address, CompactSizeUInt}
 import org.bitcoins.core.script.bitwise.{OP_EQUAL, OP_EQUALVERIFY}
 import org.bitcoins.core.script.constant.{ScriptConstant, ScriptNumber, ScriptNumberOperation, ScriptToken}
 import org.bitcoins.core.script.control.{OP_ELSE, OP_ENDIF, OP_NOTIF}
-import org.bitcoins.core.script.crypto.{OP_CHECKSIG, OP_CHECKSIGVERIFY, OP_SHA256}
+import org.bitcoins.core.script.crypto.{OP_CHECKMULTISIGVERIFY, OP_CHECKSIG, OP_CHECKSIGVERIFY, OP_SHA256}
 import org.bitcoins.core.script.locktime.OP_CHECKSEQUENCEVERIFY
 import org.bitcoins.core.script.splice.OP_SIZE
 import org.bitcoins.core.util.{BitcoinScriptUtil, BytesUtil}
@@ -37,6 +37,65 @@ import scodec.bits.ByteVector
 import java.security.MessageDigest
 
 object BitcoinUtils {
+
+  def buildScriptAsmNew(
+    userPKey:         ECPublicKey,
+    bridgeKeys:       Iterable[ECPublicKey],
+    secretHash:       ByteVector,
+    relativeLockTime: Long
+  ): Seq[ScriptToken] = {
+    val pushOpsUser = BitcoinScriptUtil.calculatePushOp(userPKey.bytes)
+    val bridgePushOps: List[Seq[ScriptToken]] =
+      bridgeKeys.toList.map(pkey => BitcoinScriptUtil.calculatePushOp(pkey.bytes))
+    val pushOp5 = BitcoinScriptUtil.calculatePushOp(ScriptNumber.apply(5))
+    val pushOp7 = BitcoinScriptUtil.calculatePushOp(ScriptNumber.apply(7))
+
+    val pushOpsSecretHash =
+      BitcoinScriptUtil.calculatePushOp(secretHash)
+    val pushOp32 =
+      BitcoinScriptUtil.calculatePushOp(ScriptNumber.apply(32))
+
+    val scriptOp =
+      BitcoinScriptUtil.minimalScriptNumberRepresentation(
+        ScriptNumber(relativeLockTime)
+      )
+
+    val scriptNum: Seq[ScriptToken] =
+      if (scriptOp.isInstanceOf[ScriptNumberOperation]) {
+        Seq(scriptOp)
+      } else {
+        val pushOpsLockTime =
+          BitcoinScriptUtil.calculatePushOp(ScriptNumber(relativeLockTime))
+        pushOpsLockTime ++ Seq(
+          ScriptConstant(ScriptNumber(relativeLockTime).bytes)
+        )
+      }
+
+    val bridgeSequence = bridgeKeys.zip(bridgePushOps).flatMap { case (key, pushOps) =>
+      pushOps ++ Seq(
+        ScriptConstant.fromBytes(key.bytes)
+      )
+    }
+
+    pushOpsUser ++ Seq(
+      ScriptConstant.fromBytes(userPKey.bytes),
+      OP_CHECKSIG,
+      OP_NOTIF
+    ) ++ pushOp5 ++ Seq(ScriptNumber.apply(5)) ++ bridgeSequence ++ pushOp7 ++ Seq(ScriptNumber.apply(7)) ++ Seq(
+      OP_CHECKMULTISIGVERIFY,
+      OP_SIZE
+    ) ++ pushOp32 ++ Seq(
+      ScriptNumber.apply(32),
+      OP_EQUALVERIFY,
+      OP_SHA256
+    ) ++ pushOpsSecretHash ++ Seq(
+      ScriptConstant.fromBytes(secretHash),
+      OP_EQUAL
+    ) ++ Seq(OP_ELSE) ++ scriptNum ++ Seq(
+      OP_CHECKSEQUENCEVERIFY,
+      OP_ENDIF
+    )
+  }
 
   def buildScriptAsm(
     userPKey:         ECPublicKey,
@@ -90,12 +149,21 @@ object BitcoinUtils {
   }
 
   // or(and(pk(A),older(1000)),and(pk(B),sha256(H)))
-  def createDescriptor(
+    def createDescriptor(
     bridgePKey: String,
     userPKey:   String,
     secretHash: String
   ) =
     s"wsh(andor(pk($userPKey),older(1000),and_v(v:pk($bridgePKey),sha256($secretHash))))"
+
+
+  // or(and(pk(A),older(1000)),and(thresh(5, pk(B1), pk(B2),pk(B3), pk(B4),pk(B5),pk(B6),pk(B7)),sha256(H)))
+  def createDescriptorNew(
+    bridgesPkey:  Iterable[ECPublicKey],
+    userPKey:   String,
+    secretHash: String
+  ) =
+    s"wsh(andor(pk(${userPKey}),older(1000),and_v(v:multi(5,${bridgesPkey.map(_.hex).mkString(",")},B7),sha256(${secretHash}))))"
 
   def serializeForSignature(
     txTo:        Transaction,

@@ -160,7 +160,6 @@ object BridgeStateMachineExecutionManagerImpl {
       queue                    <- Queue.unbounded[F, (Long, StateMachineRequest)]
       elegibilityManager       <- ExecutionElegibilityManagerImpl.make[F]()
       startMintingRequestQueue <- Queue.unbounded[F, StartMintingRequest]
-
       mintingManagerAlgebra = MintingManagerAlgebraImpl
         .make[F](startMintingRequestQueue)
     } yield {

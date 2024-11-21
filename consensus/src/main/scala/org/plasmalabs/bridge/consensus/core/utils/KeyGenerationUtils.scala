@@ -1,7 +1,8 @@
 package org.plasmalabs.bridge.consensus.core.utils
 
 import cats.effect.kernel.Sync
-import org.bitcoins.core.crypto.MnemonicCode
+import cats.implicits._
+import org.bitcoins.core.crypto.{ExtPublicKey, MnemonicCode}
 import org.bitcoins.core.hd.{BIP32Path, HDAccount, HDPath, HDPurposes}
 import org.bitcoins.core.wallet.keymanagement.KeyManagerParams
 import org.bitcoins.crypto.{AesPassword, ECDigitalSignature, ECPublicKey, HashType}
@@ -16,7 +17,6 @@ object KeyGenerationUtils {
     txBytes:    ByteVector,
     currentIdx: Int
   ): F[String] = {
-    import cats.implicits._
     for {
       signed <- Sync[F].delay(
         km.toSign(HDPath.fromString("m/84'/1'/0'/0/" + currentIdx))
@@ -35,7 +35,6 @@ object KeyGenerationUtils {
     seedFile:   String,
     password:   String
   ): F[BIP39KeyManager] = {
-    import cats.implicits._
     for {
       seedPath <- Sync[F].delay(
         new java.io.File(seedFile).getAbsoluteFile.toPath
@@ -60,8 +59,7 @@ object KeyGenerationUtils {
     btcNetwork: BitcoinNetworkIdentifiers,
     seedFile:   String,
     password:   String
-  ) = {
-    import cats.implicits._
+  ): F[BIP39KeyManager] = {
     for {
       seedPath <- Sync[F].delay(
         new java.io.File(seedFile).getAbsoluteFile.toPath
@@ -86,7 +84,6 @@ object KeyGenerationUtils {
     km:         BIP39KeyManager,
     currentIdx: Int
   ): F[ECPublicKey] = {
-    import cats.implicits._
     for {
       hdAccount <- Sync[F].fromOption(
         HDAccount.fromPath(
@@ -104,4 +101,33 @@ object KeyGenerationUtils {
       )
     } yield (pKey)
   }
+
+  def generateSharableKey[F[_]: Sync](
+    km: BIP39KeyManager,
+    accountPath: String = "m/84'/1'/0'" // default to standard segwit path
+  ): F[ExtPublicKey] = {
+    for {
+      hdAccount <- Sync[F].fromOption(
+        HDAccount.fromPath(BIP32Path.fromString(accountPath)),
+        new IllegalArgumentException("Invalid account path")
+      )
+      xpub <- Sync[F].delay(
+        km.deriveXPub(hdAccount).get
+      )
+    } yield xpub
+  }
+
+  def deriveChildPublicKey[F[_]: Sync](
+    extendedPubKey: ExtPublicKey,
+    currentIdx: Int
+  ): F[ECPublicKey] = {
+
+    for {
+      childKey <- Sync[F].delay(
+         extendedPubKey
+        .deriveChildPubKey(BIP32Path.fromString("m/0/" + currentIdx.toString)).get.key
+      )
+    } yield childKey
+  }
+
 }
