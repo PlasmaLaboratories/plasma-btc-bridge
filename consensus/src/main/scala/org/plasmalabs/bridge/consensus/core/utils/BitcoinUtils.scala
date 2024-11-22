@@ -46,9 +46,13 @@ object BitcoinUtils {
   ): Seq[ScriptToken] = {
     val pushOpsUser = BitcoinScriptUtil.calculatePushOp(userPKey.bytes)
     val bridgePushOps: List[Seq[ScriptToken]] =
-      bridgeKeys.toList.map(pkey => BitcoinScriptUtil.calculatePushOp(pkey.bytes))
-    val pushOp5 = BitcoinScriptUtil.calculatePushOp(ScriptNumber.apply(5))
-    val pushOp7 = BitcoinScriptUtil.calculatePushOp(ScriptNumber.apply(7))
+      bridgeKeys.toList.map(bridgePKey => BitcoinScriptUtil.calculatePushOp(bridgePKey.bytes))
+
+    val m = 1
+    val n = 7
+    val pushOpM = BitcoinScriptUtil.calculatePushOp(ScriptNumber.apply(m))
+    val pushOpN = BitcoinScriptUtil.calculatePushOp(ScriptNumber.apply(n))
+
 
     val pushOpsSecretHash =
       BitcoinScriptUtil.calculatePushOp(secretHash)
@@ -81,7 +85,13 @@ object BitcoinUtils {
       ScriptConstant.fromBytes(userPKey.bytes),
       OP_CHECKSIG,
       OP_NOTIF
-    ) ++ pushOp5 ++ Seq(ScriptNumber.apply(5)) ++ bridgeSequence ++ pushOp7 ++ Seq(ScriptNumber.apply(7)) ++ Seq(
+    ) ++ 
+    pushOpM ++ 
+    Seq(ScriptNumber.apply(m))++ 
+    bridgeSequence ++ 
+    pushOpN ++ 
+    Seq(ScriptNumber.apply(n)) ++ 
+    Seq(
       OP_CHECKMULTISIGVERIFY,
       OP_SIZE
     ) ++ pushOp32 ++ Seq(
@@ -148,20 +158,11 @@ object BitcoinUtils {
 
   }
 
-  // or(and(pk(A),older(1000)),and(pk(B),sha256(H)))
-    def createDescriptor(
-    bridgePKey: String,
-    userPKey:   String,
-    secretHash: String
-  ) =
-    s"wsh(andor(pk($userPKey),older(1000),and_v(v:pk($bridgePKey),sha256($secretHash))))"
-
-
   // or(and(pk(A),older(1000)),and(thresh(5, pk(B1), pk(B2),pk(B3), pk(B4),pk(B5),pk(B6),pk(B7)),sha256(H)))
-  def createDescriptorNew(
-    bridgesPkey:  Iterable[ECPublicKey],
-    userPKey:   String,
-    secretHash: String
+  def createDescriptor(
+    bridgesPkey: Iterable[ECPublicKey],
+    userPKey:    String,
+    secretHash:  String
   ) =
     s"wsh(andor(pk(${userPKey}),older(1000),and_v(v:multi(5,${bridgesPkey.map(_.hex).mkString(",")},B7),sha256(${secretHash}))))"
 

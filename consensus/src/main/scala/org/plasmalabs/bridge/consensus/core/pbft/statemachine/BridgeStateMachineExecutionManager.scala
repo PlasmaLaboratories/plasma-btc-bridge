@@ -82,6 +82,8 @@ import scodec.bits.ByteVector
 
 import java.security.{KeyPair => JKeyPair}
 import java.util.UUID
+import org.bitcoins.core.crypto.ExtPublicKey
+
 
 trait BridgeStateMachineExecutionManager[F[_]] {
 
@@ -149,7 +151,8 @@ object BridgeStateMachineExecutionManagerImpl {
     defaultFromTemplate:      Template,
     bitcoindInstance:         BitcoindRpcClient,
     replicaCount:             ReplicaCount,
-    defaultFeePerByte:        CurrencyUnit
+    defaultFeePerByte:        CurrencyUnit,
+    allReplicasPublicKeys :      List[ExtPublicKey]
   ) = {
     for {
       tKeyPair <- walletManagementUtils.loadKeys(
@@ -423,7 +426,7 @@ object BridgeStateMachineExecutionManagerImpl {
                   Satoshis
                     .fromLong(
                       BigInt(value.amount.toByteArray()).toLong
-                    )
+                    ), 
                 )).getOrElse(Sync[F].unit)
               } yield Result.Empty
             case PostClaimTx(value) =>

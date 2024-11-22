@@ -64,6 +64,8 @@ import org.typelevel.log4cats.Logger
 
 import java.security.{KeyPair => JKeyPair, PublicKey}
 import java.util.concurrent.ConcurrentHashMap
+import org.bitcoins.core.crypto.ExtPublicKey
+
 
 trait AppModule extends WalletStateResource {
 
@@ -85,7 +87,8 @@ trait AppModule extends WalletStateResource {
     currentBitcoinNetworkHeight: Ref[IO, Int],
     seqNumberManager:            SequenceNumberManager[IO],
     currentPlasmaHeight:         Ref[IO, Long],
-    currentState:                Ref[IO, SystemGlobalState]
+    currentState:                Ref[IO, SystemGlobalState],
+    allReplicasPublicKeys :      List[ExtPublicKey]
   )(implicit
     pbftProtocolClient:     PBFTInternalGrpcServiceClient[IO],
     publicApiClientGrpcMap: PublicApiClientGrpcMap[IO],
@@ -151,6 +154,7 @@ trait AppModule extends WalletStateResource {
     implicit val iPeginWalletManager = new PeginWalletManager(
       pegInWalletManager
     )
+    implicit val iAllReplicasPublicKeys = allReplicasPublicKeys
     implicit val iBridgeWalletManager = new BridgeWalletManager(walletManager)
     implicit val btcNetwork = params.btcNetwork
     implicit val plasmaChannelResource = channelResource(
@@ -188,7 +192,8 @@ trait AppModule extends WalletStateResource {
             viewManager,
             walletManagementUtils,
             params.plasmaWalletSeedFile,
-            params.plasmaWalletPassword
+            params.plasmaWalletPassword, 
+
           )
       requestStateManager <- RequestStateManagerImpl
         .make[IO](

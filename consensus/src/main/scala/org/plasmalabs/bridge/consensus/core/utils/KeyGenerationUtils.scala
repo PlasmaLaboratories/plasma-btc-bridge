@@ -16,7 +16,7 @@ object KeyGenerationUtils {
     km:         BIP39KeyManager,
     txBytes:    ByteVector,
     currentIdx: Int
-  ): F[String] = {
+  ): F[String] =
     for {
       signed <- Sync[F].delay(
         km.toSign(HDPath.fromString("m/84'/1'/0'/0/" + currentIdx))
@@ -28,13 +28,12 @@ object KeyGenerationUtils {
         )
       )
     } yield canonicalSignature.hex
-  }
 
   def loadKeyManager[F[_]: Sync](
     btcNetwork: BitcoinNetworkIdentifiers,
     seedFile:   String,
     password:   String
-  ): F[BIP39KeyManager] = {
+  ): F[BIP39KeyManager] =
     for {
       seedPath <- Sync[F].delay(
         new java.io.File(seedFile).getAbsoluteFile.toPath
@@ -53,13 +52,12 @@ object KeyGenerationUtils {
           .map(_ => new IllegalArgumentException("Invalid params"))
       )
     } yield km
-  }
 
   def createKeyManager[F[_]: Sync](
     btcNetwork: BitcoinNetworkIdentifiers,
     seedFile:   String,
     password:   String
-  ): F[BIP39KeyManager] = {
+  ): F[BIP39KeyManager] =
     for {
       seedPath <- Sync[F].delay(
         new java.io.File(seedFile).getAbsoluteFile.toPath
@@ -78,12 +76,11 @@ object KeyGenerationUtils {
         )
       )
     } yield km
-  }
 
   def generateKey[F[_]: Sync](
     km:         BIP39KeyManager,
     currentIdx: Int
-  ): F[ECPublicKey] = {
+  ): F[ECPublicKey] =
     for {
       hdAccount <- Sync[F].fromOption(
         HDAccount.fromPath(
@@ -100,34 +97,42 @@ object KeyGenerationUtils {
           .key
       )
     } yield (pKey)
-  }
 
-  def generateSharableKey[F[_]: Sync](
-    km: BIP39KeyManager,
-    accountPath: String = "m/84'/1'/0'" // default to standard segwit path
-  ): F[ExtPublicKey] = {
-    for {
-      hdAccount <- Sync[F].fromOption(
-        HDAccount.fromPath(BIP32Path.fromString(accountPath)),
-        new IllegalArgumentException("Invalid account path")
-      )
-      xpub <- Sync[F].delay(
-        km.deriveXPub(hdAccount).get
-      )
-    } yield xpub
-  }
+  def generateSharableKey(
+    km: BIP39KeyManager
+  ): ExtPublicKey = km.getRootXPub
+  // hdAccount <- Sync[F].fromOption(
+  //   HDAccount.fromPath(BIP32Path.fromString("m/84'/1'/0'")),
+  //   new IllegalArgumentException("Invalid account path")
+  // )
+  // xpub <- Sync[F].delay(
+  //   km.deriveXPub(hdAccount).get
+  // )
 
-  def deriveChildPublicKey[F[_]: Sync](
+  def deriveChildFromSharedPublicKey[F[_]: Sync](
     extendedPubKey: ExtPublicKey,
-    currentIdx: Int
-  ): F[ECPublicKey] = {
-
+    currentIdx:     Int
+  ): F[ECPublicKey] =
     for {
       childKey <- Sync[F].delay(
-         extendedPubKey
-        .deriveChildPubKey(BIP32Path.fromString("m/0/" + currentIdx.toString)).get.key
+        extendedPubKey
+          .deriveChildPubKey(BIP32Path.fromString("m/0/" + currentIdx.toString))
+          .get
+          .key
       )
     } yield childKey
-  }
 
+  def deriveChildrenFromSharedPublicKeys[F[_]: Sync](
+    extendedPubKeys: List[ExtPublicKey],
+    currentIdx:     Int
+  ): F[List[ECPublicKey]] = {
+    for {
+      childKeys <- extendedPubKeys.traverse {
+        key => deriveChildFromSharedPublicKey(key, currentIdx).map { ecKey =>
+        // Convert to compressed format
+        ECPublicKey.fromHex(ecKey.hex) 
+        }
+      }
+    } yield (childKeys)
+  }
 }

@@ -34,12 +34,15 @@ import org.plasmalabs.sdk.dataApi.{FellowshipStorageAlgebra, TemplateStorageAlge
 import org.plasmalabs.sdk.wallet.WalletApi
 import org.typelevel.log4cats.Logger
 import scodec.bits.ByteVector
+import org.bitcoins.core.crypto.ExtPublicKey
+import org.plasmalabs.bridge.consensus.core.utils.KeyGenerationUtils
+
 
 import java.util.UUID
 
 object StartSessionController {
 
-  private def createPeginSessionInfo[F[_]: Sync](
+  private def createPeginSessionInfo[F[_]: Sync: Logger](
     btcPeginCurrentWalletIdx:  Int,
     btcBridgeCurrentWalletIdx: Int,
     mintTemplateName:          String,
@@ -51,10 +54,15 @@ object StartSessionController {
     btcNetwork:                BitcoinNetworkIdentifiers,
     redeemAddress:             String,
     minHeight:                 Long,
-    maxHeight:                 Long
-  ): F[(String, PeginSessionInfo)] = {
+    maxHeight:                 Long,
+    allReplicasPublicKeys: List[ExtPublicKey]
+  ): F[(String, PeginSessionInfo, List[ECPublicKey])] = {
     import cats.implicits._
+import org.typelevel.log4cats.syntax._
+
     for {
+      publicKeysForCurrentIndex <- KeyGenerationUtils.deriveChildrenFromSharedPublicKeys(allReplicasPublicKeys, btcPeginCurrentWalletIdx)
+      _ <- info"Derived children from keys with length ${publicKeysForCurrentIndex(0).bytes}"
       hash <- Sync[F].fromOption(
         ByteVector.fromHex(sha256.toLowerCase()),
         InvalidHash(s"Invalid hash $sha256")
@@ -67,12 +75,14 @@ object StartSessionController {
         .delay(ECPublicKey.fromHex(pUserPKey))
         .handleError(_ => throw InvalidKey(s"Invalid key $pUserPKey"))
       asm =
-        BitcoinUtils.buildScriptAsm(
+        BitcoinUtils.buildScriptAsmNew(
           userPKey,
-          ECPublicKey.fromHex(btcPeginBridgePKey),
+          publicKeysForCurrentIndex,
           hash,
           btcWaitExpirationTime.underlying
         )
+
+      _ <- info"Created script for escrow address ${asm}"
       scriptAsm = BytesUtil.toByteVector(asm)
       scriptHash = CryptoUtil.sha256(scriptAsm)
       push_op = BitcoinScriptUtil.calculatePushOp(hash)
@@ -108,7 +118,8 @@ object StartSessionController {
         maxHeight,
         claimAddress,
         PeginSessionState.PeginSessionStateWaitingForBTC
-      )
+      ),
+      publicKeysForCurrentIndex
     )
   }
 
@@ -127,7 +138,8 @@ object StartSessionController {
     btcWaitExpirationTime:    BTCWaitExpirationTime,
     tba:                      TransactionBuilderApi[F],
     walletApi:                WalletApi[F],
-    wsa:                      WalletStateAlgebra[F]
+    wsa:                      WalletStateAlgebra[F],
+    allReplicasPublicKeys: List[ExtPublicKey]
   ): F[Either[BridgeError, (PeginSessionInfo, StartPeginSessionResponse)]] = {
     import cats.implicits._
     import PlasmaWalletAlgebra._
@@ -173,9 +185,10 @@ object StartSessionController {
         btcNetwork,
         someRedeemAdress.get,
         minPlasmaHeight,
-        maxPlasmaHeight
+        maxPlasmaHeight,
+        allReplicasPublicKeys
       )
-      (address, sessionInfo) = addressAndsessionInfo
+      (address, sessionInfo, publicKeysForCurrentIndex) = addressAndsessionInfo
     } yield (
       sessionInfo,
       StartPeginSessionResponse(
@@ -183,7 +196,7 @@ object StartSessionController {
         sessionInfo.scriptAsm,
         address,
         BitcoinUtils
-          .createDescriptor(btcPeginBridgePKey.hex, req.pkey, req.sha256),
+          .createDescriptor(publicKeysForCurrentIndex, req.pkey, req.sha256),
         minPlasmaHeight,
         maxPlasmaHeight
       )

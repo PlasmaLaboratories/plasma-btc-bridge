@@ -46,6 +46,19 @@ trait ReplicaConfModule extends CommonSetupModule {
 |      publicKeyFile = "consensusPublicKey${replicaId}.pem"
 |      # path to the private key file
 |      privateKeyFile = "consensusPrivateKey${replicaId}.pem"
+|
+|      # path to shared private pegin wallet seed file
+|      peginWalletFile = "pegin-wallet${replicaId}.json"
+|      # path to shared ext pub key files of other replicas 
+|      sharedPubKeyFiles = {
+|         0 = "shared-pubkey0.txt"
+|         1 = "shared-pubkey1.txt"
+|         2 = "shared-pubkey2.txt"
+|         3 = "shared-pubkey3.txt"
+|         4 = "shared-pubkey4.txt"
+|         5 = "shared-pubkey5.txt"
+|         6 = "shared-pubkey6.txt"
+|       }
 |    }
 |    consensus {
 |      replicaCount = ${replicaCount}

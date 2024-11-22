@@ -23,13 +23,13 @@ class BridgeIntegrationSpec
 
   override def munitFixtures = List(startServer)
 
-  // cleanupDir.test("Bridge should correctly peg-in BTC") { _ =>
-  //   info"Bridge should correctly peg-in BTC" >> successfulPegin()
-  // }
-
-  cleanupDir.test("Bridges should correctly generate different new escrow addresses") { _ =>
-    info"Bridges should correctly generate different new escrow addresses" >> multipleCorrectEscrowAddressGeneration(3)
+  cleanupDir.test("Bridge should correctly peg-in BTC") { _ =>
+    info"Bridge should correctly peg-in BTC" >> successfulPegin()
   }
+
+  // cleanupDir.test("Bridges should correctly generate different new escrow addresses") { _ =>
+  //   info"Bridges should correctly generate different new escrow addresses" >> multipleCorrectEscrowAddressGeneration(3)
+  // }
 
   // cleanupDir.test("Bridge should correctly peg-in BTC if non-primaries replica fails") { _ =>
   //   info"Bridge should correctly peg-in BTC if non-primaries replica fails" >> successfulPeginWithNonPrimaryFailure()

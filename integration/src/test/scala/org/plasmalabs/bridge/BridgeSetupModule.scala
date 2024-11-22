@@ -90,12 +90,8 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
             peginFilePath,
             password
           )
-          newKey       <- KeyGenerationUtils.generateSharableKey[IO](keyManager)
-          _            <- info"Generated a new sharable ExtPublicKey: ${newKey}"
+          newKey       =  KeyGenerationUtils.generateSharableKey(keyManager)
           _            <- saveExtPublicKey(newKey, sharableFilePath)
-          newKeyLoaded <- loadExtPublicKey(sharableFilePath)
-          _            <- info"Loaded freshly generated sharable ExtPublicKey: ${newKeyLoaded}"
-
         } yield ()
       }
     } yield ()

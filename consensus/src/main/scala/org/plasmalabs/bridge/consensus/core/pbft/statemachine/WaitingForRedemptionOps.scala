@@ -10,23 +10,23 @@ import org.bitcoins.rpc.client.common.BitcoindRpcClient
 import org.plasmalabs.bridge.consensus.core.PeginWalletManager
 import org.plasmalabs.bridge.consensus.core.utils.BitcoinUtils
 import scodec.bits.ByteVector
+import org.plasmalabs.bridge.shared.ReplicaId
 
 object WaitingForRedemptionOps {
-
   def startClaimingProcess[F[_]: Async](
-    secret:           String,
-    claimAddress:     String,
+    secret: String,
+    claimAddress: String,
     currentWalletIdx: Int,
-    inputTxId:        String,
-    vout:             Long,
-    scriptAsm:        String,
+    inputTxId: String,
+    vout: Long,
+    scriptAsm: String,
     amountInSatoshis: CurrencyUnit
   )(implicit
-    bitcoindInstance:   BitcoindRpcClient,
+    bitcoindInstance: BitcoindRpcClient,
     pegInWalletManager: PeginWalletManager[F],
-    feePerByte:         CurrencyUnit
-  ) = {
-
+    feePerByte: CurrencyUnit,
+    replica: ReplicaId
+  ): F[Unit] = {
     import cats.implicits._
 
     val tx = BitcoinUtils.createRedeemingTx(
@@ -36,14 +36,16 @@ object WaitingForRedemptionOps {
       feePerByte,
       claimAddress
     )
+
     val srp = RawScriptPubKey.fromAsmHex(scriptAsm)
-    val serializedTxForSignature =
-      BitcoinUtils.serializeForSignature(
-        tx,
-        amountInSatoshis.satoshis,
-        srp.asm
-      )
+    val serializedTxForSignature = BitcoinUtils.serializeForSignature(
+      tx,
+      amountInSatoshis.satoshis,
+      srp.asm
+    )
+
     val signableBytes = CryptoUtil.doubleSHA256(serializedTxForSignature)
+
     for {
       signature <- pegInWalletManager.underlying.signForIdx(
         currentWalletIdx,
@@ -54,16 +56,16 @@ object WaitingForRedemptionOps {
           ScriptConstant.fromBytes(
             ByteVector(secret.getBytes().padTo(32, 0.toByte))
           ),
-          ScriptConstant(
-            signature.hex
-          ), // signature of bridge
+          // Add OP_0 for the dummy signature in multisig
+          OP_0,
+          ScriptConstant(signature.hex),
           OP_0
         )
       )
       txWit = WitnessTransaction
         .toWitnessTx(tx)
         .updateWitness(
-          0,
+          replica.id,
           P2WSHWitnessV0(
             srp,
             bridgeSig
@@ -74,5 +76,4 @@ object WaitingForRedemptionOps {
       )
     } yield ()
   }
-
 }

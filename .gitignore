@@ -41,6 +41,9 @@ integration/seriesPolicy.yaml
 integration/user-wallet-mnemonic*.txt
 integration/user-wallet*.db
 integration/user-wallet*.json
+integration/pegin-wallet*.json
+integration/shared-pubkey*.json
+
 integration/plasma-wallet*.db
 integration/user-wallet*.json
 integration/plasma-wallet*.json
