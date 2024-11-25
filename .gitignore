@@ -62,3 +62,7 @@ integration-monitor/node02/
 
 .direnv
 /.idea/
+/integration/seriesTransferTx.pbuf
+/integration/seriesTransferTxProved.pbuf
+/integration/groupTransferTx.pbuf
+/integration/groupTransferTxProved.pbuf
