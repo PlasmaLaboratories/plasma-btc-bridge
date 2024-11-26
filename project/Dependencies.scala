@@ -6,7 +6,6 @@ object Dependencies {
   object Versions {
     val catsCoreVersion = "2.12.0"
     val http4sVersion = "0.23.29"
-    val slf4jVersion = "2.0.16"
     val mUnitTeVersion = "0.7.29"
     val bitcoinsVersion = "1.9.9"
     val btcVersionZmq = "1.9.8"
@@ -15,7 +14,7 @@ object Dependencies {
     val ioGrpcVersion = "1.68.1"
   }
 
-  val akkaSlf4j: Seq[ModuleID] = Seq(
+  val pekkoActorTyped: Seq[ModuleID] = Seq(
     "org.apache.pekko" %% "pekko-actor-typed" % "1.0.2"
   )
 
@@ -23,12 +22,7 @@ object Dependencies {
     "ch.qos.logback" % "logback-classic" % "1.5.12"
   )
 
-  val slf4j: Seq[ModuleID] = Seq(
-    "org.slf4j" % "slf4j-api" % slf4jVersion
-  )
-
   val log4cats: Seq[ModuleID] = Seq(
-    "org.typelevel" %% "log4cats-core"  % "2.7.0",
     "org.typelevel" %% "log4cats-slf4j" % "2.7.0"
   )
 
@@ -121,7 +115,7 @@ object Dependencies {
       grpcNetty ++
       grpcRuntime ++
       sqlite ++
-      akkaSlf4j
+      pekkoActorTyped
 
     val publicApi: Seq[ModuleID] =
       scopt ++
@@ -132,7 +126,6 @@ object Dependencies {
       optics ++
       grpcNetty ++
       grpcRuntime ++
-      slf4j ++
       config ++
       logback ++
       genericCirce

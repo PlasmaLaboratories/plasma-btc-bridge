@@ -33,7 +33,7 @@ lazy val commonSettings = Seq(
       "-oDGG",
       "-u",
       "target/test-reports"
-    ),
+    )
   ),
   resolvers ++= Seq(
     Resolver.defaultLocal,
@@ -45,7 +45,7 @@ lazy val commonSettings = Seq(
     "Maven Repo" at "https://repo1.maven.org/maven2/",
     "Bintray" at "https://jcenter.bintray.com/"
   ),
-  testFrameworks += TestFrameworks.MUnit,
+  testFrameworks += TestFrameworks.MUnit
   // PB.protocExecutable := file("/nix/store/53gyjpxxkzrih1bj388ddw0kg8y0qz8j-protobuf-25.4/bin/protoc")
 )
 
@@ -129,7 +129,7 @@ lazy val shared = (project in file("shared"))
     scalapbCodeGeneratorOptions += CodeGeneratorOption.FlatPackage,
     libraryDependencies ++=
       Dependencies.plasmaBtcBridge.shared ++
-        Dependencies.plasmaBtcBridge.test
+      Dependencies.plasmaBtcBridge.test
   )
   .enablePlugins(Fs2Grpc)
 
@@ -142,7 +142,7 @@ lazy val consensus = (project in file("consensus"))
     name := "plasma-btc-bridge-consensus",
     libraryDependencies ++=
       Dependencies.plasmaBtcBridge.consensus ++
-        Dependencies.plasmaBtcBridge.test
+      Dependencies.plasmaBtcBridge.test
   )
   .enablePlugins(DockerPlugin, JavaAppPackaging)
   .dependsOn(shared)
@@ -157,7 +157,7 @@ lazy val publicApi =
       name := "plasma-btc-bridge-public-api",
       libraryDependencies ++=
         Dependencies.plasmaBtcBridge.publicApi ++
-          Dependencies.plasmaBtcBridge.test
+        Dependencies.plasmaBtcBridge.test
     )
     .enablePlugins(DockerPlugin, JavaAppPackaging)
     .dependsOn(shared)
@@ -189,8 +189,7 @@ buildClient := {
   // even after the server is packaged in a fat jar.
   IO.copyDirectory(
     source = (root / baseDirectory).value / "bridge-ui" / "dist",
-    target =
-      (consensus / baseDirectory).value / "src" / "main" / "resources" / "static"
+    target = (consensus / baseDirectory).value / "src" / "main" / "resources" / "static"
   )
 }
 
@@ -201,27 +200,33 @@ lazy val plasmaBtcCli = (project in file("plasma-btc-cli"))
     name := "plasma-btc-cli",
     libraryDependencies ++=
       Dependencies.plasmaBtcBridge.consensus ++
-        Dependencies.plasmaBtcBridge.test
+      Dependencies.plasmaBtcBridge.test
   )
   .enablePlugins(JavaAppPackaging)
   .dependsOn(shared)
 
 lazy val integration = (project in file("integration"))
-  .dependsOn(consensus, publicApi, plasmaBtcCli) // your current subproject
+  .dependsOn(consensus, publicApi, plasmaBtcCli)
   .settings(
     publish / skip := true,
     commonSettings,
-    libraryDependencies ++= Dependencies.plasmaBtcBridge.consensus ++ Dependencies.plasmaBtcBridge.publicApi ++ Dependencies.plasmaBtcBridge.shared ++ Dependencies.plasmaBtcBridge.test
+    libraryDependencies ++=
+      Dependencies.plasmaBtcBridge.consensus ++
+      Dependencies.plasmaBtcBridge.publicApi ++
+      Dependencies.plasmaBtcBridge.shared ++
+      Dependencies.plasmaBtcBridge.test
   )
 
 lazy val `integration-monitor` = (project in file("integration-monitor"))
-  .dependsOn(consensus, plasmaBtcCli) // your current subproject
+  .dependsOn(consensus, plasmaBtcCli)
   .settings(
     publish / skip := true,
     commonSettings,
-    libraryDependencies ++= Dependencies.plasmaBtcBridge.consensus ++ Dependencies.plasmaBtcBridge.shared ++ Dependencies.plasmaBtcBridge.test
+    libraryDependencies ++=
+      Dependencies.plasmaBtcBridge.consensus ++
+      Dependencies.plasmaBtcBridge.shared ++
+      Dependencies.plasmaBtcBridge.test
   )
-
 
 lazy val root = project
   .in(file("."))

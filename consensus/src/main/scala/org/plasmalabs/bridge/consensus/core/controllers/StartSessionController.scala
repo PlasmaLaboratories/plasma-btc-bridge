@@ -160,7 +160,6 @@ object StartSessionController {
         someRedeemAdress.isDefined,
         "Redeem address was not generated correctly"
       )
-      bridgeNodeKey = someRedeemAdressAndKey.map(_._2).get
       addressAndsessionInfo <- createPeginSessionInfo(
         btcPeginCurrentWalletIdx,
         btcBridgeCurrentWalletIdx,
