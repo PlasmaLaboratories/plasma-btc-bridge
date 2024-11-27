@@ -24,6 +24,7 @@ lazy val commonSettings = Seq(
   scalacOptions ++= commonScalacOptions,
   semanticdbVersion := scalafixSemanticdb.revision,
   semanticdbEnabled := true, // enable SemanticDB for Scalafix
+  javaOptions += "-Dslf4j.internal.verbosity=WARN", // https://github.com/qos-ch/slf4j/issues/422
   Test / testOptions ++= Seq(
     Tests.Argument(TestFrameworks.ScalaCheck, "-verbosity", "2"),
     Tests.Argument(
