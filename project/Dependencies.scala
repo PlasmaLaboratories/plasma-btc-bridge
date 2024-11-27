@@ -6,6 +6,7 @@ object Dependencies {
   object Versions {
     val catsCoreVersion = "2.12.0"
     val http4sVersion = "0.23.29"
+    val slf4jVersion = "2.0.16"
     val mUnitTeVersion = "0.7.29"
     val bitcoinsVersion = "1.9.9"
     val btcVersionZmq = "1.9.8"
@@ -14,67 +15,68 @@ object Dependencies {
     val ioGrpcVersion = "1.68.1"
   }
 
-  val pekkoActorTyped: Seq[ModuleID] = Seq(
+  private val pekkoActorTyped = Seq(
     "org.apache.pekko" %% "pekko-actor-typed" % "1.0.2"
   )
 
-  val logback: Seq[ModuleID] = Seq(
+  private val logback = Seq(
     "ch.qos.logback" % "logback-classic" % "1.5.12"
   )
 
-  val log4cats: Seq[ModuleID] = Seq(
-    "org.typelevel" %% "log4cats-slf4j" % "2.7.0"
+  private val log4cats = Seq(
+    "org.typelevel" %% "log4cats-slf4j" % "2.7.0",
+    "org.slf4j"      % "slf4j-api"      % slf4jVersion
   )
 
-  val bouncycastle: Seq[ModuleID] = Seq(
+  private val bouncycastle = Seq(
     "org.bouncycastle" % "bcprov-jdk15on" % "1.68",
     "org.bouncycastle" % "bcpkix-jdk15on" % "1.68"
   )
 
-  val plasma: Seq[ModuleID] = Seq(
+  private val plasma = Seq(
     "org.plasmalabs" %% "plasma-sdk"  % plasmaVersion,
     "org.plasmalabs" %% "crypto"      % plasmaVersion,
     "org.plasmalabs" %% "service-kit" % plasmaVersion
   )
 
-  val mUnit: Seq[ModuleID] = Seq(
+  private val mUnit = Seq(
     "org.scalameta" %% "munit"                   % "1.0.2",
     "org.scalameta" %% "munit-scalacheck"        % "1.0.0",
     "org.typelevel" %% "munit-cats-effect"       % "2.0.0",
     "org.typelevel" %% "scalacheck-effect-munit" % "1.0.4"
   )
 
-  val sqlite: Seq[ModuleID] = Seq(
+  private val sqlite = Seq(
     "org.xerial" % "sqlite-jdbc" % "3.47.0.0"
   )
 
-  val ip4score: Seq[ModuleID] = Seq(
+  private val ip4score = Seq(
     "com.comcast" %% "ip4s-core" % "3.6.0"
   )
 
-  val cats: Seq[ModuleID] = Seq(
+  private val cats = Seq(
     "org.typelevel" %% "cats-core"   % catsCoreVersion,
     "org.typelevel" %% "cats-effect" % "3.5.6"
   )
 
-  val grpcNetty: Seq[ModuleID] =
+  private val grpcNetty =
     Seq("io.grpc" % "grpc-netty-shaded" % ioGrpcVersion)
 
-  val grpcRuntime: Seq[ModuleID] =
+  private val grpcRuntime =
     Seq(
       "com.thesamet.scalapb" %% "scalapb-runtime-grpc" % scalapb.compiler.Version.scalapbVersion
     )
 
-  val scopt: Seq[ModuleID] = Seq("com.github.scopt" %% "scopt" % "4.1.0")
+  private val scopt = Seq("com.github.scopt" %% "scopt" % "4.1.0")
 
-  val http4s: Seq[ModuleID] = Seq(
+  private val http4s = Seq(
     "org.http4s" %% "http4s-ember-client" % http4sVersion,
     "org.http4s" %% "http4s-dsl"          % http4sVersion,
     "org.http4s" %% "http4s-circe"        % http4sVersion,
     "org.http4s" %% "http4s-ember-server" % http4sVersion
   )
 
-  val bitcoinS: Seq[ModuleID] = Seq(
+  private val bitcoinS = Seq(
     "org.bitcoin-s" %% "bitcoin-s-bitcoind-rpc" % bitcoinsVersion,
     "org.bitcoin-s" %% "bitcoin-s-core"         % bitcoinsVersion,
     "org.bitcoin-s" %% "bitcoin-s-chain"        % bitcoinsVersion,
@@ -89,16 +91,16 @@ object Dependencies {
     "org.bitcoin-s" %% "bitcoin-s-zmq"          % btcVersionZmq
   )
 
-  val genericCirce: Seq[ModuleID] = Seq(
+  private val genericCirce = Seq(
     "io.circe" %% "circe-generic" % "0.14.10"
   )
 
-  val optics: Seq[ModuleID] = Seq(
+  private val optics = Seq(
     "dev.optics" %% "monocle-core"  % monocleVersion,
     "dev.optics" %% "monocle-macro" % monocleVersion
   )
 
-  val config: Seq[ModuleID] = Seq(
+  private val config = Seq(
     "com.typesafe" % "config" % "1.4.3"
   )
 
@@ -136,7 +138,6 @@ object Dependencies {
       cats ++
       grpcRuntime ++
       bouncycastle
-
 
     val test: Seq[ModuleID] = mUnit.map(_ % Test)
   }
