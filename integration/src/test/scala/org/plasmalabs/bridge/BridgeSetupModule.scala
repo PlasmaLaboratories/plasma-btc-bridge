@@ -112,9 +112,18 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
           }
           _              <- createReplicaConfigurationFiles[IO]()
           _              <- createPublicApiConfigurationFiles[IO]()
-          currentAddress <- currentAddress(plasmaWalletDb(0))
+          currentAddress <- currentAddress(plasmaWalletDb(0)) // here
           utxo           <- getCurrentUtxosFromAddress(plasmaWalletDb(0), currentAddress)
           (groupId, seriesId) = extractIds(utxo)
+          // TODO Remove debugging lines
+          _ <- IO.println(s"###################TESTING########################")
+          _ <- IO.println(s"currentAddress: ${currentAddress}")
+          _ <- IO.println(s"utxo=input: ${utxo}")
+          _ <- IO.println(s"groupId: ${groupId}")
+          _ <- IO.println(s"seriesId: ${seriesId}")
+          _ <- IO.println(s"################### END TESTING########################")
+          // TODO end Remove debugging lines
+
           _ <- IO(Try(Files.delete(Paths.get("bridge.db"))))
           _ <- IO.asyncForIO.both(
             (0 until replicaCount).map(launchConsensus(_, groupId, seriesId)).toList.sequence.map { f2 =>

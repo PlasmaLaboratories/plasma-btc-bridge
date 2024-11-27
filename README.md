@@ -31,14 +31,14 @@ This script:
 - run 2 bitcoins containers, and 2 plasma nodes container
 - clean up {resources, delete test input and output folders}
 - creates privates and public keys for PBFT
-- create a wallet
+- create a plasma wallet
 - create/prove/broadcast a transaction which transfer 1000 LVLs from the genesis_block to the wallet
 - create/prove/broadcast a transaction which transfer 1 Group from genesis_block to the wallet
 - create/prove/broadcast a transaction which transfer 1 Series from genesis_block to the wallet
 
 ```shell
 $ cd integration/scripts/
-$ ./prepareAndLauncIntegrationTest.sh
+$ ./prepareIntegrationTest.sh
 ```
 
 The expected outcome should be
@@ -97,9 +97,14 @@ Value                      : 1
 
 ```
 
-and then
+and then, path to root folder
 
-```sbtShell
+
+```shell
+> cd ..
+> pwd
+plasma-btc-bridge
+
 sbt integration/test
 ```
 
