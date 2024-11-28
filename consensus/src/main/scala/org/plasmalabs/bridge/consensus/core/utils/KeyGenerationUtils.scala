@@ -104,21 +104,16 @@ object KeyGenerationUtils {
 
   def deriveChildFromSharedPublicKey[F[_]: Sync](
     extendedPubKey: ExtPublicKey,
-    currentIdx: Int
-): F[ECPublicKey] =
-  for {
-    accountLevel <- Sync[F].delay(
-      extendedPubKey
-        .deriveChildPubKey(BIP32Path.fromString("m/84'/1'/0'")) // using same derivation path as generate key without the m 
-        .get
-    )
-    childKey <- Sync[F].delay(
-      accountLevel
-        .deriveChildPubKey(BIP32Path.fromString("m/0/" + currentIdx.toString))
-        .get
-        .key
-    )
-  } yield childKey
+    currentIdx:     Int
+  ): F[ECPublicKey] =
+    for {
+      childKey <- Sync[F].delay(
+        extendedPubKey
+          .deriveChildPubKey(BIP32Path.fromString("m/84/1/0/0/" + currentIdx.toString))
+          .get
+          .key
+      )
+    } yield childKey
 
   def deriveChildrenFromSharedPublicKeys[F[_]: Sync](
     extendedPubKeys: List[(Int, ExtPublicKey)],
