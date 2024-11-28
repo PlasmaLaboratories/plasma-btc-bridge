@@ -81,8 +81,4 @@ class BridgeIntegrationSpec
   //   info"Bridge should correctly go back to minting if there is a reorg" >> failedMintingReorgModule()
   // }
 
-  // cleanupDir.test("Bridge should fail peg-in BTC if more than f non-primaries replicas fail") { _ =>
-  //   info"Bridge should fail peg-in BTC if more than f non-primaries replicas fail" >> failedPeginNonPrimaryFailure()
-  // }
-
 }

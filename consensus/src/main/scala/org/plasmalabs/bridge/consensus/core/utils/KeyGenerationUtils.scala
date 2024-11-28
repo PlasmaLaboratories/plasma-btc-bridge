@@ -101,38 +101,34 @@ object KeyGenerationUtils {
   def generateSharableKey(
     km: BIP39KeyManager
   ): ExtPublicKey = km.getRootXPub
-  // hdAccount <- Sync[F].fromOption(
-  //   HDAccount.fromPath(BIP32Path.fromString("m/84'/1'/0'")),
-  //   new IllegalArgumentException("Invalid account path")
-  // )
-  // xpub <- Sync[F].delay(
-  //   km.deriveXPub(hdAccount).get
-  // )
 
   def deriveChildFromSharedPublicKey[F[_]: Sync](
     extendedPubKey: ExtPublicKey,
-    currentIdx:     Int
-  ): F[ECPublicKey] =
-    for {
-      childKey <- Sync[F].delay(
-        extendedPubKey
-          .deriveChildPubKey(BIP32Path.fromString("m/0/" + currentIdx.toString))
-          .get
-          .key
-      )
-    } yield childKey
+    currentIdx: Int
+): F[ECPublicKey] =
+  for {
+    accountLevel <- Sync[F].delay(
+      extendedPubKey
+        .deriveChildPubKey(BIP32Path.fromString("m/84'/1'/0'")) // using same derivation path as generate key without the m 
+        .get
+    )
+    childKey <- Sync[F].delay(
+      accountLevel
+        .deriveChildPubKey(BIP32Path.fromString("m/0/" + currentIdx.toString))
+        .get
+        .key
+    )
+  } yield childKey
 
   def deriveChildrenFromSharedPublicKeys[F[_]: Sync](
-    extendedPubKeys: List[ExtPublicKey],
-    currentIdx:     Int
-  ): F[List[ECPublicKey]] = {
+    extendedPubKeys: List[(Int, ExtPublicKey)],
+    currentIdx:      Int
+  ): F[List[(Int, ECPublicKey)]] =
     for {
-      childKeys <- extendedPubKeys.traverse {
-        key => deriveChildFromSharedPublicKey(key, currentIdx).map { ecKey =>
-        // Convert to compressed format
-        ECPublicKey.fromHex(ecKey.hex) 
+      childKeys <- extendedPubKeys.traverse { case (id, key) =>
+        deriveChildFromSharedPublicKey(key, currentIdx).map { ecKey =>
+          (id, ECPublicKey.fromHex(ecKey.hex))
         }
       }
     } yield (childKeys)
-  }
 }

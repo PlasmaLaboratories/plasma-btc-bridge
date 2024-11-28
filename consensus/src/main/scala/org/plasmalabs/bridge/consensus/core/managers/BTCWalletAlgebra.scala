@@ -7,6 +7,7 @@ import org.bitcoins.keymanager.bip39.BIP39KeyManager
 import org.plasmalabs.bridge.consensus.core.utils.KeyGenerationUtils
 import scodec.bits.ByteVector
 
+// to do
 trait BTCWalletAlgebra[F[_]] {
   def getCurrentPubKeyAndPrepareNext(): F[(Int, ECPublicKey)]
   def getCurrentPubKey(): F[ECPublicKey]
@@ -42,7 +43,7 @@ object BTCWalletAlgebraImpl {
       ): F[ECDigitalSignature] =
         for {
           signed <- Sync[F].delay(
-            km.toSign(HDPath.fromString("m/84'/1'/0'/0/" + idx))
+            km.toSign(HDPath.fromString("m/84'/1'/0'/0/" + idx)) // TODO: Adjust to derivation path of pub key derivation
               .sign(txBytes)
           )
           canonicalSignature <- Sync[F].delay(

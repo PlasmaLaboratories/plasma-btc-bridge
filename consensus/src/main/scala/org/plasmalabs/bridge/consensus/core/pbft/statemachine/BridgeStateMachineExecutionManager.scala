@@ -4,6 +4,7 @@ import cats.effect.kernel.{Async, Ref, Resource, Sync}
 import cats.effect.std.Queue
 import com.google.protobuf.ByteString
 import io.grpc.ManagedChannel
+import org.bitcoins.core.crypto.ExtPublicKey
 import org.bitcoins.core.currency.{CurrencyUnit, Satoshis}
 import org.bitcoins.rpc.client.common.BitcoindRpcClient
 import org.plasmalabs.bridge.consensus.core.controllers.StartSessionController
@@ -82,8 +83,6 @@ import scodec.bits.ByteVector
 
 import java.security.{KeyPair => JKeyPair}
 import java.util.UUID
-import org.bitcoins.core.crypto.ExtPublicKey
-
 
 trait BridgeStateMachineExecutionManager[F[_]] {
 
@@ -152,7 +151,7 @@ object BridgeStateMachineExecutionManagerImpl {
     bitcoindInstance:         BitcoindRpcClient,
     replicaCount:             ReplicaCount,
     defaultFeePerByte:        CurrencyUnit,
-    allReplicasPublicKeys :      List[ExtPublicKey]
+    allReplicasPublicKeys:    List[(Int, ExtPublicKey)]
   ) = {
     for {
       tKeyPair <- walletManagementUtils.loadKeys(
@@ -422,11 +421,11 @@ object BridgeStateMachineExecutionManagerImpl {
                   peginSessionInfo.btcBridgeCurrentWalletIdx,
                   value.txId,
                   value.vout,
-                  peginSessionInfo.scriptAsm, // scriptAsm,
+                  peginSessionInfo.scriptAsm,
                   Satoshis
                     .fromLong(
                       BigInt(value.amount.toByteArray()).toLong
-                    ), 
+                    )
                 )).getOrElse(Sync[F].unit)
               } yield Result.Empty
             case PostClaimTx(value) =>

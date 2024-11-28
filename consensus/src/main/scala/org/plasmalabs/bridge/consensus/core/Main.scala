@@ -7,6 +7,7 @@ import com.google.protobuf.ByteString
 import com.typesafe.config.{Config, ConfigFactory}
 import io.grpc.netty.NettyServerBuilder
 import io.grpc.{ManagedChannelBuilder, Metadata}
+import org.bitcoins.core.crypto.ExtPublicKey
 import org.bitcoins.keymanager.bip39.BIP39KeyManager
 import org.bitcoins.rpc.client.common.BitcoindRpcClient
 import org.bitcoins.rpc.config.BitcoindAuthCredentials
@@ -56,7 +57,6 @@ import java.util.concurrent.atomic.LongAdder
 import java.util.concurrent.{ConcurrentHashMap, Executors, TimeUnit}
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
-import org.bitcoins.core.crypto.ExtPublicKey
 
 case class SystemGlobalState(
   currentStatus: Option[String],
@@ -101,11 +101,13 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
     params: PlasmaBTCBridgeConsensusParamConfig,
     conf:   Config
   ): IO[BIP39KeyManager] =
-    KeyGenerationUtils.loadKeyManager[IO](
-      params.btcNetwork,
-      conf.getString("bridge.replica.security.peginWalletFile"),
-      params.btcPegInPassword
-    )
+    for {
+      km <- KeyGenerationUtils.loadKeyManager[IO](
+        params.btcNetwork,
+        conf.getString("bridge.replica.security.peginWalletFile"),
+        params.btcPegInPassword
+      )
+    } yield km
 
   def loadExtPublicKey(
     filePath: String
@@ -121,13 +123,13 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
   private def loadReplicasPublicKeys(
     conf:         Config,
     replicaCount: Int
-  ): IO[List[ExtPublicKey]] = {
+  ): IO[List[(Int, ExtPublicKey)]] = {
     import cats.implicits._
     for {
-      replicasPublicKeys <- (0 until replicaCount).toList.parTraverse { replicaId =>
+      replicasPublicKeys <- (0 until replicaCount).toList.traverse { replicaId =>
         for {
           key <- loadExtPublicKey(conf.getString(s"bridge.replica.security.sharedPubKeyFiles.${replicaId}"))
-        } yield key
+        } yield (replicaId, key)
       }
     } yield replicasPublicKeys
   }
@@ -208,7 +210,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
     seqNumberManager:            SequenceNumberManager[IO],
     currentPlasmaHeight:         Ref[IO, Long],
     currentState:                Ref[IO, SystemGlobalState],
-    allReplicasPublicKeys :      List[ExtPublicKey]
+    allReplicasPublicKeys:       List[(Int, ExtPublicKey)]
   )(implicit
     clientId:           ClientId,
     replicaId:          ReplicaId,
@@ -265,8 +267,8 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
     currentBitcoinNetworkHeight: Ref[IO, Int],
     seqNumberManager:            SequenceNumberManager[IO],
     currentPlasmaHeight:         Ref[IO, Long],
-    currentState:                Ref[IO, SystemGlobalState], 
-    allReplicasPublicKeys :      List[ExtPublicKey]
+    currentState:                Ref[IO, SystemGlobalState],
+    allReplicasPublicKeys:       List[(Int, ExtPublicKey)]
   )(implicit
     conf:               Config,
     fromFellowship:     Fellowship,
@@ -301,7 +303,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
       maxRetries = conf.getInt("bridge.replica.clients.mintingPolicy.maxRetries")
     )
 
-    implicit val iAllReplicasPublicKeys  = allReplicasPublicKeys
+    allReplicasPublicKeys
 
     for {
       replicaKeyPair <- BridgeCryptoUtils
@@ -344,7 +346,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         currentBitcoinNetworkHeight,
         seqNumberManager,
         currentPlasmaHeight,
-        currentState, 
+        currentState,
         allReplicasPublicKeys
       ).toResource
       (
@@ -564,13 +566,13 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
     (for {
       _ <- IO(Security.addProvider(new BouncyCastleProvider()))
 
-      pegInKm            <- loadKeyPegin(params, conf)
+      pegInKm               <- loadKeyPegin(params, conf)
       allReplicasPublicKeys <- loadReplicasPublicKeys(conf, replicaCount.value)
-      walletKm           <- loadKeyWallet(params)
-      pegInWalletManager <- BTCWalletAlgebraImpl.make[IO](pegInKm)
-      walletManager      <- BTCWalletAlgebraImpl.make[IO](walletKm)
-      _                  <- printParams[IO](params)
-      _                  <- printConfig[IO]
+      walletKm              <- loadKeyWallet(params)
+      pegInWalletManager    <- BTCWalletAlgebraImpl.make[IO](pegInKm)
+      walletManager         <- BTCWalletAlgebraImpl.make[IO](walletKm)
+      _                     <- printParams[IO](params)
+      _                     <- printConfig[IO]
       globalState <- Ref[IO].of(
         SystemGlobalState(Some("Setting up wallet..."), None)
       )

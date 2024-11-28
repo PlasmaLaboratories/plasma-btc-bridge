@@ -1,13 +1,14 @@
 package org.plasmalabs.bridge.consensus.core.controllers
 
 import cats.effect.kernel.{Async, Sync}
+import org.bitcoins.core.crypto.ExtPublicKey
 import org.bitcoins.core.protocol.Bech32Address
 import org.bitcoins.core.protocol.script.{P2WPKHWitnessSPKV0, WitnessScriptPubKey}
 import org.bitcoins.core.script.constant.{OP_0, ScriptConstant}
 import org.bitcoins.core.util.{BitcoinScriptUtil, BytesUtil}
 import org.bitcoins.crypto.{ECPublicKey, _}
 import org.plasmalabs.bridge.consensus.core.managers.PlasmaWalletAlgebra
-import org.plasmalabs.bridge.consensus.core.utils.BitcoinUtils
+import org.plasmalabs.bridge.consensus.core.utils.{BitcoinUtils, KeyGenerationUtils}
 import org.plasmalabs.bridge.consensus.core.{
   BitcoinNetworkIdentifiers,
   BridgeWalletManager,
@@ -34,9 +35,6 @@ import org.plasmalabs.sdk.dataApi.{FellowshipStorageAlgebra, TemplateStorageAlge
 import org.plasmalabs.sdk.wallet.WalletApi
 import org.typelevel.log4cats.Logger
 import scodec.bits.ByteVector
-import org.bitcoins.core.crypto.ExtPublicKey
-import org.plasmalabs.bridge.consensus.core.utils.KeyGenerationUtils
-
 
 import java.util.UUID
 
@@ -55,18 +53,24 @@ object StartSessionController {
     redeemAddress:             String,
     minHeight:                 Long,
     maxHeight:                 Long,
-    allReplicasPublicKeys: List[ExtPublicKey]
-  ): F[(String, PeginSessionInfo, List[ECPublicKey])] = {
+    allReplicasPublicKeys:     List[(Int, ExtPublicKey)]
+  ): F[(String, PeginSessionInfo, List[(Int, ECPublicKey)])] = {
     import cats.implicits._
-import org.typelevel.log4cats.syntax._
+    import org.typelevel.log4cats.syntax._
 
     for {
-      publicKeysForCurrentIndex <- KeyGenerationUtils.deriveChildrenFromSharedPublicKeys(allReplicasPublicKeys, btcPeginCurrentWalletIdx)
-      _ <- info"Derived children from keys with length ${publicKeysForCurrentIndex(0).bytes}"
+      publicKeysForCurrentIndex <- KeyGenerationUtils.deriveChildrenFromSharedPublicKeys(
+        allReplicasPublicKeys,
+        btcPeginCurrentWalletIdx
+      )
+
+      _ <- info"Derived children from replicas master public keys: ${publicKeysForCurrentIndex}"
       hash <- Sync[F].fromOption(
         ByteVector.fromHex(sha256.toLowerCase()),
         InvalidHash(s"Invalid hash $sha256")
       )
+
+      _ <- info"LOCK Secret hash: ${hash}"
       _ <- Sync[F].delay(
         if (hash.size != 32)
           throw InvalidHash(s"Sha length is too short, only ${hash.size} bytes")
@@ -75,14 +79,13 @@ import org.typelevel.log4cats.syntax._
         .delay(ECPublicKey.fromHex(pUserPKey))
         .handleError(_ => throw InvalidKey(s"Invalid key $pUserPKey"))
       asm =
-        BitcoinUtils.buildScriptAsmNew(
+        BitcoinUtils.buildScriptAsm(
           userPKey,
           publicKeysForCurrentIndex,
           hash,
           btcWaitExpirationTime.underlying
         )
-
-      _ <- info"Created script for escrow address ${asm}"
+      _ <- info"The following script was generated for the escrow address: ${asm}"
       scriptAsm = BytesUtil.toByteVector(asm)
       scriptHash = CryptoUtil.sha256(scriptAsm)
       push_op = BitcoinScriptUtil.calculatePushOp(hash)
@@ -103,6 +106,8 @@ import org.typelevel.log4cats.syntax._
           btcNetwork.btcNetwork
         )
         .value
+
+      _ <- info"Claim Address is: ${claimAddress}"
 
     } yield (
       address,
@@ -139,7 +144,7 @@ import org.typelevel.log4cats.syntax._
     tba:                      TransactionBuilderApi[F],
     walletApi:                WalletApi[F],
     wsa:                      WalletStateAlgebra[F],
-    allReplicasPublicKeys: List[ExtPublicKey]
+    allReplicasPublicKeys:    List[(Int, ExtPublicKey)]
   ): F[Either[BridgeError, (PeginSessionInfo, StartPeginSessionResponse)]] = {
     import cats.implicits._
     import PlasmaWalletAlgebra._
@@ -172,7 +177,8 @@ import org.typelevel.log4cats.syntax._
         someRedeemAdress.isDefined,
         "Redeem address was not generated correctly"
       )
-      bridgeNodeKey = someRedeemAdressAndKey.map(_._2).get
+      bridgeNodeKey = someRedeemAdressAndKey.map(_._2).get // Todo delete
+
       addressAndsessionInfo <- createPeginSessionInfo(
         btcPeginCurrentWalletIdx,
         btcBridgeCurrentWalletIdx,

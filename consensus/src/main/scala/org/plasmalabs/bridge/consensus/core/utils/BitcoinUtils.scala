@@ -21,9 +21,9 @@ import org.bitcoins.core.protocol.transaction.{
 }
 import org.bitcoins.core.protocol.{Bech32Address, CompactSizeUInt}
 import org.bitcoins.core.script.bitwise.{OP_EQUAL, OP_EQUALVERIFY}
-import org.bitcoins.core.script.constant.{ScriptConstant, ScriptNumber, ScriptNumberOperation, ScriptToken}
+import org.bitcoins.core.script.constant.{OP_1, OP_7, ScriptConstant, ScriptNumber, ScriptNumberOperation, ScriptToken}
 import org.bitcoins.core.script.control.{OP_ELSE, OP_ENDIF, OP_NOTIF}
-import org.bitcoins.core.script.crypto.{OP_CHECKMULTISIGVERIFY, OP_CHECKSIG, OP_CHECKSIGVERIFY, OP_SHA256}
+import org.bitcoins.core.script.crypto.{OP_CHECKMULTISIGVERIFY, OP_CHECKSIG, OP_SHA256}
 import org.bitcoins.core.script.locktime.OP_CHECKSEQUENCEVERIFY
 import org.bitcoins.core.script.splice.OP_SIZE
 import org.bitcoins.core.util.{BitcoinScriptUtil, BytesUtil}
@@ -38,21 +38,16 @@ import java.security.MessageDigest
 
 object BitcoinUtils {
 
-  def buildScriptAsmNew(
+  def buildScriptAsm(
     userPKey:         ECPublicKey,
-    bridgeKeys:       Iterable[ECPublicKey],
+    bridgeKeys:       Iterable[(Int, ECPublicKey)],
     secretHash:       ByteVector,
     relativeLockTime: Long
   ): Seq[ScriptToken] = {
     val pushOpsUser = BitcoinScriptUtil.calculatePushOp(userPKey.bytes)
+
     val bridgePushOps: List[Seq[ScriptToken]] =
-      bridgeKeys.toList.map(bridgePKey => BitcoinScriptUtil.calculatePushOp(bridgePKey.bytes))
-
-    val m = 1
-    val n = 7
-    val pushOpM = BitcoinScriptUtil.calculatePushOp(ScriptNumber.apply(m))
-    val pushOpN = BitcoinScriptUtil.calculatePushOp(ScriptNumber.apply(n))
-
+      bridgeKeys.toList.map(bridgePKey => BitcoinScriptUtil.calculatePushOp(bridgePKey._2.bytes))
 
     val pushOpsSecretHash =
       BitcoinScriptUtil.calculatePushOp(secretHash)
@@ -64,7 +59,7 @@ object BitcoinUtils {
         ScriptNumber(relativeLockTime)
       )
 
-    val scriptNum: Seq[ScriptToken] =
+    val lockTime: Seq[ScriptToken] =
       if (scriptOp.isInstanceOf[ScriptNumberOperation]) {
         Seq(scriptOp)
       } else {
@@ -75,9 +70,9 @@ object BitcoinUtils {
         )
       }
 
-    val bridgeSequence = bridgeKeys.zip(bridgePushOps).flatMap { case (key, pushOps) =>
+    val bridgeSequence = bridgeKeys.zip(bridgePushOps).flatMap { case (idKeyPair, pushOps) =>
       pushOps ++ Seq(
-        ScriptConstant.fromBytes(key.bytes)
+        ScriptConstant.fromBytes(idKeyPair._2.bytes)
       )
     }
 
@@ -85,86 +80,41 @@ object BitcoinUtils {
       ScriptConstant.fromBytes(userPKey.bytes),
       OP_CHECKSIG,
       OP_NOTIF
-    ) ++ 
-    pushOpM ++ 
-    Seq(ScriptNumber.apply(m))++ 
-    bridgeSequence ++ 
-    pushOpN ++ 
-    Seq(ScriptNumber.apply(n)) ++ 
+    ) ++
+    Seq(OP_1) ++
+    bridgeSequence ++
+    Seq(OP_7) ++
     Seq(
       OP_CHECKMULTISIGVERIFY,
       OP_SIZE
-    ) ++ pushOp32 ++ Seq(
+    ) ++
+    pushOp32 ++
+    Seq(
       ScriptNumber.apply(32),
       OP_EQUALVERIFY,
       OP_SHA256
-    ) ++ pushOpsSecretHash ++ Seq(
+    ) ++
+    pushOpsSecretHash ++
+    Seq(
       ScriptConstant.fromBytes(secretHash),
       OP_EQUAL
-    ) ++ Seq(OP_ELSE) ++ scriptNum ++ Seq(
+    ) ++
+    Seq(OP_ELSE) ++
+    lockTime ++
+    Seq(
       OP_CHECKSEQUENCEVERIFY,
       OP_ENDIF
     )
   }
 
-  def buildScriptAsm(
-    userPKey:         ECPublicKey,
-    bridgePKey:       ECPublicKey,
-    secretHash:       ByteVector,
-    relativeLockTime: Long
-  ): Seq[ScriptToken] = {
-    val pushOpsUser = BitcoinScriptUtil.calculatePushOp(userPKey.bytes)
-    val pushOpsBridge = BitcoinScriptUtil.calculatePushOp(bridgePKey.bytes)
-    val pushOpsSecretHash =
-      BitcoinScriptUtil.calculatePushOp(secretHash)
-    val pushOp32 =
-      BitcoinScriptUtil.calculatePushOp(ScriptNumber.apply(32))
-
-    val scriptOp =
-      BitcoinScriptUtil.minimalScriptNumberRepresentation(
-        ScriptNumber(relativeLockTime)
-      )
-
-    val scriptNum: Seq[ScriptToken] =
-      if (scriptOp.isInstanceOf[ScriptNumberOperation]) {
-        Seq(scriptOp)
-      } else {
-        val pushOpsLockTime =
-          BitcoinScriptUtil.calculatePushOp(ScriptNumber(relativeLockTime))
-        pushOpsLockTime ++ Seq(
-          ScriptConstant(ScriptNumber(relativeLockTime).bytes)
-        )
-      }
-
-    pushOpsUser ++ Seq(
-      ScriptConstant.fromBytes(userPKey.bytes),
-      OP_CHECKSIG,
-      OP_NOTIF
-    ) ++ pushOpsBridge ++ Seq(
-      ScriptConstant.fromBytes(bridgePKey.bytes),
-      OP_CHECKSIGVERIFY,
-      OP_SIZE
-    ) ++ pushOp32 ++ Seq(
-      ScriptNumber.apply(32),
-      OP_EQUALVERIFY,
-      OP_SHA256
-    ) ++ pushOpsSecretHash ++ Seq(
-      ScriptConstant.fromBytes(secretHash),
-      OP_EQUAL
-    ) ++ Seq(OP_ELSE) ++ scriptNum ++ Seq(
-      OP_CHECKSEQUENCEVERIFY,
-      OP_ENDIF
-    )
-
-  }
-
+  // For generating bitcoin script: https://bitcoin.sipa.be/miniscript/
   // or(and(pk(A),older(1000)),and(thresh(5, pk(B1), pk(B2),pk(B3), pk(B4),pk(B5),pk(B6),pk(B7)),sha256(H)))
   def createDescriptor(
-    bridgesPkey: Iterable[ECPublicKey],
+    bridgesPkey: Iterable[(Int, ECPublicKey)],
     userPKey:    String,
     secretHash:  String
   ) =
-    s"wsh(andor(pk(${userPKey}),older(1000),and_v(v:multi(5,${bridgesPkey.map(_.hex).mkString(",")},B7),sha256(${secretHash}))))"
+    s"wsh(andor(pk(${userPKey}),older(1000),and_v(v:multi(5,${bridgesPkey.map(_._2.hex).mkString(",")},B7),sha256(${secretHash}))))"
 
   def serializeForSignature(
     txTo:        Transaction,
@@ -211,7 +161,7 @@ object BitcoinUtils {
     inputAmount:  CurrencyUnit,
     feePerByte:   CurrencyUnit,
     claimAddress: String
-  ) = {
+  ): Transaction = {
     val inputAmountSatoshis = inputAmount.satoshis
     val outpoint = TransactionOutPoint(
       DoubleSha256DigestBE.apply(inputTxId),
@@ -236,7 +186,7 @@ object BitcoinUtils {
       outpoint,
       inputAmountSatoshis,
       P2WSHWitnessV0.apply(EmptyScriptPubKey),
-      ConditionalPath.NoCondition
+      ConditionalPath.NoCondition // bridges multisig Path
     )
     val finalizer = SubtractFeeFromOutputsFinalizer(
       Vector(inputInfo),
@@ -279,7 +229,7 @@ object BitcoinUtils {
     val dummyScript = RawScriptPubKey(
       buildScriptAsm(
         dummyUserPrivKey.publicKey,
-        ECPublicKey.dummy,
+        List((0, ECPublicKey.dummy)),
         ByteVector(MessageDigest.getInstance("SHA-256").digest("dummy".getBytes)),
         btcWaitExpirationTime.underlying
       )

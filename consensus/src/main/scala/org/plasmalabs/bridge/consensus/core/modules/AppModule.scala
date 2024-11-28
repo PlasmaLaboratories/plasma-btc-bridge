@@ -4,6 +4,7 @@ import cats.effect.IO
 import cats.effect.kernel.Ref
 import cats.effect.std.Queue
 import io.grpc.Metadata
+import org.bitcoins.core.crypto.ExtPublicKey
 import org.bitcoins.rpc.client.common.BitcoindRpcClient
 import org.http4s.dsl.io._
 import org.http4s.{HttpRoutes, _}
@@ -64,8 +65,6 @@ import org.typelevel.log4cats.Logger
 
 import java.security.{KeyPair => JKeyPair, PublicKey}
 import java.util.concurrent.ConcurrentHashMap
-import org.bitcoins.core.crypto.ExtPublicKey
-
 
 trait AppModule extends WalletStateResource {
 
@@ -88,7 +87,7 @@ trait AppModule extends WalletStateResource {
     seqNumberManager:            SequenceNumberManager[IO],
     currentPlasmaHeight:         Ref[IO, Long],
     currentState:                Ref[IO, SystemGlobalState],
-    allReplicasPublicKeys :      List[ExtPublicKey]
+    allReplicasPublicKeys:       List[(Int, ExtPublicKey)]
   )(implicit
     pbftProtocolClient:     PBFTInternalGrpcServiceClient[IO],
     publicApiClientGrpcMap: PublicApiClientGrpcMap[IO],
@@ -192,8 +191,7 @@ trait AppModule extends WalletStateResource {
             viewManager,
             walletManagementUtils,
             params.plasmaWalletSeedFile,
-            params.plasmaWalletPassword, 
-
+            params.plasmaWalletPassword
           )
       requestStateManager <- RequestStateManagerImpl
         .make[IO](
