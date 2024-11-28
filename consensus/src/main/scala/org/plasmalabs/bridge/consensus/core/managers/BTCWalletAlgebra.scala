@@ -43,7 +43,7 @@ object BTCWalletAlgebraImpl {
       ): F[ECDigitalSignature] =
         for {
           signed <- Sync[F].delay(
-            km.toSign(HDPath.fromString("m/84'/1'/0'/0/" + idx)) // TODO: Adjust to derivation path of pub key derivation
+            km.toSign(HDPath.fromString("m/84/1/0/0/" + idx)) // TODO: Adjust to derivation path of pub key derivation
               .sign(txBytes)
           )
           canonicalSignature <- Sync[F].delay(
