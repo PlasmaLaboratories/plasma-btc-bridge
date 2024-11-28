@@ -156,11 +156,11 @@ object StartSessionController {
         maxPlasmaHeight
       )
       someRedeemAdress = someRedeemAdressAndKey.map(_._1)
+      // TODO could we return a BridgeError instead of throwing assertion?
       _ = assert(
         someRedeemAdress.isDefined,
         "Redeem address was not generated correctly"
       )
-      bridgeNodeKey = someRedeemAdressAndKey.map(_._2).get
       addressAndsessionInfo <- createPeginSessionInfo(
         btcPeginCurrentWalletIdx,
         btcBridgeCurrentWalletIdx,
