@@ -65,10 +65,12 @@ object WaitingForRedemptionOps {
 
       // bridgeSigAsm = Seq(ScriptConstant.fromBytes(ByteVector(secret.getBytes().padTo(32, 0.toByte))))++ Seq(OP_0) ++ Seq(OP_0) // for 0 of 7 multisig this works, change buildScriptAsm to check
       bridgeSigAsm =
-        Seq(ScriptConstant.fromBytes(ByteVector(secret.getBytes().padTo(32, 0.toByte)))) ++
-          Seq(OP_0) ++
-          Seq(ScriptConstant(signature.hex)) ++
-          Seq(OP_0)
+        Seq(ScriptConstant.fromBytes(ByteVector(secret.getBytes().padTo(32, 0.toByte)))) ++  
+        Seq.fill(replica.id)(OP_0) ++ 
+        Seq(ScriptConstant(signature.hex)) ++ // make sure the signature is false, how do we do that? 
+        Seq.fill(6 - replica.id)(OP_0) ++ 
+        Seq(OP_0) ++
+        Seq(OP_0) 
 
       _ <- info"Bridge asm: ${bridgeSigAsm}"
 
