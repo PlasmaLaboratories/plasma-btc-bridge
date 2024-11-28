@@ -45,6 +45,9 @@ trait MultipleEscrowAddressGenerationModule {
   def multipleCorrectEscrowAddressGeneration(numberOfSessions: Int): IO[Unit] = {
     import cats.implicits._
 
+
+    // TODO: Once normal pegin passes with multi sig 5 out of 7 
+    // peginWallet Manager should increase everytime we start a new session
     assertIO(
       for {
         _ <- deleteOutputFiles(numberOfSessions)
@@ -62,6 +65,3 @@ trait MultipleEscrowAddressGenerationModule {
     )
   }
 }
-
-// Unit Tests to implement
-// sharable key, same public key like the one when loading the account manager? should be but write unit tests
