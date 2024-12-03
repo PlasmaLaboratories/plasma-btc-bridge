@@ -11,8 +11,8 @@ object Dependencies {
     val bitcoinsVersion = "1.9.9"
     val btcVersionZmq = "1.9.8"
     val monocleVersion = "3.3.0"
-    val plasmaVersion = "0.2.1"
-    val ioGrpcVersion = "1.68.1"
+    val plasmaVersion = "0.2.2"
+    val ioGrpcVersion = "1.68.2"
   }
 
   val akkaSlf4j: Seq[ModuleID] = Seq(
@@ -44,14 +44,14 @@ object Dependencies {
   )
 
   val mUnit: Seq[ModuleID] = Seq(
-    "org.scalameta" %% "munit"                   % "1.0.2",
+    "org.scalameta" %% "munit"                   % "1.0.3",
     "org.scalameta" %% "munit-scalacheck"        % "1.0.0",
     "org.typelevel" %% "munit-cats-effect"       % "2.0.0",
     "org.typelevel" %% "scalacheck-effect-munit" % "1.0.4"
   )
 
   val sqlite: Seq[ModuleID] = Seq(
-    "org.xerial" % "sqlite-jdbc" % "3.47.0.0"
+    "org.xerial" % "sqlite-jdbc" % "3.47.1.0"
   )
 
   val ip4score: Seq[ModuleID] = Seq(
@@ -60,7 +60,7 @@ object Dependencies {
 
   val cats: Seq[ModuleID] = Seq(
     "org.typelevel" %% "cats-core"   % catsCoreVersion,
-    "org.typelevel" %% "cats-effect" % "3.5.6"
+    "org.typelevel" %% "cats-effect" % "3.5.7"
   )
 
   val grpcNetty: Seq[ModuleID] =
@@ -143,7 +143,6 @@ object Dependencies {
       cats ++
       grpcRuntime ++
       bouncycastle
-
 
     val test: Seq[ModuleID] = mUnit.map(_ % Test)
   }
