@@ -5,11 +5,18 @@ import cats.effect.std.Queue
 import org.plasmalabs.bridge.consensus.core.PublicApiClientGrpcMap
 import org.plasmalabs.bridge.consensus.core.pbft.activities.{
   CommitActivity,
+  NewViewActivity,
   PrePrepareActivity,
   PrepareActivity,
   ViewChangeActivity
 }
-import org.plasmalabs.bridge.consensus.pbft.{CommitRequest, PrePrepareRequest, PrepareRequest, ViewChangeRequest}
+import org.plasmalabs.bridge.consensus.pbft.{
+  CommitRequest,
+  NewViewRequest,
+  PrePrepareRequest,
+  PrepareRequest,
+  ViewChangeRequest
+}
 import org.plasmalabs.bridge.consensus.shared.persistence.StorageApi
 import org.plasmalabs.bridge.shared.ReplicaCount
 import org.typelevel.log4cats.Logger
@@ -22,7 +29,7 @@ trait PBFTRequestPreProcessor[F[_]] {
   def preProcessRequest(request: PrepareRequest): F[Unit]
   def preProcessRequest(request: CommitRequest): F[Unit]
   def preProcessRequest(request: ViewChangeRequest): F[Unit]
-
+  def preProcessRequest(request: NewViewRequest): F[Unit]
 }
 
 object PBFTRequestPreProcessorImpl {
@@ -92,6 +99,9 @@ object PBFTRequestPreProcessorImpl {
 
     override def preProcessRequest(request: ViewChangeRequest): F[Unit] =
       ViewChangeActivity(request, replicaKeysMap)
+
+    override def preProcessRequest(request: NewViewRequest): F[Unit] =
+      NewViewActivity(request)(replicaKeysMap)
 
   }
 }
