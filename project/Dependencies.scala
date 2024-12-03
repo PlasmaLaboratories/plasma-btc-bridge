@@ -11,7 +11,7 @@ object Dependencies {
     val bitcoinsVersion = "1.9.9"
     val btcVersionZmq = "1.9.8"
     val monocleVersion = "3.3.0"
-    val plasmaVersion = "0.2.1"
+    val plasmaVersion = "0.2.2"
     val ioGrpcVersion = "1.68.2"
   }
 
