@@ -65,9 +65,22 @@ trait FailedMintingReorgModule {
         // TODO: Reset Wallet state
         _ <-
           info"Session ${startSessionResponse.sessionID} went back to PeginSessionWaitingForClaim again"
+        _ <-
+          searchLogs(sessionStateTransitionLogNeedles(startSessionResponse.sessionID)).assertEquals(Set.empty[String])
       } yield (),
       ()
     )
   }
+
+  private def sessionStateTransitionLogNeedles(sessionID: String): Set[String] =
+    List("consensus-00", "consensus-01", "consensus-02", "consensus-03", "consensus-04", "consensus-05", "consensus-06")
+      .flatMap(instanceName =>
+        List(
+          s"$instanceName - Transitioning session $sessionID from MWaitingForBTCDeposit to MConfirmingBTCDeposit",
+          s"$instanceName - Transitioning session $sessionID from MConfirmingBTCDeposit to MMintingTBTC",
+          s"$instanceName - Transitioning session $sessionID from MMintingTBTC to MConfirmingTBTCMint"
+        )
+      )
+      .toSet
 
 }

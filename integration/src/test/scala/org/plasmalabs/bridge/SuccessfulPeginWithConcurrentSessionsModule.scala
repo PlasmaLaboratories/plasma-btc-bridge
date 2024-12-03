@@ -250,8 +250,29 @@ trait SuccessfulPeginWithConcurrentSessionsModule {
             IO.pure(0)
           }
         }
+        _ <-
+          searchLogs(sessionResponses.map(_._3.sessionID).toSet.flatMap(sessionStateTransitionLogNeedles))
+            .assertEquals(Set.empty[String])
       } yield successfulSessions.sum,
       numberOfSessions
     )
   }
+
+  private def sessionStateTransitionLogNeedles(sessionID: String): Set[String] =
+    List("consensus-00", "consensus-01", "consensus-02", "consensus-03", "consensus-04", "consensus-05", "consensus-06")
+      .flatMap(instanceName =>
+        List(
+          s"$instanceName - Transitioning session $sessionID from MWaitingForBTCDeposit to MConfirmingBTCDeposit",
+          s"$instanceName - Transitioning session $sessionID from MConfirmingBTCDeposit to MMintingTBTC",
+          s"$instanceName - Transitioning session $sessionID from MMintingTBTC to MConfirmingTBTCMint",
+          s"$instanceName - Transitioning session $sessionID from MConfirmingTBTCMint to MWaitingForRedemption",
+          s"$instanceName - Transitioning session $sessionID from MWaitingForRedemption to MConfirmingRedemption",
+          s"$instanceName - Transitioning session $sessionID from MConfirmingRedemption to MWaitingForClaim",
+          // TODO: Why does this transition take place?
+          s"$instanceName - Transitioning session $sessionID from MWaitingForClaim to MWaitingForClaim",
+          s"$instanceName - Transitioning session $sessionID from MWaitingForClaim to MConfirmingBTCClaim",
+          s"$instanceName - Session $sessionID ended successfully",
+        )
+      )
+      .toSet
 }
