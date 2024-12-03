@@ -37,5 +37,6 @@ case class PlasmaBTCBridgeConsensusParamConfig(
   seriesId:                    SeriesId,
   configurationFile:           File = new File("application.conf"),
   dbFile:                      File = new File("bridge.db"),
+  dbFileSignatures:            File = new File("signatures.db"),
   plasmaSecureConnection:      Boolean = false
 )

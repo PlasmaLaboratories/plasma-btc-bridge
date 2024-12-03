@@ -26,7 +26,6 @@ import org.plasmalabs.sdk.servicekit.{
   WalletStateResource
 }
 import org.plasmalabs.sdk.wallet.WalletApi
-import org.bitcoins.core.crypto.ExtPublicKey
 
 import java.nio.file.{Files, Path, Paths}
 

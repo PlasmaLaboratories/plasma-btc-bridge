@@ -60,3 +60,18 @@ message MintingStatusRes {
   string address = 3;
   string redeemScript = 4;
 }
+
+message SignatureMessage {
+  int32 machine_id = 1;
+  bytes signature_data = 2;
+  int64 timestamp = 3;
+}
+
+message GetSignatureRequest {
+  int32 replicaId = 1;
+  string txId = 2;
+}
+
+service SignatureService {
+  rpc GetSignature (GetSignatureRequest) returns (SignatureMessage) {}
+}

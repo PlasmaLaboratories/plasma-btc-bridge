@@ -303,8 +303,6 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
       maxRetries = conf.getInt("bridge.replica.clients.mintingPolicy.maxRetries")
     )
 
-    allReplicasPublicKeys
-
     for {
       replicaKeyPair <- BridgeCryptoUtils
         .getKeyPair[IO](privateKeyFile)

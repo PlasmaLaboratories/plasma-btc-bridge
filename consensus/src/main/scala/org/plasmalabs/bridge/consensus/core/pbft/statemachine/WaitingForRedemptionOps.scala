@@ -1,22 +1,19 @@
 package org.plasmalabs.bridge.consensus.core.pbft.statemachine
 
 import cats.effect.kernel.Async
+import cats.implicits._
 import org.bitcoins.core.currency.CurrencyUnit
 import org.bitcoins.core.protocol.script.{NonStandardScriptSignature, P2WSHWitnessV0, RawScriptPubKey}
-import org.bitcoins.core.protocol.transaction.WitnessTransaction
+import org.bitcoins.core.protocol.transaction.{Transaction, WitnessTransaction}
 import org.bitcoins.core.script.constant.{OP_0, ScriptConstant}
-import org.bitcoins.crypto._
+import org.bitcoins.crypto.{ECDigitalSignature, _}
 import org.bitcoins.rpc.client.common.BitcoindRpcClient
 import org.plasmalabs.bridge.consensus.core.PeginWalletManager
 import org.plasmalabs.bridge.consensus.core.utils.BitcoinUtils
-import scodec.bits.ByteVector
-import org.plasmalabs.bridge.consensus.core.pbft.{RequestIdentifier, RequestTimerManager, ViewManager}
-import org.typelevel.log4cats.Logger
 import org.plasmalabs.bridge.shared.ReplicaId
-import org.bitcoins.crypto.{ECDigitalSignature, ECPublicKey, HashType}
-import org.bitcoins.core.protocol.transaction.Transaction
+import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
-    import cats.implicits._
+import scodec.bits.ByteVector
 
 object WaitingForRedemptionOps {
 
