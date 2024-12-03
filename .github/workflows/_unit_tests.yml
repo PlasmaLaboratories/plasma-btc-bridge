@@ -17,6 +17,8 @@ jobs:
           java-version: "21"
           cache: sbt
       - uses: sbt/setup-sbt@v1
+        with:
+          sbt-runner-version: 1.10.5
       - name: Check formatting
         run: sbt checkFormat
       - name: Run unit tests
