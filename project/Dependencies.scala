@@ -60,7 +60,7 @@ object Dependencies {
 
   val cats: Seq[ModuleID] = Seq(
     "org.typelevel" %% "cats-core"   % catsCoreVersion,
-    "org.typelevel" %% "cats-effect" % "3.5.6"
+    "org.typelevel" %% "cats-effect" % "3.5.7"
   )
 
   val grpcNetty: Seq[ModuleID] =
