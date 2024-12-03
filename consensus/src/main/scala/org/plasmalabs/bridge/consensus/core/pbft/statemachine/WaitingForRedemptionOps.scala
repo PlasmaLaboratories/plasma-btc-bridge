@@ -1,7 +1,6 @@
 package org.plasmalabs.bridge.consensus.core.pbft.statemachine
 
 import cats.effect.kernel.Async
-import cats.implicits._
 import org.bitcoins.core.currency.CurrencyUnit
 import org.bitcoins.core.protocol.script.{NonStandardScriptSignature, P2WSHWitnessV0, RawScriptPubKey}
 import org.bitcoins.core.protocol.transaction.WitnessTransaction
@@ -10,12 +9,80 @@ import org.bitcoins.crypto._
 import org.bitcoins.rpc.client.common.BitcoindRpcClient
 import org.plasmalabs.bridge.consensus.core.PeginWalletManager
 import org.plasmalabs.bridge.consensus.core.utils.BitcoinUtils
-import org.plasmalabs.bridge.shared.ReplicaId
-import org.typelevel.log4cats.Logger
-import org.typelevel.log4cats.syntax._
 import scodec.bits.ByteVector
+import org.plasmalabs.bridge.consensus.core.pbft.{RequestIdentifier, RequestTimerManager, ViewManager}
+import org.typelevel.log4cats.Logger
+import org.plasmalabs.bridge.shared.ReplicaId
+import org.bitcoins.crypto.{ECDigitalSignature, ECPublicKey, HashType}
+import org.bitcoins.core.protocol.transaction.Transaction
+import org.typelevel.log4cats.syntax._
+    import cats.implicits._
 
 object WaitingForRedemptionOps {
+
+  def createInputs(
+    claimAddress:     String,
+    inputTxId:        String,
+    vout:             Long,
+    scriptAsm:        String,
+    amountInSatoshis: CurrencyUnit
+  )(implicit
+    feePerByte: CurrencyUnit
+  ) = {
+
+    val tx = BitcoinUtils.createRedeemingTx(
+      inputTxId,
+      vout,
+      amountInSatoshis,
+      feePerByte,
+      claimAddress
+    )
+    val srp = RawScriptPubKey.fromAsmHex(scriptAsm)
+    val serializedTxForSignature =
+      BitcoinUtils.serializeForSignature(
+        tx,
+        amountInSatoshis.satoshis,
+        srp.asm
+      )
+    val signableBytes = CryptoUtil.doubleSHA256(serializedTxForSignature)
+
+    (signableBytes, tx, srp)
+  }
+
+  def primaryCollectSignatures[F[_]: Async: Logger] = {}
+
+  def primaryBroadcastBitcoinTx[F[_]: Async: Logger](
+    secret:    String,
+    signature: ECDigitalSignature,
+    tx:        Transaction,
+    srp:       RawScriptPubKey
+  )(implicit
+    bitcoindInstance: BitcoindRpcClient
+  ) = {
+
+    val bridgeSigAsm =
+      Seq(ScriptConstant.fromBytes(ByteVector(secret.getBytes().padTo(32, 0.toByte)))) ++ Seq(OP_0) ++ Seq(
+        ScriptConstant(signature.hex)
+      ) ++ Seq(
+        OP_0
+      )
+    val bridgeSig = NonStandardScriptSignature.fromAsm(bridgeSigAsm)
+    val txWit = WitnessTransaction
+      .toWitnessTx(tx)
+      .updateWitness(
+        0,
+        P2WSHWitnessV0(
+          srp,
+          bridgeSig
+        )
+      )
+    for {
+      _ <- info"I am the primary, I am broadcasting"
+      _ <- Async[F].start(
+        Async[F].delay(bitcoindInstance.sendRawTransaction(txWit))
+      )
+    } yield ()
+  }
 
   def startClaimingProcess[F[_]: Async: Logger](
     secret:           String,
@@ -29,26 +96,16 @@ object WaitingForRedemptionOps {
     bitcoindInstance:   BitcoindRpcClient,
     pegInWalletManager: PeginWalletManager[F],
     feePerByte:         CurrencyUnit,
-    replica:            ReplicaId // TODO: will be needed for updating the correct index
+    replica:            ReplicaId
   ) = {
 
-    val unsignedTx = BitcoinUtils.createRedeemingTx(
+    val (signableBytes, tx, srp) = createInputs(
+      claimAddress,
       inputTxId,
       vout,
-      amountInSatoshis,
-      feePerByte,
-      claimAddress
+      scriptAsm,
+      amountInSatoshis
     )
-
-    val srp = RawScriptPubKey.fromAsmHex(scriptAsm)
-
-    val serializedTxForSignature = BitcoinUtils.serializeForSignature(
-      unsignedTx,
-      amountInSatoshis.satoshis,
-      srp.asm
-    )
-
-    val signableBytes = CryptoUtil.doubleSHA256(serializedTxForSignature)
 
     for {
       signature <- pegInWalletManager.underlying.signForIdx(
@@ -56,107 +113,22 @@ object WaitingForRedemptionOps {
         signableBytes.bytes
       )
 
-      // TODO: Currently blocked by possible issues:
-      // Public Key Account derivation path (shouldn't play a role)
-      // Unclear where signatures should be inserted (we have a dummy variable and the OP_0 at the end of signatures)
-      // Unclear which order of signatures, 0 $signature1 $signature2 2 $address1 $address2 2 OP_CHECKMULTISIG this is the flow usually
-      // 0 $signature1 $signature2 serializedScript for the multisig path
-      // Unsure if we need to provide 7 signatures (for 0 of 7 multisig provide none are needed)
+      _ <- info"Signed Tx: ${inputTxId}"
 
-      // bridgeSigAsm = Seq(ScriptConstant.fromBytes(ByteVector(secret.getBytes().padTo(32, 0.toByte))))++ Seq(OP_0) ++ Seq(OP_0) // for 0 of 7 multisig this works, change buildScriptAsm to check
-      bridgeSigAsm =
-        Seq(ScriptConstant.fromBytes(ByteVector(secret.getBytes().padTo(32, 0.toByte)))) ++  
-        Seq.fill(replica.id)(OP_0) ++ 
-        Seq(ScriptConstant(signature.hex)) ++ // make sure the signature is false, how do we do that? 
-        Seq.fill(6 - replica.id)(OP_0) ++ 
-        Seq(OP_0) ++
-        Seq(OP_0) 
+      _ <-
+        if (replica.id == 0) {
+          for {
+            _ <- info"We are the primary, collecting signatures"
+            _ <- primaryBroadcastBitcoinTx(secret, signature, tx, srp)
+          } yield ()
 
-      _ <- info"Bridge asm: ${bridgeSigAsm}"
-
-      bridgeSig = NonStandardScriptSignature.fromAsm(bridgeSigAsm)
-
-      txWit: WitnessTransaction = WitnessTransaction
-        .toWitnessTx(unsignedTx)
-        .updateWitness(
-          0,
-          P2WSHWitnessV0(
-            srp,
-            bridgeSig
-          )
-        )
-
-      _ <- info"TXwit : ${txWit.hex}"
-
-      _ <- Async[F].start(Async[F].delay(bitcoindInstance.sendRawTransaction(txWit)))
+        } else {
+          for {
+            _ <- info"We are not the primary, broadcasting to primary"
+          } yield ()
+        }
 
     } yield ()
   }
 
 }
-
-// TODO: Use as base once 1 out of 7 works and we have the signature structure
-// Preparation for partially signed tx, next step after 1 of 7 is working, we can use this structure to create a 5 of 7 multisig
-
-// val unsignedTx = BitcoinUtils.createRedeemingTx(
-//       inputTxId,
-//       vout,
-//       amountInSatoshis,
-//       feePerByte,
-//       claimAddress
-//     )
-
-//     val psbtFromUnsignedTx = PSBT.fromUnsignedTx(unsignedTx) // utxos should be included here already
-
-//     val redeemScriptPubkey = RawScriptPubKey.fromAsmHex(scriptAsm)
-
-//     val serializedTxForSignature = BitcoinUtils.serializeForSignature(
-//       unsignedTx,
-//       amountInSatoshis.satoshis,
-//       redeemScriptPubkey.asm
-//     )
-
-//     val signableBytes = CryptoUtil.doubleSHA256(serializedTxForSignature)
-
-//     for {
-//       signature <- pegInWalletManager.underlying.signForIdx(
-//         currentWalletIdx,
-//         signableBytes.bytes
-//       )
-
-//       bridgeWitnessScriptSeq = Seq(
-//         ScriptConstant.fromBytes(ByteVector(secret.getBytes().padTo(32, 0.toByte)))
-//       ) ++
-//         Seq(OP_0) ++
-//         Seq.fill(6 - replica.id)(OP_0) ++
-//         Seq(ScriptConstant(signature.hex)) ++
-//         Seq.fill(replica.id)(OP_0)
-
-//       witnessScriptAsm = BytesUtil.toByteVector(bridgeWitnessScriptSeq)
-
-//       witnessScriptPubkey = RawScriptPubKey.fromAsmHex(witnessScriptAsm.toHex)
-
-//       // bridgeSig = NonStandardScriptSignature.fromAsm(bridgeWitnessScriptSeq)
-//       digitalSignature = ECDigitalSignature(ScriptConstant(signature.hex).bytes)
-
-//       pubkey <- pegInWalletManager.underlying.getCurrentPubKey()
-//       pubkeyBytes = pubkey.toPublicKeyBytes()
-
-//       bridgePartialSignature = PartialSignature(
-//         pubkeyBytes,
-//         digitalSignature
-//       )
-
-//       psbtWithInputs = psbtFromUnsignedTx
-//         .addRedeemOrWitnessScriptToInput(redeemScriptPubkey, index = 0)
-//         .addRedeemOrWitnessScriptToInput(witnessScriptPubkey, index = 0) // TODO: Check Index
-//       psbtWithSigHashFlags = psbtWithInputs.addSigHashTypeToInput(HashType.sigHashAll, index = 0) // TODO: Check Index
-
-//       psbtWithSignature = psbtWithSigHashFlags.addSignature(bridgePartialSignature, 0) // TODO: Check Index
-
-//       bytes = psbtWithSignature.bytes
-
-//       _ <- info"Bytes: We successfully created a partially signed transaction: ${bytes}"
-//       _ <- info"Signature Object: We successfully created a partially signed transaction: ${psbtWithSignature}"
-
-//       // TODO: Aggregate the txs and send it once combined

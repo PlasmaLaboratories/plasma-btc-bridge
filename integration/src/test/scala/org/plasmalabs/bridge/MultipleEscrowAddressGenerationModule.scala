@@ -45,7 +45,6 @@ trait MultipleEscrowAddressGenerationModule {
   def multipleCorrectEscrowAddressGeneration(numberOfSessions: Int): IO[Unit] = {
     import cats.implicits._
 
-
     // TODO: Once normal pegin passes with multi sig 5 out of 7 
     // peginWallet Manager should increase everytime we start a new session
     assertIO(

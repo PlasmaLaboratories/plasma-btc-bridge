@@ -98,10 +98,10 @@ object KeyGenerationUtils {
       )
     } yield (pKey)
 
- def generateSharableKey(km: BIP39KeyManager): ExtPublicKey = {
-  val hdAccount = HDAccount.fromPath(BIP32Path.fromString("m/84'/1'/0'")).get
-  km.deriveXPub(hdAccount).get
-}
+  def generateSharableKey(km: BIP39KeyManager): ExtPublicKey = {
+    val hdAccount = HDAccount.fromPath(BIP32Path.fromString("m/84'/1'/0'")).get
+    km.deriveXPub(hdAccount).get
+  }
 
   def deriveChildFromSharedPublicKey[F[_]: Sync](
     extendedPubKey: ExtPublicKey,
@@ -110,7 +110,7 @@ object KeyGenerationUtils {
     for {
       childKey <- Sync[F].delay(
         extendedPubKey
-          .deriveChildPubKey(BIP32Path.fromString(s"m/84'/1'/0'/0/$currentIdx"))
+          .deriveChildPubKey(BIP32Path.fromString(s"m/0/$currentIdx"))
           .get
           .key
       )

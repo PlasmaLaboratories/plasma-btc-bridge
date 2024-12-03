@@ -32,8 +32,8 @@ done
 
 # Start the containers
 echo "Starting containers"
-docker run --rm -d --add-host host.docker.internal:host-gateway -p 18444:18444 -p 18443:18443 -p 28332:28332 --name bitcoin01 stratalab/bitcoin-zmq:v25-regtest
-docker run --rm -d --add-host host.docker.internal:host-gateway -p 18446:18444 -p 18445:18443 -p 28333:28332 --name bitcoin02 stratalab/bitcoin-zmq:v25-regtest
+docker run --rm -d --add-host host.docker.internal:host-gateway -p 18444:18444 -p 18443:18443 -p 28332:28332 -e BITCOIN_EXTRA_ARGS="-txindex=1" --name bitcoin01 stratalab/bitcoin-zmq:v25-regtest
+docker run --rm -d --add-host host.docker.internal:host-gateway -p 18446:18444 -p 18445:18443 -p 28333:28332 -e BITCOIN_EXTRA_ARGS="-txindex=1" --name bitcoin02 stratalab/bitcoin-zmq:v25-regtest
 
 
 sudo rm -fr node01
