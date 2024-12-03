@@ -12,7 +12,7 @@ object Dependencies {
     val btcVersionZmq = "1.9.8"
     val monocleVersion = "3.3.0"
     val plasmaVersion = "0.2.1"
-    val ioGrpcVersion = "1.68.1"
+    val ioGrpcVersion = "1.68.2"
   }
 
   val akkaSlf4j: Seq[ModuleID] = Seq(
@@ -143,7 +143,6 @@ object Dependencies {
       cats ++
       grpcRuntime ++
       bouncycastle
-
 
     val test: Seq[ModuleID] = mUnit.map(_ % Test)
   }
