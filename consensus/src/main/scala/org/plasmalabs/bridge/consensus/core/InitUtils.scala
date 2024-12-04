@@ -63,6 +63,18 @@ trait InitUtils {
   def responsePort(implicit conf: Config) =
     conf.getInt("bridge.replica.responses.port")
 
+  def internalReqHost(implicit conf: Config) =
+    conf.getString("bridge.replica.internalRequests.host")
+
+  def internalReqPort(implicit conf: Config) =
+    conf.getInt("bridge.replica.internalRequests.port")
+
+  def internalResHost(implicit conf: Config) =
+    conf.getString("bridge.replica.internalResponses.host")
+
+  def internalResPort(implicit conf: Config) =
+    conf.getInt("bridge.replica.internalResponses.port")
+
   def printConfig[F[_]: Sync: Logger](implicit
     conf:      Config,
     replicaId: ReplicaId

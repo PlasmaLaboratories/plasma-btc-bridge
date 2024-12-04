@@ -37,7 +37,9 @@ package object shared {
     id:            Int,
     backendHost:   String,
     backendPort:   Int,
-    backendSecure: Boolean
+    backendSecure: Boolean,
+    internalBackendHost: String, 
+    internalBackendPort: Int
   )
 
   object implicits {

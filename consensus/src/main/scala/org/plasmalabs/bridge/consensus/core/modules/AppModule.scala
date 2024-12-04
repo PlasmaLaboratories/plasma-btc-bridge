@@ -9,7 +9,11 @@ import org.bitcoins.rpc.client.common.BitcoindRpcClient
 import org.http4s.dsl.io._
 import org.http4s.{HttpRoutes, _}
 import org.plasmalabs.bridge.consensus.core.managers.{BTCWalletAlgebra, WalletManagementUtils}
-import org.plasmalabs.bridge.consensus.core.pbft.statemachine.{BridgeStateMachineExecutionManagerImpl,SignatureServiceServer}
+import org.plasmalabs.bridge.consensus.core.pbft.statemachine.{
+  BridgeStateMachineExecutionManagerImpl,
+  SignatureServiceServer
+}
+
 import org.plasmalabs.bridge.consensus.core.pbft.{
   CheckpointManagerImpl,
   PBFTInternalEvent,
@@ -168,6 +172,7 @@ trait AppModule extends WalletStateResource {
     implicit val currentPlasmaHeightRef = new CurrentPlasmaHeightRef[IO](
       currentPlasmaHeight
     )
+
     implicit val watermarkRef = new WatermarkRef[IO](
       Ref.unsafe[IO, (Long, Long)]((0, 0))
     )
@@ -186,6 +191,7 @@ trait AppModule extends WalletStateResource {
         checkpointManager,
         requestTimerManager
       )
+
       bridgeStateMachineExecutionManager <-
         BridgeStateMachineExecutionManagerImpl
           .make[IO](
@@ -234,7 +240,9 @@ trait AppModule extends WalletStateResource {
             replicaKeysMap
           ),
         requestStateManager,
-        SignatureServiceServer.signatureGrpcServiceServer(Set(0,1,2,3,4,5,6)) // TODO: get secure algorithm
+        SignatureServiceServer.signatureGrpcServiceServer[IO](
+          Set(0, 1, 2, 3, 4, 5, 6)
+        ) // TODO: get secure method to verify allowed hosts
       )
     }
   }

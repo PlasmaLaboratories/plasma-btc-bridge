@@ -14,6 +14,7 @@ import org.plasmalabs.bridge.shared.ReplicaId
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
 import scodec.bits.ByteVector
+import org.plasmalabs.bridge.consensus.core.pbft.statemachine.{SignatureServiceClient, SignatureServiceClientImpl}
 
 object WaitingForRedemptionOps {
 
@@ -93,7 +94,8 @@ object WaitingForRedemptionOps {
     bitcoindInstance:   BitcoindRpcClient,
     pegInWalletManager: PeginWalletManager[F],
     feePerByte:         CurrencyUnit,
-    replica:            ReplicaId
+    replica:            ReplicaId,
+    signatureClient:    SignatureServiceClient[F]
   ) = {
 
     val (signableBytes, tx, srp) = createInputs(
@@ -116,6 +118,7 @@ object WaitingForRedemptionOps {
         if (replica.id == 0) {
           for {
             _ <- info"We are the primary, collecting signatures"
+            _ <- signatureClient.getSignature(replica.id)
             _ <- primaryBroadcastBitcoinTx(secret, signature, tx, srp)
           } yield ()
 

@@ -179,13 +179,23 @@ object Main extends IOApp with PublicApiParamsDescriptor {
       secure <- Sync[F].delay(
         conf.getBoolean(s"bridge.client.consensus.replicas.$i.secure")
       )
+      internalHost <- Sync[F].delay(
+        conf.getString(s"bridge.client.consensus.replicas.$i.internalHost")
+      )
+      internalPort <- Sync[F].delay(
+        conf.getInt(s"bridge.client.consensus.replicas.$i.internalPort")
+      )
       _ <-
         info"bridge.client.consensus.replicas.$i.host: ${host}"
       _ <-
         info"bridge.client.consensus.replicas.$i.port: ${port}"
       _ <-
         info"bridge.client.consensus.replicas.$i.secure: ${secure}"
-    } yield ReplicaNode[F](i, host, port, secure)).toList.sequence
+      _ <-
+        info"bridge.client.consensus.replicas.$i.internalHost: ${internalHost}"
+      _ <-
+        info"bridge.client.consensus.replicas.$i.internalPort: ${internalPort}"
+    } yield ReplicaNode[F](i, host, port, secure, internalHost, internalPort)).toList.sequence
   }
 
   override def run(args: List[String]): IO[ExitCode] =

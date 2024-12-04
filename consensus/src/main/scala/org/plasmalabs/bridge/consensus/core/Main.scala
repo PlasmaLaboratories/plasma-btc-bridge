@@ -50,6 +50,7 @@ import org.plasmalabs.sdk.utils.Encoding
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
 import scopt.OParser
+import org.plasmalabs.bridge.consensus.core.pbft.statemachine.{SignatureServiceClientImpl,SignatureServiceClient}
 
 import java.net.InetSocketAddress
 import java.security.{KeyPair => JKeyPair, PublicKey, Security}
@@ -157,13 +158,25 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
       secure <- Sync[F].delay(
         conf.getBoolean(s"bridge.replica.consensus.replicas.$i.secure")
       )
+      internalHost <- Sync[F].delay(
+        conf.getString(s"bridge.replica.consensus.replicas.$i.internalHost")
+      )
+      internalPort <- Sync[F].delay(
+        conf.getInt(s"bridge.replica.consensus.replicas.$i.internalPort")
+      )
+
       _ <-
         info"bridge.replica.consensus.replicas.$i.host: ${host}"
       _ <-
         info"bridge.replica.consensus.replicas.$i.port: ${port}"
       _ <-
         info"bridge.replica.consensus.replicas.$i.secure: ${secure}"
-    } yield ReplicaNode[F](i, host, port, secure)).toList.sequence
+
+         _ <-
+        info"bridge.replica.consensus.replicas.$i.internalHost: ${internalHost}"
+      _ <-
+        info"bridge.replica.consensus.replicas.$i.internalPort: ${internalPort}"
+    } yield ReplicaNode[F](i, host, port, secure, internalHost, internalPort)).toList.sequence
   }
 
   private def createReplicaClienMap[F[_]: Async](
@@ -210,7 +223,8 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
     seqNumberManager:            SequenceNumberManager[IO],
     currentPlasmaHeight:         Ref[IO, Long],
     currentState:                Ref[IO, SystemGlobalState],
-    allReplicasPublicKeys:       List[(Int, ExtPublicKey)]
+    allReplicasPublicKeys:       List[(Int, ExtPublicKey)],
+    internalSignatureClient:     SignatureServiceClient[IO]
   )(implicit
     clientId:           ClientId,
     replicaId:          ReplicaId,
@@ -228,6 +242,8 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
     implicit val iPbftProtocolClient = pbftProtocolClient
     implicit val pbftProtocolClientImpl =
       new PublicApiClientGrpcMap[IO](publicApiClientGrpcMap)
+
+    implicit val iInternalSignatureClient = internalSignatureClient
     for {
       currentPlasmaHeightVal         <- currentPlasmaHeight.get
       currentBitcoinNetworkHeightVal <- currentBitcoinNetworkHeight.get
@@ -254,7 +270,8 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
       res._3,
       res._4,
       res._5,
-      res._6
+      res._6,
+      res._7
     )
   }
 
@@ -318,6 +335,9 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         replicaKeyPair,
         replicaNodes
       )
+      signaturesMutex              <- Mutex[IO].toResource
+      internalSignatureClient <- SignatureServiceClientImpl.make[IO](replicaNodes,signaturesMutex)
+
       viewReference <- Ref[IO].of(0L).toResource
       replicaClients <- StateMachineServiceGrpcClientImpl
         .makeContainer[IO](
@@ -345,7 +365,8 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         seqNumberManager,
         currentPlasmaHeight,
         currentState,
-        allReplicasPublicKeys
+        allReplicasPublicKeys,
+        internalSignatureClient
       ).toResource
       (
         currentPlasmaHeightVal,
@@ -355,10 +376,11 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         init,
         peginStateMachine,
         pbftServiceResource,
-        requestStateManager
+        requestStateManager, 
+        signatureServiceResource
       ) = res
       _ <- requestStateManager.startProcessingEvents()
-      _ <- IO.asyncForIO.background(bridgeStateMachineExecutionManager.runStream().compile.drain)
+      _ <- IO.asyncForIO.background(bridgeStateMachineExecutionManager.runStream(internalSignatureClient).compile.drain)
       _ <- IO.asyncForIO.background(
         bridgeStateMachineExecutionManager.mintingStream(mintingManagerPolicy).compile.drain
       )
@@ -414,6 +436,14 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         .forAddress(new InetSocketAddress(responseHost, responsePort))
         .addService(responsesService)
         .resource[IO]
+
+      signatureService <- signatureServiceResource
+
+      internalReqListener <- NettyServerBuilder
+        .forAddress(new InetSocketAddress(internalReqHost, internalReqPort))
+        .addService(signatureService)
+        .resource[IO]
+
       _ <- IO.asyncForIO
         .background(
           fs2.Stream
@@ -435,6 +465,15 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
           IO(
             responsesGrpcListener.start
           ) >> info"Netty-Server (response grpc) service bound to address ${responseHost}:${responsePort}" (
+            logger
+          )
+        )
+        
+      _ <- IO.asyncForIO
+        .background(
+          IO(
+            internalReqListener.start
+          ) >> info"Netty-Server (internal signature requests grpc) service bound to address ${internalReqHost}:${internalReqPort}" (
             logger
           )
         )

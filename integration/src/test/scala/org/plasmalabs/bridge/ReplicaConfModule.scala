@@ -39,7 +39,15 @@ trait ReplicaConfModule extends CommonSetupModule {
 |      host = "[::]"
 |      # the port where we are listening for responses
 |      port = ${clientPort + 2 * replicaId + 1}
-|    } 
+|    }
+|    internalRequests = {
+|      host = "[::]"
+|      port = ${internalRequestPort + replicaId}
+|    }
+|    internalResponses = {
+|      host = "[::]"
+|      port = ${internalClientPort + 2 * replicaId + 1}
+|    }
 |    # security configuration
 |    security {
 |      # path to the public key file

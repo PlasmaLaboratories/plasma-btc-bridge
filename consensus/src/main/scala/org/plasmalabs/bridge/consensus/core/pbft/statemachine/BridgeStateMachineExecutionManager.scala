@@ -1,7 +1,6 @@
 package org.plasmalabs.bridge.consensus.core.pbft.statemachine
 
 import cats.effect.kernel.{Async, Ref, Resource, Sync}
-import cats.effect.std.Queue
 import com.google.protobuf.ByteString
 import io.grpc.ManagedChannel
 import org.bitcoins.core.crypto.ExtPublicKey
@@ -13,6 +12,8 @@ import org.plasmalabs.bridge.consensus.core.managers.{
   StartMintingRequest,
   WalletManagementUtils
 }
+import cats.effect.std.{Mutex, Queue}
+
 import org.plasmalabs.bridge.consensus.core.pbft.ViewManager
 import org.plasmalabs.bridge.consensus.core.pbft.statemachine.PBFTEvent
 import org.plasmalabs.bridge.consensus.core.{
@@ -84,6 +85,8 @@ import scodec.bits.ByteVector
 import java.security.{KeyPair => JKeyPair}
 import java.util.UUID
 
+import org.plasmalabs.bridge.consensus.core.pbft.statemachine.{SignatureServiceClient, SignatureServiceClientImpl}
+
 trait BridgeStateMachineExecutionManager[F[_]] {
 
   /**
@@ -102,7 +105,7 @@ trait BridgeStateMachineExecutionManager[F[_]] {
   /**
    * Expected Outcome: Starts the stream for the elegibility manager that appends, updates or executes the requests.
    */
-  def runStream(): fs2.Stream[F, Unit]
+  def runStream(signatureClient: SignatureServiceClient[F]): fs2.Stream[F, Unit]
 
   /**
    * Expected Outcome: Creates the minting stream on the existing mintingManager
@@ -166,9 +169,14 @@ object BridgeStateMachineExecutionManagerImpl {
         .make[F](startMintingRequestQueue)
     } yield {
       implicit val plasmaKeypair = new PlasmaKeypair(tKeyPair)
+
       new BridgeStateMachineExecutionManager[F] {
 
-        def runStream(): fs2.Stream[F, Unit] =
+        def runStream(
+          signatureClient: SignatureServiceClient[F]
+        ): fs2.Stream[F, Unit] = {
+          implicit val iSignatureClient = signatureClient
+
           fs2.Stream
             .fromQueueUnterminated[F, (Long, StateMachineRequest)](queue)
             .evalMap(x =>
@@ -185,6 +193,7 @@ object BridgeStateMachineExecutionManagerImpl {
                 )
             )
             .evalMap(x => trace"Executing the request: ${x._2}" >> executeRequestF(x._1, x._2))
+        }
 
         def mintingStream(mintingManagerPolicy: ValidationPolicy): fs2.Stream[F, Unit] =
           mintingManagerAlgebra.mintingStream(mintingManagerPolicy)
@@ -345,6 +354,8 @@ object BridgeStateMachineExecutionManagerImpl {
 
         private def executeRequestAux(
           request: org.plasmalabs.bridge.shared.StateMachineRequest
+        )(implicit
+          signatureClient: SignatureServiceClient[F]
         ): F[StateMachineReply.Result] =
           (request.operation match {
             case StateMachineRequest.Operation.Empty =>
@@ -446,6 +457,8 @@ object BridgeStateMachineExecutionManagerImpl {
         private def executeRequestF(
           sequenceNumber: Long,
           request:        org.plasmalabs.bridge.shared.StateMachineRequest
+        )(implicit
+          signatureClient: SignatureServiceClient[F]
         ) = {
           import org.plasmalabs.bridge.shared.implicits._
           import cats.implicits._
