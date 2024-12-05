@@ -11,9 +11,8 @@ In the case of one bridge being hacked these funds are not lost. For our case of
 ### Escrow Addresses
 This is valid for our escrow addresses: The bitcoin addresses users get from the Start-Session-Request when trying to bridge funds into the Plasma ecosystem are created with a multisig. After the user deposits the funds, only 5 out of 7 bridges together can claim the funds from the escrow address and send to the bridge wallet (which is also a multisig wallet). The user can claim the funds after a certain amount of time if the bridges take too long. 
 
-
 ### How this is done is practice? 
-Each bridge generates one master key and also a master public key that is shares with the other bridges. During different processes new child public keys are generated e.g. for providing new escrow addresses. 
+Each bridge generates one master key and also a master public key that is shares with the other bridges. During different processes new child public keys are generated e.g. for providing new escrow addresses. During the signing process each replica signs the transaction and stores this signature in its local database. The primary then contacts the other replicas and collects the signatures.
 
 #### Generating the escrow address - Policy, Miniscript and Bitcoin Script
 ##### Policy: 
