@@ -17,6 +17,7 @@ import org.typelevel.log4cats.syntax._
 import scodec.bits.ByteVector
 import scala.concurrent.duration._
 import cats.implicits._
+import org.plasmalabs.bridge.consensus.service.{SignatureMessage}
 
 object WaitingForRedemptionOps {
 
@@ -49,12 +50,12 @@ object WaitingForRedemptionOps {
     (signableBytes, tx, srp)
   }
 
-  def primaryCollectSignatures[F[_]: Async: Logger](implicit
+  def primaryCollectSignatures[F[_]: Async: Logger](inputTxId: String)(implicit
     signatureClient: SignatureServiceClient[F]
   ) = for {
     signatures <- (1 until 7).toList.traverse { id =>
       for {
-        signature <- signatureClient.getSignature(id)
+        signature <- signatureClient.getSignature(id, inputTxId)
         _         <- info"Signature received from client ${id}: ${signature}"
       } yield signature
     }
@@ -62,19 +63,24 @@ object WaitingForRedemptionOps {
 
   def primaryBroadcastBitcoinTx[F[_]: Async: Logger](
     secret:    String,
-    signature: ECDigitalSignature,
+    primarySignature: ECDigitalSignature,
     tx:        Transaction,
-    srp:       RawScriptPubKey
+    srp:       RawScriptPubKey,
+    otherSignatures: List[SignatureMessage],
   )(implicit
     bitcoindInstance: BitcoindRpcClient
   ) = {
+    val otherSignaturesAsECDigital = otherSignatures.map(signature => ECDigitalSignature.fromBytes(ByteVector(signature.signatureData.toByteArray)))
 
     val bridgeSigAsm =
-      Seq(ScriptConstant.fromBytes(ByteVector(secret.getBytes().padTo(32, 0.toByte)))) ++ Seq(OP_0) ++ Seq(
-        ScriptConstant(signature.hex)
-      ) ++ Seq(
-        OP_0
-      )
+      Seq(ScriptConstant.fromBytes(ByteVector(secret.getBytes().padTo(32, 0.toByte)))) ++ Seq(OP_0) ++ 
+      Seq(ScriptConstant(primarySignature.hex)) ++ 
+      Seq(ScriptConstant(otherSignaturesAsECDigital(0).hex)) ++
+      Seq(ScriptConstant(otherSignaturesAsECDigital(1).hex)) ++
+      Seq(ScriptConstant(otherSignaturesAsECDigital(2).hex)) ++
+      Seq(ScriptConstant(otherSignaturesAsECDigital(3).hex)) ++
+      Seq(OP_0)
+
     val bridgeSig = NonStandardScriptSignature.fromAsm(bridgeSigAsm)
     val txWit = WitnessTransaction
       .toWitnessTx(tx)
@@ -135,8 +141,8 @@ object WaitingForRedemptionOps {
             _ <- info"We are the primary, collecting signatures"
             _ <- Async[F].sleep(10.second)
 
-            signatures <- primaryCollectSignatures
-            _          <- primaryBroadcastBitcoinTx(secret, signature, tx, srp)
+            otherSignatures <- primaryCollectSignatures(inputTxId)
+            _          <- primaryBroadcastBitcoinTx(secret, signature, tx, srp, otherSignatures)
           } yield ()
 
         } else {

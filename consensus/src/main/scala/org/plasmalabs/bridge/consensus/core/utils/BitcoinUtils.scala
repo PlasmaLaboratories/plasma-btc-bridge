@@ -21,7 +21,7 @@ import org.bitcoins.core.protocol.transaction.{
 }
 import org.bitcoins.core.protocol.{Bech32Address, CompactSizeUInt}
 import org.bitcoins.core.script.bitwise.{OP_EQUAL, OP_EQUALVERIFY}
-import org.bitcoins.core.script.constant.{OP_1, OP_7, ScriptConstant, ScriptNumber, ScriptNumberOperation, ScriptToken}
+import org.bitcoins.core.script.constant.{OP_5, OP_7, ScriptConstant, ScriptNumber, ScriptNumberOperation, ScriptToken}
 import org.bitcoins.core.script.control.{OP_ELSE, OP_ENDIF, OP_NOTIF}
 import org.bitcoins.core.script.crypto.{OP_CHECKMULTISIGVERIFY, OP_CHECKSIG, OP_SHA256}
 import org.bitcoins.core.script.locktime.OP_CHECKSEQUENCEVERIFY
@@ -81,7 +81,7 @@ object BitcoinUtils {
       OP_CHECKSIG,
       OP_NOTIF
     ) ++
-    Seq(OP_1) ++
+    Seq(OP_5) ++
     bridgeSequence ++
     Seq(OP_7) ++
     Seq(

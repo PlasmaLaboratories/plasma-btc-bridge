@@ -665,11 +665,12 @@ object StorageApiImpl {
         ")"
 
       val createSignatureTableStmt =
-        """CREATE TABLE IF NOT EXISTS signatures (
-          |  tx_id TEXT PRIMARY KEY,
-          |  signature TEXT NOT NULL,
-          |  timestamp BIGINT NOT NULL
-          |)""".stripMargin
+        "CREATE TABLE IF NOT EXISTS signatures (" +
+          "tx_id TEXT NOT NULL," +
+          "signature TEXT NOT NULL," + 
+          "timestamp TEXT NOT NULL, " + 
+          "PRIMARY KEY (tx_id)" +
+        ")"
 
       def insertCheckpointMessage(
         checkpointRequest: CheckpointRequest
@@ -790,7 +791,7 @@ object StorageApiImpl {
       ): F[Boolean] = {
         val insertSignatureStmnt =
           "INSERT OR REPLACE INTO signatures (tx_id, signature, timestamp) VALUES" +
-            s"(${txId},${signature},${timestamp})"
+            s"('${txId}','${signature}','${timestamp}')"
 
         statementResource.use { stmnt =>
           Sync[F]

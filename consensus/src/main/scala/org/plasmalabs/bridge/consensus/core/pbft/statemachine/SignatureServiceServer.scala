@@ -35,7 +35,7 @@ object SignatureServiceServer {
           request: GetSignatureRequest
         ) =
           for {
-            _ <- info"Someone requested my signature with request: ${request}"
+            _ <- info"Replica ${request.replicaId} requested signature for txId: ${request.txId}"
             result <-
               if (allowedPeers.contains(request.replicaId)) {
                 for {

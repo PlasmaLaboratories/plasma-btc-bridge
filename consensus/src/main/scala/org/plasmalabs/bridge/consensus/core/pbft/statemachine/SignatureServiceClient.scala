@@ -13,7 +13,8 @@ import org.plasmalabs.bridge.shared.{ReplicaCount, ReplicaNode}
 trait SignatureServiceClient[F[_]] {
 
   def getSignature(
-    replicaId: Int
+    replicaId: Int, 
+        txId: String
   ): F[SignatureMessage]
 }
 
@@ -42,12 +43,13 @@ object SignatureServiceClientImpl {
     } yield new SignatureServiceClient[F] {
 
       def getSignature(
-        replicaId: Int
+        replicaId: Int, 
+        txId: String
       ): F[SignatureMessage] =
         mutex.lock.surround(
           for {
             _ <- info"Requesting signature from replica $replicaId"
-            request = GetSignatureRequest(replicaId = replicaId)
+            request = GetSignatureRequest(replicaId, txId)
             response <- replicaMap(replicaId)
               .getSignature(request, new Metadata())
               .handleErrorWith { error =>

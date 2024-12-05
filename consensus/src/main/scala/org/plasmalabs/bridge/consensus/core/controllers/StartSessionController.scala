@@ -64,13 +64,11 @@ object StartSessionController {
         btcPeginCurrentWalletIdx
       )
 
-      _ <- info"Derived children from replicas master public keys: ${publicKeysForCurrentIndex}"
       hash <- Sync[F].fromOption(
         ByteVector.fromHex(sha256.toLowerCase()),
         InvalidHash(s"Invalid hash $sha256")
       )
 
-      _ <- info"LOCK Secret hash: ${hash}"
       _ <- Sync[F].delay(
         if (hash.size != 32)
           throw InvalidHash(s"Sha length is too short, only ${hash.size} bytes")
