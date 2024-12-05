@@ -5,10 +5,10 @@ import cats.effect.std.Mutex
 import cats.implicits._
 import fs2.grpc.syntax.all._
 import io.grpc.{ManagedChannelBuilder, Metadata}
-import org.typelevel.log4cats.Logger
-import org.typelevel.log4cats.syntax._
 import org.plasmalabs.bridge.consensus.service.{GetSignatureRequest, SignatureMessage, SignatureServiceFs2Grpc}
 import org.plasmalabs.bridge.shared.ReplicaNode
+import org.typelevel.log4cats.Logger
+import org.typelevel.log4cats.syntax._
 
 trait SignatureServiceClient[F[_]] {
 
