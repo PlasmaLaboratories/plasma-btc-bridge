@@ -17,6 +17,7 @@ import org.plasmalabs.bridge.shared.ReplicaId
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
 import scodec.bits.ByteVector
+import org.plasmalabs.bridge.consensus.core.pbft.{ViewManager}
 
 import scala.concurrent.duration._
 
@@ -50,7 +51,8 @@ trait WaitingForRedemption {
     inputTxId:        String,
     vout:             Long,
     scriptAsm:        String,
-    amountInSatoshis: CurrencyUnit
+    amountInSatoshis: CurrencyUnit, 
+    currentPrimary: Int
   )(implicit
     bitcoindInstance:   BitcoindRpcClient,
     pegInWalletManager: PeginWalletManager[F],
@@ -70,7 +72,8 @@ object WaitingForRedemptionOps {
     inputTxId:        String,
     vout:             Long,
     scriptAsm:        String,
-    amountInSatoshis: CurrencyUnit
+    amountInSatoshis: CurrencyUnit, 
+    currentPrimary: Int
   )(implicit
     bitcoindInstance:   BitcoindRpcClient,
     pegInWalletManager: PeginWalletManager[F],
@@ -96,9 +99,9 @@ object WaitingForRedemptionOps {
 
       _ <- storageApi.insertSignature(inputTxId, signature.hex, 1L)
       _ <- replica.id match {
-        case 0 =>
+        case `currentPrimary` =>
           for {
-            otherSignatures <- primaryCollectSignatures(replica.id, inputTxId)
+            otherSignatures <- primaryCollectSignatures(currentPrimary, inputTxId)
             _               <- primaryBroadcastBitcoinTx(secret, signature, tx, srp, otherSignatures)
           } yield ()
         case _ => Async[F].unit
@@ -148,7 +151,7 @@ object WaitingForRedemptionOps {
       remainingIds:    Set[Int],
       validSignatures: List[SignatureMessage],
       attempt:         Int,
-      maxAttempts:     Int = 3 // TODO add to config
+      maxAttempts:     Int = 5 // TODO add to config
     ): F[List[SignatureMessage]] =
       // Threshold needs to be 4 for 5 out of 7 multisig, 1 signature comes from the primary
       if (validSignatures.length >= 4) {
@@ -161,6 +164,7 @@ object WaitingForRedemptionOps {
           newSignatures <- remainingIds.toList.traverse(collectSignatureForReplica)
           newValidSignatures = newSignatures.filter(_.replicaId != -1)
 
+          _          <- Async[F].sleep(1.second)
           result <- collectSignaturesRecursive(
             remainingIds -- newValidSignatures.map(_.replicaId),
             validSignatures ++ newValidSignatures,

@@ -48,7 +48,7 @@ object SignatureServiceClientImpl {
       ): F[SignatureMessage] =
         mutex.lock.surround(
           for {
-            _ <- info"Requesting signature from replica $replicaId"
+            _ <- info"Requesting signature from replica ${replicaId} for tx ${txId}"
             request = GetSignatureRequest(replicaId, txId)
             response <- replicaMap(replicaId)
               .getSignature(request, new Metadata())
@@ -60,7 +60,6 @@ object SignatureServiceClientImpl {
                   timestamp = 0L
                 ).pure[F]
               }
-            _ <- info"Received signature from replica $replicaId with timestamp ${response.timestamp}"
           } yield response
         )
     }

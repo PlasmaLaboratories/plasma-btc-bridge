@@ -422,6 +422,7 @@ object BridgeStateMachineExecutionManagerImpl {
                   value.sessionId,
                   request.operation
                 )
+                currentPrimary <- viewManager.currentPrimary
                 _ <- (for {
                   sessionInfo <- someSessionInfo
                   peginSessionInfo <- MiscUtils.sessionInfoPeginPrism
@@ -436,7 +437,9 @@ object BridgeStateMachineExecutionManagerImpl {
                   Satoshis
                     .fromLong(
                       BigInt(value.amount.toByteArray()).toLong
-                    )
+                    ),
+                                    currentPrimary,
+
                 )).getOrElse(Sync[F].unit)
               } yield Result.Empty
             case PostClaimTx(value) =>

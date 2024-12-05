@@ -6,8 +6,6 @@ import com.google.protobuf.ByteString
 import io.grpc.{Metadata, ServerServiceDefinition}
 import org.plasmalabs.bridge.consensus.service.{GetSignatureRequest, SignatureMessage, SignatureServiceFs2Grpc}
 import org.plasmalabs.bridge.consensus.shared.persistence.StorageApi
-import org.typelevel.log4cats.Logger
-import org.typelevel.log4cats.syntax._
 
 case class InternalSignature(
   txId:      String,
@@ -17,7 +15,7 @@ case class InternalSignature(
 
 object SignatureServiceServer {
 
-  def signatureGrpcServiceServer[F[_]: Async: Logger](
+  def signatureGrpcServiceServer[F[_]: Async](
     allowedPeers: Set[Int],
     replicaId:    Int
   )(implicit
@@ -36,7 +34,6 @@ object SignatureServiceServer {
           request: GetSignatureRequest
         ) =
           for {
-            _ <- info"Replica ${request.replicaId} requested signature for txId: ${request.txId}"
             result <-
               if (allowedPeers.contains(request.replicaId)) {
                 for {
