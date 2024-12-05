@@ -14,6 +14,7 @@ import org.bitcoins.rpc.config.BitcoindAuthCredentials
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.plasmalabs.bridge.consensus.core.managers.{BTCWalletAlgebra, BTCWalletAlgebraImpl}
 import org.plasmalabs.bridge.consensus.core.modules.AppModule
+import org.plasmalabs.bridge.consensus.core.pbft.statemachine.{SignatureServiceClient, SignatureServiceClientImpl}
 import org.plasmalabs.bridge.consensus.core.utils.KeyGenerationUtils
 import org.plasmalabs.bridge.consensus.core.{
   ConsensusParamsDescriptor,
@@ -50,7 +51,6 @@ import org.plasmalabs.sdk.utils.Encoding
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
 import scopt.OParser
-import org.plasmalabs.bridge.consensus.core.pbft.statemachine.{SignatureServiceClientImpl,SignatureServiceClient}
 
 import java.net.InetSocketAddress
 import java.security.{KeyPair => JKeyPair, PublicKey, Security}
@@ -171,8 +171,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         info"bridge.replica.consensus.replicas.$i.port: ${port}"
       _ <-
         info"bridge.replica.consensus.replicas.$i.secure: ${secure}"
-
-         _ <-
+      _ <-
         info"bridge.replica.consensus.replicas.$i.internalHost: ${internalHost}"
       _ <-
         info"bridge.replica.consensus.replicas.$i.internalPort: ${internalPort}"
@@ -243,7 +242,6 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
     implicit val pbftProtocolClientImpl =
       new PublicApiClientGrpcMap[IO](publicApiClientGrpcMap)
 
-    implicit val iInternalSignatureClient = internalSignatureClient
     for {
       currentPlasmaHeightVal         <- currentPlasmaHeight.get
       currentBitcoinNetworkHeightVal <- currentBitcoinNetworkHeight.get
@@ -335,8 +333,8 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         replicaKeyPair,
         replicaNodes
       )
-      signaturesMutex              <- Mutex[IO].toResource
-      internalSignatureClient <- SignatureServiceClientImpl.make[IO](replicaNodes,signaturesMutex)
+      signaturesMutex         <- Mutex[IO].toResource
+      internalSignatureClient <- SignatureServiceClientImpl.make[IO](replicaNodes, signaturesMutex)
 
       viewReference <- Ref[IO].of(0L).toResource
       replicaClients <- StateMachineServiceGrpcClientImpl
@@ -376,11 +374,13 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         init,
         peginStateMachine,
         pbftServiceResource,
-        requestStateManager, 
+        requestStateManager,
         signatureServiceResource
       ) = res
       _ <- requestStateManager.startProcessingEvents()
-      _ <- IO.asyncForIO.background(bridgeStateMachineExecutionManager.runStream(internalSignatureClient).compile.drain)
+      _ <- IO.asyncForIO.background(
+        bridgeStateMachineExecutionManager.runStream(internalSignatureClient, storageApi).compile.drain
+      )
       _ <- IO.asyncForIO.background(
         bridgeStateMachineExecutionManager.mintingStream(mintingManagerPolicy).compile.drain
       )
@@ -468,7 +468,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
             logger
           )
         )
-        
+
       _ <- IO.asyncForIO
         .background(
           IO(

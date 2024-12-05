@@ -1,6 +1,7 @@
 package org.plasmalabs.bridge.consensus.core.pbft.statemachine
 
 import cats.effect.kernel.{Async, Ref, Resource, Sync}
+import cats.effect.std.Queue
 import com.google.protobuf.ByteString
 import io.grpc.ManagedChannel
 import org.bitcoins.core.crypto.ExtPublicKey
@@ -12,10 +13,8 @@ import org.plasmalabs.bridge.consensus.core.managers.{
   StartMintingRequest,
   WalletManagementUtils
 }
-import cats.effect.std.{Mutex, Queue}
-
 import org.plasmalabs.bridge.consensus.core.pbft.ViewManager
-import org.plasmalabs.bridge.consensus.core.pbft.statemachine.PBFTEvent
+import org.plasmalabs.bridge.consensus.core.pbft.statemachine.{PBFTEvent, SignatureServiceClient}
 import org.plasmalabs.bridge.consensus.core.{
   BitcoinNetworkIdentifiers,
   BridgeWalletManager,
@@ -41,6 +40,7 @@ import org.plasmalabs.bridge.consensus.shared.PeginSessionState.{
   PeginSessionStateWaitingForBTC,
   PeginSessionWaitingForClaim
 }
+import org.plasmalabs.bridge.consensus.shared.persistence.StorageApi
 import org.plasmalabs.bridge.consensus.shared.{
   AssetToken,
   BTCWaitExpirationTime,
@@ -85,8 +85,6 @@ import scodec.bits.ByteVector
 import java.security.{KeyPair => JKeyPair}
 import java.util.UUID
 
-import org.plasmalabs.bridge.consensus.core.pbft.statemachine.{SignatureServiceClient, SignatureServiceClientImpl}
-
 trait BridgeStateMachineExecutionManager[F[_]] {
 
   /**
@@ -105,7 +103,7 @@ trait BridgeStateMachineExecutionManager[F[_]] {
   /**
    * Expected Outcome: Starts the stream for the elegibility manager that appends, updates or executes the requests.
    */
-  def runStream(signatureClient: SignatureServiceClient[F]): fs2.Stream[F, Unit]
+  def runStream(signatureClient: SignatureServiceClient[F], storageApi: StorageApi[F]): fs2.Stream[F, Unit]
 
   /**
    * Expected Outcome: Creates the minting stream on the existing mintingManager
@@ -173,10 +171,11 @@ object BridgeStateMachineExecutionManagerImpl {
       new BridgeStateMachineExecutionManager[F] {
 
         def runStream(
-          signatureClient: SignatureServiceClient[F]
+          signatureClient: SignatureServiceClient[F],
+          storageApi:      StorageApi[F]
         ): fs2.Stream[F, Unit] = {
           implicit val iSignatureClient = signatureClient
-
+          implicit val iStorageApi = storageApi
           fs2.Stream
             .fromQueueUnterminated[F, (Long, StateMachineRequest)](queue)
             .evalMap(x =>
@@ -355,7 +354,8 @@ object BridgeStateMachineExecutionManagerImpl {
         private def executeRequestAux(
           request: org.plasmalabs.bridge.shared.StateMachineRequest
         )(implicit
-          signatureClient: SignatureServiceClient[F]
+          signatureClient: SignatureServiceClient[F],
+          storageApi:      StorageApi[F]
         ): F[StateMachineReply.Result] =
           (request.operation match {
             case StateMachineRequest.Operation.Empty =>
@@ -458,7 +458,8 @@ object BridgeStateMachineExecutionManagerImpl {
           sequenceNumber: Long,
           request:        org.plasmalabs.bridge.shared.StateMachineRequest
         )(implicit
-          signatureClient: SignatureServiceClient[F]
+          signatureClient: SignatureServiceClient[F],
+          storageApi:      StorageApi[F]
         ) = {
           import org.plasmalabs.bridge.shared.implicits._
           import cats.implicits._

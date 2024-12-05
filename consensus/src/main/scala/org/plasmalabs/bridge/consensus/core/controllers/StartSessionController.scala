@@ -85,7 +85,6 @@ object StartSessionController {
           hash,
           btcWaitExpirationTime.underlying
         )
-      _ <- info"The following script was generated for the escrow address: ${asm}"
       scriptAsm = BytesUtil.toByteVector(asm)
       scriptHash = CryptoUtil.sha256(scriptAsm)
       push_op = BitcoinScriptUtil.calculatePushOp(hash)

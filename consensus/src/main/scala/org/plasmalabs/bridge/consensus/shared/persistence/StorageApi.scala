@@ -4,6 +4,7 @@ import cats.effect.kernel.{Resource, Sync}
 import cats.implicits._
 import com.google.common.io.BaseEncoding
 import com.google.protobuf.ByteString
+import org.plasmalabs.bridge.consensus.core.pbft.statemachine.InternalSignature
 import org.plasmalabs.bridge.consensus.pbft.{CheckpointRequest, CommitRequest, PrePrepareRequest, PrepareRequest}
 import org.plasmalabs.bridge.consensus.shared.{MiscUtils, PeginSessionInfo, PeginSessionState, SessionInfo}
 import org.plasmalabs.bridge.consensus.subsystems.monitor.BlockchainEvent
@@ -82,6 +83,16 @@ trait StorageApi[F[_]] {
     sessionId:   String,
     sessionInfo: SessionInfo
   ): F[Unit]
+
+  def insertSignature(
+    txId:      String,
+    signature: String,
+    timestamp: Long
+  ): F[Boolean]
+
+  def getSignature(
+    txId: String
+  ): F[Option[InternalSignature]]
 
   def insertBlockchainEvent(event: BlockchainEvent): F[Unit]
 
@@ -653,6 +664,13 @@ object StorageApiImpl {
         "PRIMARY KEY (sequence_number, replica_id)" +
         ")"
 
+      val createSignatureTableStmt =
+        """CREATE TABLE IF NOT EXISTS signatures (
+          |  tx_id TEXT PRIMARY KEY,
+          |  signature TEXT NOT NULL,
+          |  timestamp BIGINT NOT NULL
+          |)""".stripMargin
+
       def insertCheckpointMessage(
         checkpointRequest: CheckpointRequest
       ): F[Boolean] = {
@@ -765,6 +783,52 @@ object StorageApiImpl {
             }
         }
 
+      override def insertSignature(
+        txId:      String,
+        signature: String,
+        timestamp: Long
+      ): F[Boolean] = {
+        val insertSignatureStmnt =
+          "INSERT OR REPLACE INTO signatures (tx_id, signature, timestamp) VALUES" +
+            s"(${txId},${signature},${timestamp})"
+
+        statementResource.use { stmnt =>
+          Sync[F]
+            .blocking(
+              stmnt.execute(insertSignatureStmnt)
+            )
+        }
+      }
+
+      override def getSignature(
+        txId: String
+      ): F[Option[InternalSignature]] = {
+        val selectSignatureStmnt =
+          "SELECT * FROM signatures WHERE tx_id = ?"
+
+        Resource
+          .make(
+            Sync[F].blocking(conn.prepareStatement(selectSignatureStmnt))
+          )(stmt => Sync[F].blocking(stmt.close()))
+          .use { prepStmt =>
+            for {
+              _  <- Sync[F].blocking(prepStmt.setString(1, txId))
+              rs <- Sync[F].blocking(prepStmt.executeQuery())
+              result <- Sync[F].blocking {
+                if (rs.next()) {
+                  Some(
+                    InternalSignature(
+                      txId = rs.getString("tx_id"),
+                      signature = rs.getString("signature"),
+                      timestamp = rs.getLong("timestamp")
+                    )
+                  )
+                } else None
+              }
+            } yield result
+          }
+      }
+
       override def initializeStorage(): F[Unit] = statementResource.use { stmnt =>
         Sync[F].blocking(
           stmnt.execute(createEvtTableStmnt)
@@ -778,6 +842,8 @@ object StorageApiImpl {
           stmnt.execute(createCommitTableStmt)
         ) >> Sync[F].blocking(
           stmnt.execute(createCheckpointTableStmnt)
+        ) >> Sync[F].blocking(
+          stmnt.execute(createSignatureTableStmt)
         )
       }
 

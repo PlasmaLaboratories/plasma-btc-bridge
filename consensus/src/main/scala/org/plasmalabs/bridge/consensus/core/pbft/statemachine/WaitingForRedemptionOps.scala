@@ -1,7 +1,6 @@
 package org.plasmalabs.bridge.consensus.core.pbft.statemachine
 
 import cats.effect.kernel.Async
-import cats.implicits._
 import org.bitcoins.core.currency.CurrencyUnit
 import org.bitcoins.core.protocol.script.{NonStandardScriptSignature, P2WSHWitnessV0, RawScriptPubKey}
 import org.bitcoins.core.protocol.transaction.{Transaction, WitnessTransaction}
@@ -9,12 +8,15 @@ import org.bitcoins.core.script.constant.{OP_0, ScriptConstant}
 import org.bitcoins.crypto.{ECDigitalSignature, _}
 import org.bitcoins.rpc.client.common.BitcoindRpcClient
 import org.plasmalabs.bridge.consensus.core.PeginWalletManager
+import org.plasmalabs.bridge.consensus.core.pbft.statemachine.SignatureServiceClient
 import org.plasmalabs.bridge.consensus.core.utils.BitcoinUtils
+import org.plasmalabs.bridge.consensus.shared.persistence.StorageApi
 import org.plasmalabs.bridge.shared.ReplicaId
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
 import scodec.bits.ByteVector
-import org.plasmalabs.bridge.consensus.core.pbft.statemachine.{SignatureServiceClient, SignatureServiceClientImpl}
+import scala.concurrent.duration._
+import cats.implicits._
 
 object WaitingForRedemptionOps {
 
@@ -47,7 +49,16 @@ object WaitingForRedemptionOps {
     (signableBytes, tx, srp)
   }
 
-  def primaryCollectSignatures[F[_]: Async: Logger] = {}
+  def primaryCollectSignatures[F[_]: Async: Logger](implicit
+    signatureClient: SignatureServiceClient[F]
+  ) = for {
+    signatures <- (1 until 7).toList.traverse { id =>
+      for {
+        signature <- signatureClient.getSignature(id)
+        _         <- info"Signature received from client ${id}: ${signature}"
+      } yield signature
+    }
+  } yield signatures
 
   def primaryBroadcastBitcoinTx[F[_]: Async: Logger](
     secret:    String,
@@ -95,7 +106,8 @@ object WaitingForRedemptionOps {
     pegInWalletManager: PeginWalletManager[F],
     feePerByte:         CurrencyUnit,
     replica:            ReplicaId,
-    signatureClient:    SignatureServiceClient[F]
+    signatureClient:    SignatureServiceClient[F],
+    storageApi:         StorageApi[F]
   ) = {
 
     val (signableBytes, tx, srp) = createInputs(
@@ -114,17 +126,22 @@ object WaitingForRedemptionOps {
 
       _ <- info"Signed Tx: ${inputTxId}"
 
+      _ <- info"Saving current signature"
+      _ <- storageApi.insertSignature(inputTxId, signature.hex, 1L)
+
       _ <-
         if (replica.id == 0) {
           for {
             _ <- info"We are the primary, collecting signatures"
-            _ <- signatureClient.getSignature(replica.id)
-            _ <- primaryBroadcastBitcoinTx(secret, signature, tx, srp)
+            _ <- Async[F].sleep(10.second)
+
+            signatures <- primaryCollectSignatures
+            _          <- primaryBroadcastBitcoinTx(secret, signature, tx, srp)
           } yield ()
 
         } else {
           for {
-            _ <- info"We are not the primary, broadcasting to primary"
+            _ <- info"We are not the primary, we just save our signature"
           } yield ()
         }
 

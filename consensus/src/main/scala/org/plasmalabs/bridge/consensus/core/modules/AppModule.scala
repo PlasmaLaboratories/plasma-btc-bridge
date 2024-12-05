@@ -13,7 +13,6 @@ import org.plasmalabs.bridge.consensus.core.pbft.statemachine.{
   BridgeStateMachineExecutionManagerImpl,
   SignatureServiceServer
 }
-
 import org.plasmalabs.bridge.consensus.core.pbft.{
   CheckpointManagerImpl,
   PBFTInternalEvent,
