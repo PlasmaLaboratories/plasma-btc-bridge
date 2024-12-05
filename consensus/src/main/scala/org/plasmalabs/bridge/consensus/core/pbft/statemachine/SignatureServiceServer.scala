@@ -18,7 +18,8 @@ case class InternalSignature(
 object SignatureServiceServer {
 
   def signatureGrpcServiceServer[F[_]: Async: Logger](
-    allowedPeers: Set[Int]
+    allowedPeers: Set[Int],
+    replicaId:    Int
   )(implicit
     storageApi: StorageApi[F]
   ): Resource[F, ServerServiceDefinition] =
@@ -26,7 +27,7 @@ object SignatureServiceServer {
       serviceImpl = new SignatureServiceFs2Grpc[F, Metadata] {
 
         val defaultSignature = SignatureMessage(
-          machineId = 0,
+          replicaId = -1,
           signatureData = ByteString.empty,
           timestamp = 1L
         )
@@ -43,7 +44,7 @@ object SignatureServiceServer {
                 } yield result match {
                   case Some(internalSignature) =>
                     SignatureMessage(
-                      machineId = 0,
+                      replicaId, // TODO: rename to replicaId
                       signatureData = ByteString.fromHex(internalSignature.signature),
                       timestamp = internalSignature.timestamp
                     )

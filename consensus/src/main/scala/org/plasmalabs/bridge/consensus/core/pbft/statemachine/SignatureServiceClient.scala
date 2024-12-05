@@ -8,13 +8,13 @@ import io.grpc.{ManagedChannelBuilder, Metadata}
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
 import org.plasmalabs.bridge.consensus.service.{GetSignatureRequest, SignatureMessage, SignatureServiceFs2Grpc}
-import org.plasmalabs.bridge.shared.{ReplicaCount, ReplicaNode}
+import org.plasmalabs.bridge.shared.ReplicaNode
 
 trait SignatureServiceClient[F[_]] {
 
   def getSignature(
-    replicaId: Int, 
-        txId: String
+    replicaId: Int,
+    txId:      String
   ): F[SignatureMessage]
 }
 
@@ -23,7 +23,7 @@ object SignatureServiceClientImpl {
   def make[F[_]: Async: Logger](
     replicaNodes: List[ReplicaNode[F]],
     mutex:        Mutex[F]
-  )(implicit replicaCount: ReplicaCount) =
+  ) =
     for {
       idClientList <- (for {
         replicaNode <- replicaNodes
@@ -43,8 +43,8 @@ object SignatureServiceClientImpl {
     } yield new SignatureServiceClient[F] {
 
       def getSignature(
-        replicaId: Int, 
-        txId: String
+        replicaId: Int,
+        txId:      String
       ): F[SignatureMessage] =
         mutex.lock.surround(
           for {
@@ -55,7 +55,7 @@ object SignatureServiceClientImpl {
               .handleErrorWith { error =>
                 error"Error getting signature from replica $replicaId: ${error.getMessage}" >>
                 SignatureMessage(
-                  machineId = 0,
+                  replicaId = -1,
                   signatureData = com.google.protobuf.ByteString.EMPTY,
                   timestamp = 0L
                 ).pure[F]

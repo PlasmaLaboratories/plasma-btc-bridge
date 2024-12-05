@@ -240,8 +240,9 @@ trait AppModule extends WalletStateResource {
           ),
         requestStateManager,
         SignatureServiceServer.signatureGrpcServiceServer[IO](
-          Set(0, 1, 2, 3, 4, 5, 6)
-        ) // TODO: get secure method to verify allowed hosts
+          Set(0, 1, 2, 3, 4, 5, 6), // TODO: get secure method to verify allowed hosts
+          replicaId.id
+        )
       )
     }
   }

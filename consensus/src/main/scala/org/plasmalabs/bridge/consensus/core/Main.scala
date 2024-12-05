@@ -14,7 +14,7 @@ import org.bitcoins.rpc.config.BitcoindAuthCredentials
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.plasmalabs.bridge.consensus.core.managers.{BTCWalletAlgebra, BTCWalletAlgebraImpl}
 import org.plasmalabs.bridge.consensus.core.modules.AppModule
-import org.plasmalabs.bridge.consensus.core.pbft.statemachine.{SignatureServiceClient, SignatureServiceClientImpl}
+import org.plasmalabs.bridge.consensus.core.pbft.statemachine.{SignatureServiceClientImpl}
 import org.plasmalabs.bridge.consensus.core.utils.KeyGenerationUtils
 import org.plasmalabs.bridge.consensus.core.{
   ConsensusParamsDescriptor,
@@ -222,8 +222,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
     seqNumberManager:            SequenceNumberManager[IO],
     currentPlasmaHeight:         Ref[IO, Long],
     currentState:                Ref[IO, SystemGlobalState],
-    allReplicasPublicKeys:       List[(Int, ExtPublicKey)],
-    internalSignatureClient:     SignatureServiceClient[IO]
+    allReplicasPublicKeys:       List[(Int, ExtPublicKey)]
   )(implicit
     clientId:           ClientId,
     replicaId:          ReplicaId,
@@ -363,8 +362,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         seqNumberManager,
         currentPlasmaHeight,
         currentState,
-        allReplicasPublicKeys,
-        internalSignatureClient
+        allReplicasPublicKeys
       ).toResource
       (
         currentPlasmaHeightVal,

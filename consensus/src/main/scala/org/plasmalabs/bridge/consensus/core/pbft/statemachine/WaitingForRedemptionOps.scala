@@ -17,7 +17,7 @@ import org.typelevel.log4cats.syntax._
 import scodec.bits.ByteVector
 import scala.concurrent.duration._
 import cats.implicits._
-import org.plasmalabs.bridge.consensus.service.{SignatureMessage}
+import org.plasmalabs.bridge.consensus.service.SignatureMessage
 
 object WaitingForRedemptionOps {
 
@@ -62,19 +62,20 @@ object WaitingForRedemptionOps {
   } yield signatures
 
   def primaryBroadcastBitcoinTx[F[_]: Async: Logger](
-    secret:    String,
+    secret:           String,
     primarySignature: ECDigitalSignature,
-    tx:        Transaction,
-    srp:       RawScriptPubKey,
-    otherSignatures: List[SignatureMessage],
+    tx:               Transaction,
+    srp:              RawScriptPubKey,
+    otherSignatures:  List[SignatureMessage]
   )(implicit
     bitcoindInstance: BitcoindRpcClient
   ) = {
-    val otherSignaturesAsECDigital = otherSignatures.map(signature => ECDigitalSignature.fromBytes(ByteVector(signature.signatureData.toByteArray)))
+    val otherSignaturesAsECDigital =
+      otherSignatures.map(signature => ECDigitalSignature.fromBytes(ByteVector(signature.signatureData.toByteArray)))
 
     val bridgeSigAsm =
-      Seq(ScriptConstant.fromBytes(ByteVector(secret.getBytes().padTo(32, 0.toByte)))) ++ Seq(OP_0) ++ 
-      Seq(ScriptConstant(primarySignature.hex)) ++ 
+      Seq(ScriptConstant.fromBytes(ByteVector(secret.getBytes().padTo(32, 0.toByte)))) ++ Seq(OP_0) ++
+      Seq(ScriptConstant(primarySignature.hex)) ++
       Seq(ScriptConstant(otherSignaturesAsECDigital(0).hex)) ++
       Seq(ScriptConstant(otherSignaturesAsECDigital(1).hex)) ++
       Seq(ScriptConstant(otherSignaturesAsECDigital(2).hex)) ++
@@ -139,10 +140,10 @@ object WaitingForRedemptionOps {
         if (replica.id == 0) {
           for {
             _ <- info"We are the primary, collecting signatures"
-            _ <- Async[F].sleep(10.second)
+            _ <- Async[F].sleep(1.second)
 
             otherSignatures <- primaryCollectSignatures(inputTxId)
-            _          <- primaryBroadcastBitcoinTx(secret, signature, tx, srp, otherSignatures)
+            _               <- primaryBroadcastBitcoinTx(secret, signature, tx, srp, otherSignatures)
           } yield ()
 
         } else {
