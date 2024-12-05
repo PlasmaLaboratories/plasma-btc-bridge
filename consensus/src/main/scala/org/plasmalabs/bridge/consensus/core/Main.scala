@@ -14,7 +14,7 @@ import org.bitcoins.rpc.config.BitcoindAuthCredentials
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.plasmalabs.bridge.consensus.core.managers.{BTCWalletAlgebra, BTCWalletAlgebraImpl}
 import org.plasmalabs.bridge.consensus.core.modules.AppModule
-import org.plasmalabs.bridge.consensus.core.pbft.statemachine.{SignatureServiceClientImpl}
+import org.plasmalabs.bridge.consensus.core.pbft.statemachine.SignatureServiceClientImpl
 import org.plasmalabs.bridge.consensus.core.utils.KeyGenerationUtils
 import org.plasmalabs.bridge.consensus.core.{
   ConsensusParamsDescriptor,

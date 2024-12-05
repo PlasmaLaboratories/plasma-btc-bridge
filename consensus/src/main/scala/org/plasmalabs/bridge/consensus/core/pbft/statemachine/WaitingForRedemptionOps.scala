@@ -50,16 +50,47 @@ object WaitingForRedemptionOps {
     (signableBytes, tx, srp)
   }
 
-  def primaryCollectSignatures[F[_]: Async: Logger](inputTxId: String)(implicit
+  def primaryCollectSignatures[F[_]: Async: Logger](primaryId: Int, inputTxId: String)(implicit
     signatureClient: SignatureServiceClient[F]
-  ) = for {
-    signatures <- (1 until 7).toList.traverse { id =>
+  ) = {
+    def collectSignatureForReplica(id: Int): F[SignatureMessage] =
       for {
         signature <- signatureClient.getSignature(id, inputTxId)
-        _         <- info"Signature received from client ${id}: ${signature}"
       } yield signature
+
+    def collectSignaturesRecursive(
+      remainingIds: Set[Int],
+      validSignatures: List[SignatureMessage],
+      attempt: Int,
+      maxAttempts: Int = 3 // TODO add to config
+  ): F[List[SignatureMessage]] = {
+    // Threshold needs to be 4 for 5 out of 7 multisig, 1 signature comes from the primary
+    if (validSignatures.length >= 4) {
+      for {
+        _ <-  info"Signature Threshold achieved with ${validSignatures.length} valid signatures"
+      } yield validSignatures.sortBy(_.replicaId)
+    } else {
+      for {
+        _ <- info"Start to collect signatures for txId: ${inputTxId}"
+        newSignatures <- remainingIds.toList.traverse(collectSignatureForReplica)
+        newValidSignatures = newSignatures.filter(_.replicaId != -1)
+        
+        // Remove successful replica IDs from the remaining set
+        remainingAfterAttempt = remainingIds -- newValidSignatures.map(_.replicaId)
+        
+        result <- collectSignaturesRecursive(
+          remainingAfterAttempt,
+          validSignatures ++ newValidSignatures,
+          attempt + 1,
+          maxAttempts
+        )
+      } yield result
     }
-  } yield signatures
+  }
+
+    val initialIds: Set[Int] = (0 until 7).toSet.filter(_ != primaryId)
+    collectSignaturesRecursive(initialIds, List.empty, 0)
+  }
 
   def primaryBroadcastBitcoinTx[F[_]: Async: Logger](
     secret:           String,
@@ -69,7 +100,7 @@ object WaitingForRedemptionOps {
     otherSignatures:  List[SignatureMessage]
   )(implicit
     bitcoindInstance: BitcoindRpcClient
-  ) = {
+  ): F[Unit] = {
     val otherSignaturesAsECDigital =
       otherSignatures.map(signature => ECDigitalSignature.fromBytes(ByteVector(signature.signatureData.toByteArray)))
 
@@ -142,7 +173,7 @@ object WaitingForRedemptionOps {
             _ <- info"We are the primary, collecting signatures"
             _ <- Async[F].sleep(1.second)
 
-            otherSignatures <- primaryCollectSignatures(inputTxId)
+            otherSignatures <- primaryCollectSignatures(replica.id, inputTxId)
             _               <- primaryBroadcastBitcoinTx(secret, signature, tx, srp, otherSignatures)
           } yield ()
 
