@@ -158,11 +158,11 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
       secure <- Sync[F].delay(
         conf.getBoolean(s"bridge.replica.consensus.replicas.$i.secure")
       )
-      internalHost <- Sync[F].delay(
-        conf.getString(s"bridge.replica.consensus.replicas.$i.internalHost")
+      signatureHost <- Sync[F].delay(
+        conf.getString(s"bridge.replica.consensus.replicas.$i.signatureHost")
       )
-      internalPort <- Sync[F].delay(
-        conf.getInt(s"bridge.replica.consensus.replicas.$i.internalPort")
+      signaturePort <- Sync[F].delay(
+        conf.getInt(s"bridge.replica.consensus.replicas.$i.signaturePort")
       )
 
       _ <-
@@ -172,10 +172,10 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
       _ <-
         info"bridge.replica.consensus.replicas.$i.secure: ${secure}"
       _ <-
-        info"bridge.replica.consensus.replicas.$i.internalHost: ${internalHost}"
+        info"bridge.replica.consensus.replicas.$i.signatureHost: ${signatureHost}"
       _ <-
-        info"bridge.replica.consensus.replicas.$i.internalPort: ${internalPort}"
-    } yield ReplicaNode[F](i, host, port, secure, internalHost, internalPort)).toList.sequence
+        info"bridge.replica.consensus.replicas.$i.signaturePort: ${signaturePort}"
+    } yield ReplicaNode[F](i, host, port, secure, signatureHost, signaturePort)).toList.sequence
   }
 
   private def createReplicaClienMap[F[_]: Async](

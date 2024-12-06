@@ -65,16 +65,16 @@ trait InitUtils {
     conf.getInt("bridge.replica.responses.port")
 
   def internalReqHost(implicit conf: Config) =
-    conf.getString("bridge.replica.internalRequests.host")
+    conf.getString("bridge.replica.signatureRequests.host")
 
   def internalReqPort(implicit conf: Config) =
-    conf.getInt("bridge.replica.internalRequests.port")
+    conf.getInt("bridge.replica.signatureRequests.port")
 
   def internalResHost(implicit conf: Config) =
-    conf.getString("bridge.replica.internalResponses.host")
+    conf.getString("bridge.replica.signatureResponses.host")
 
   def internalResPort(implicit conf: Config) =
-    conf.getInt("bridge.replica.internalResponses.port")
+    conf.getInt("bridge.replica.signatureResponses.port")
 
   def printConfig[F[_]: Sync: Logger](implicit
     conf:      Config,

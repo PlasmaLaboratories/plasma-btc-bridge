@@ -179,11 +179,11 @@ object Main extends IOApp with PublicApiParamsDescriptor {
       secure <- Sync[F].delay(
         conf.getBoolean(s"bridge.client.consensus.replicas.$i.secure")
       )
-      internalHost <- Sync[F].delay(
-        conf.getString(s"bridge.client.consensus.replicas.$i.internalHost")
+      signatureHost <- Sync[F].delay(
+        conf.getString(s"bridge.client.consensus.replicas.$i.signatureHost")
       )
-      internalPort <- Sync[F].delay(
-        conf.getInt(s"bridge.client.consensus.replicas.$i.internalPort")
+      signaturePort <- Sync[F].delay(
+        conf.getInt(s"bridge.client.consensus.replicas.$i.signaturePort")
       )
       _ <-
         info"bridge.client.consensus.replicas.$i.host: ${host}"
@@ -192,10 +192,10 @@ object Main extends IOApp with PublicApiParamsDescriptor {
       _ <-
         info"bridge.client.consensus.replicas.$i.secure: ${secure}"
       _ <-
-        info"bridge.client.consensus.replicas.$i.internalHost: ${internalHost}"
+        info"bridge.client.consensus.replicas.$i.signatureHost: ${signatureHost}"
       _ <-
-        info"bridge.client.consensus.replicas.$i.internalPort: ${internalPort}"
-    } yield ReplicaNode[F](i, host, port, secure, internalHost, internalPort)).toList.sequence
+        info"bridge.client.consensus.replicas.$i.signaturePort: ${signaturePort}"
+    } yield ReplicaNode[F](i, host, port, secure, signatureHost, signaturePort)).toList.sequence
   }
 
   override def run(args: List[String]): IO[ExitCode] =
