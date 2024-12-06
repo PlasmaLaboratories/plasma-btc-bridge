@@ -45,7 +45,6 @@ trait InitUtils {
       _ <- info"abtc-group-id            : ${Encoding.encodeToHex(params.groupId.value.toByteArray)}"
       _ <- info"abtc-series-id           : ${Encoding.encodeToHex(params.seriesId.value.toByteArray)}"
       _ <- info"db-file                  : ${params.dbFile.toPath().toString()}"
-      _ <- info"db-file-signatures       : ${params.dbFile.toPath().toString()}"
     } yield ()
   }
 
