@@ -11,7 +11,14 @@ import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
 
 trait SignatureServiceClient[F[_]] {
-
+  /**
+   * Expected Outcome: Request a signature from another replica and return it. 
+   * @param replicaId
+   * For the current request.
+   *
+   * @param txId
+   * Currently this is the txId used for creating the redeem Tx. 
+   */
   def getSignature(
     replicaId: Int,
     txId:      String
@@ -55,7 +62,7 @@ object SignatureServiceClientImpl {
               .handleErrorWith { error =>
                 error"Error getting signature from replica $replicaId: ${error.getMessage}" >>
                 SignatureMessage(
-                  replicaId = -1,
+                  replicaId = -1, // TODO: maybe return an option/either here
                   signatureData = com.google.protobuf.ByteString.EMPTY,
                   timestamp = 0L
                 ).pure[F]

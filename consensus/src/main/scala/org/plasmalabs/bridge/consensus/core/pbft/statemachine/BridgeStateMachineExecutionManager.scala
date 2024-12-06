@@ -102,6 +102,10 @@ trait BridgeStateMachineExecutionManager[F[_]] {
 
   /**
    * Expected Outcome: Starts the stream for the elegibility manager that appends, updates or executes the requests.
+   * @param signatureClient
+   * Primary uses this to get signatures from other replicas.
+   * @param storageApi
+   * Used for storing the new signatures in the DB. 
    */
   def runStream(signatureClient: SignatureServiceClient[F], storageApi: StorageApi[F]): fs2.Stream[F, Unit]
 

@@ -13,10 +13,21 @@ case class InternalSignature(
   timestamp: Long
 )
 
+trait SignatureServiceServer[F[_]] {
+  /** Retrieves a signature for a given transaction ID.
+    *
+    * @param txId The unique identifier of the transaction
+    * @param replicaId The ID of the replica requesting the signature
+    * @return The signature message if found and the requesting replica is authorized,
+    *         otherwise returns a default empty signature
+    */
+  def getSignature(txId: String, replicaId: Int): F[SignatureMessage]
+}
+
 object SignatureServiceServer {
 
   def signatureGrpcServiceServer[F[_]: Async](
-    allowedPeers: Set[Int],
+    allowedPeers: Set[Int], // TODO: Secure method to authorize other replicas 
     replicaId:    Int
   )(implicit
     storageApi: StorageApi[F]

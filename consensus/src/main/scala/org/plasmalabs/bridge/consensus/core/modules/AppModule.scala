@@ -171,7 +171,6 @@ trait AppModule extends WalletStateResource {
     implicit val currentPlasmaHeightRef = new CurrentPlasmaHeightRef[IO](
       currentPlasmaHeight
     )
-
     implicit val watermarkRef = new WatermarkRef[IO](
       Ref.unsafe[IO, (Long, Long)]((0, 0))
     )
@@ -190,7 +189,6 @@ trait AppModule extends WalletStateResource {
         checkpointManager,
         requestTimerManager
       )
-
       bridgeStateMachineExecutionManager <-
         BridgeStateMachineExecutionManagerImpl
           .make[IO](
@@ -240,7 +238,7 @@ trait AppModule extends WalletStateResource {
           ),
         requestStateManager,
         SignatureServiceServer.signatureGrpcServiceServer[IO](
-          Set(0, 1, 2, 3, 4, 5, 6), // TODO: get secure method to verify allowed hosts
+          Set(0, 1, 2, 3, 4, 5, 6), // TODO: Secure method to verify allowed hosts
           replicaId.id
         )
       )

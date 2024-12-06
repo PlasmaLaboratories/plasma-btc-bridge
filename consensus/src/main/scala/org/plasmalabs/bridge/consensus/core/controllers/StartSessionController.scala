@@ -38,9 +38,10 @@ import scodec.bits.ByteVector
 
 import java.util.UUID
 
+
 object StartSessionController {
 
-  private def createPeginSessionInfo[F[_]: Sync: Logger](
+  private def createPeginSessionInfo[F[_]: Sync](
     btcPeginCurrentWalletIdx:  Int,
     btcBridgeCurrentWalletIdx: Int,
     mintTemplateName:          String,
@@ -56,7 +57,6 @@ object StartSessionController {
     allReplicasPublicKeys:     List[(Int, ExtPublicKey)]
   ): F[(String, PeginSessionInfo, List[(Int, ECPublicKey)])] = {
     import cats.implicits._
-    import org.typelevel.log4cats.syntax._
 
     for {
       publicKeysForCurrentIndex <- KeyGenerationUtils.deriveChildrenFromSharedPublicKeys(
@@ -103,8 +103,6 @@ object StartSessionController {
           btcNetwork.btcNetwork
         )
         .value
-
-      _ <- info"Claim Address is: ${claimAddress}"
 
     } yield (
       address,
@@ -174,7 +172,7 @@ object StartSessionController {
         someRedeemAdress.isDefined,
         "Redeem address was not generated correctly"
       )
-      bridgeNodeKey = someRedeemAdressAndKey.map(_._2).get // Todo delete
+      bridgeNodeKey = someRedeemAdressAndKey.map(_._2).get // TODO: can this be deleted? I think Fernando changed something in another PR here
 
       addressAndsessionInfo <- createPeginSessionInfo(
         btcPeginCurrentWalletIdx,

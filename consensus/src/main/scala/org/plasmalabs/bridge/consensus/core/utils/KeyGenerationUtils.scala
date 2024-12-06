@@ -10,6 +10,88 @@ import org.bitcoins.keymanager.bip39.BIP39KeyManager
 import org.plasmalabs.bridge.consensus.core.BitcoinNetworkIdentifiers
 import scodec.bits.ByteVector
 
+trait KeyGenerationUtils[F[_]] {
+
+  /** Signs transaction bytes using a key manager.
+    *
+    * @param km BIP39 key manager instance
+    * @param txBytes Transaction bytes to sign
+    * @param currentIdx Current derivation index
+    * @return Hex-encoded signature
+    */
+  def signWithKeyManager(
+    km: BIP39KeyManager,
+    txBytes: ByteVector,
+    currentIdx: Int
+  ): F[String]
+
+  /** Loads an existing key manager from a seed file.
+    *
+    * @param btcNetwork Bitcoin network identifiers
+    * @param seedFile Path to seed file
+    * @param password Password for decryption
+    * @return Loaded key manager
+    */
+  def loadKeyManager(
+    btcNetwork: BitcoinNetworkIdentifiers,
+    seedFile: String,
+    password: String
+  ): F[BIP39KeyManager]
+
+  /** Creates a new key manager with a fresh mnemonic.
+    *
+    * @param btcNetwork Bitcoin network identifiers
+    * @param seedFile Path to store seed
+    * @param password Password for encryption
+    * @return Created key manager
+    */
+  def createKeyManager(
+    btcNetwork: BitcoinNetworkIdentifiers,
+    seedFile: String,
+    password: String
+  ): F[BIP39KeyManager]
+
+  /** Generates a public key at specified index.
+    *
+    * @param km Key manager to derive from
+    * @param currentIdx Derivation index
+    * @return Generated public key
+    */
+  def generateKey(
+    km: BIP39KeyManager,
+    currentIdx: Int
+  ): F[ECPublicKey]
+
+  /** Generates sharable extended public key from key manager.
+    *
+    * @param km Key manager to derive from
+    * @return Extended public key
+    */
+  def generateSharableKey(km: BIP39KeyManager): ExtPublicKey
+
+  /** Derives child key from shared public key.
+    *
+    * @param extendedPubKey Parent extended public key
+    * @param currentIdx Derivation index
+    * @return Derived public key
+    */
+  def deriveChildFromSharedPublicKey(
+    extendedPubKey: ExtPublicKey,
+    currentIdx: Int
+  ): F[ECPublicKey]
+
+  /** Derives child keys from multiple shared public keys.
+    *
+    * @param extendedPubKeys List of ID and extended public key pairs
+    * @param currentIdx Derivation index
+    * @return List of derived ID and public key pairs
+    */
+  def deriveChildrenFromSharedPublicKeys(
+    extendedPubKeys: List[(Int, ExtPublicKey)],
+    currentIdx: Int
+  ): F[List[(Int, ECPublicKey)]]
+}
+
 object KeyGenerationUtils {
 
   def signWithKeyManager[F[_]: Sync](
@@ -99,7 +181,7 @@ object KeyGenerationUtils {
     } yield (pKey)
 
   def generateSharableKey(km: BIP39KeyManager): ExtPublicKey = {
-    val hdAccount = HDAccount.fromPath(BIP32Path.fromString("m/84'/1'/0'")).get
+    val hdAccount = HDAccount.fromPath(BIP32Path.fromString("m/84'/1'/0'")).get // TODO: verify that this path is correct
     km.deriveXPub(hdAccount).get
   }
 

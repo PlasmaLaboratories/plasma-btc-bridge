@@ -36,18 +36,105 @@ import scodec.bits.ByteVector
 
 import java.security.MessageDigest
 
+trait BitcoinUtils[F[_]] {
+
+  /** Builds a Bitcoin script ASM sequence for bridge operations using a 5 out of 7 multisig.
+    *
+    * @param userPKey The user's public key
+    * @param bridgePKeys Collection of bridge node IDs and their public keys
+    * @param secretHash Hash of the secret used in the script
+    * @param relativeLockTime Relative timelock value
+    * @return Sequence of script tokens forming the complete Bitcoin script
+    */
+  def buildScriptAsm(
+    userPKey: ECPublicKey,
+    bridgePKeys: Iterable[(Int, ECPublicKey)],
+    secretHash: ByteVector,
+    relativeLockTime: Long
+  ): Seq[ScriptToken]
+
+  /** Creates a descriptor string for the Bitcoin script. (Bitcoin Miniscript)
+    * For generating bitcoin script: https://bitcoin.sipa.be/miniscript/
+    * 
+    * @param bridgesPkey Collection of bridge node IDs and their public keys
+    * @param userPKey User's public key as a hex string
+    * @param secretHash Hash of the secret as a hex string
+    * @return Descriptor string for the Bitcoin script
+    */
+  def createDescriptor(
+    bridgesPkey: Iterable[(Int, ECPublicKey)],
+    userPKey: String,
+    secretHash: String
+  ): String
+
+  /** Creates a serialized representation of a transaction for signing.
+    *
+    * @param txTo Transaction to be signed
+    * @param inputAmount Amount in the output being spent
+    * @param inputScript Script tokens for the input
+    * @return Serialized bytes for signing
+    */
+  def serializeForSignature(
+    txTo: Transaction,
+    inputAmount: CurrencyUnit,
+    inputScript: Seq[ScriptToken]
+  ): ByteVector
+
+  /** Creates a redeeming transaction from the escrow address to the claim address. 
+    *
+    * @param inputTxId ID of the input transaction
+    * @param inputTxVout Output index in the input transaction
+    * @param inputAmount Amount to redeem
+    * @param feePerByte Fee rate per byte
+    * @param claimAddress Address to send the redeemed funds
+    * @return The constructed transaction
+    */
+  def createRedeemingTx(
+    inputTxId: String,
+    inputTxVout: Long,
+    inputAmount: CurrencyUnit,
+    feePerByte: CurrencyUnit,
+    claimAddress: String
+  ): Transaction
+
+  /** Calculates the reclaim fee for a transaction.
+    *
+    * @param tx Transaction to calculate fee for
+    * @param feePerByte Fee rate per byte
+    * @return Calculated fee as a currency unit
+    */
+  def calculateBtcReclaimFee(
+    tx: Transaction,
+    feePerByte: FeeUnit
+  ): CurrencyUnit
+
+  /** Estimates the reclaim fee for a future transaction.
+    *
+    * @param inputAmount Amount to be reclaimed
+    * @param feePerByte Fee rate per byte
+    * @param network Network parameters
+    * @param btcWaitExpirationTime Expiration time for BTC wait
+    * @return Estimated fee as a currency unit
+    */
+  def estimateBtcReclaimFee(
+    inputAmount: CurrencyUnit,
+    feePerByte: FeeUnit,
+    network: NetworkParameters
+  )(implicit btcWaitExpirationTime: BTCWaitExpirationTime): CurrencyUnit
+}
+
 object BitcoinUtils {
 
   def buildScriptAsm(
     userPKey:         ECPublicKey,
-    bridgeKeys:       Iterable[(Int, ECPublicKey)],
+    bridgePKeys:       Iterable[(Int, ECPublicKey)],
     secretHash:       ByteVector,
     relativeLockTime: Long
   ): Seq[ScriptToken] = {
     val pushOpsUser = BitcoinScriptUtil.calculatePushOp(userPKey.bytes)
 
-    val bridgePushOps: List[Seq[ScriptToken]] =
-      bridgeKeys.toList.map(bridgePKey => BitcoinScriptUtil.calculatePushOp(bridgePKey._2.bytes))
+    val bridgesPushOps: List[Seq[ScriptToken]] =
+      bridgePKeys.toList.map(bridgePKey => BitcoinScriptUtil.calculatePushOp(bridgePKey._2.bytes))
 
     val pushOpsSecretHash =
       BitcoinScriptUtil.calculatePushOp(secretHash)
@@ -70,7 +157,7 @@ object BitcoinUtils {
         )
       }
 
-    val bridgeSequence = bridgeKeys.zip(bridgePushOps).flatMap { case (idKeyPair, pushOps) =>
+    val bridgesSequence = bridgePKeys.zip(bridgesPushOps).flatMap { case (idKeyPair, pushOps) =>
       pushOps ++ Seq(
         ScriptConstant.fromBytes(idKeyPair._2.bytes)
       )
@@ -82,7 +169,7 @@ object BitcoinUtils {
       OP_NOTIF
     ) ++
     Seq(OP_5) ++
-    bridgeSequence ++
+    bridgesSequence ++
     Seq(OP_7) ++
     Seq(
       OP_CHECKMULTISIGVERIFY,
@@ -107,14 +194,13 @@ object BitcoinUtils {
     )
   }
 
-  // For generating bitcoin script: https://bitcoin.sipa.be/miniscript/
   // or(and(pk(A),older(1000)),and(thresh(5, pk(B1), pk(B2),pk(B3), pk(B4),pk(B5),pk(B6),pk(B7)),sha256(H)))
   def createDescriptor(
     bridgesPkey: Iterable[(Int, ECPublicKey)],
     userPKey:    String,
     secretHash:  String
   ) =
-    s"wsh(andor(pk(${userPKey}),older(1000),and_v(v:multi(5,${bridgesPkey.map(_._2.hex).mkString(",")},B7),sha256(${secretHash}))))"
+    s"wsh(andor(pk(${userPKey}),older(1000),and_v(v:multi(5,${bridgesPkey.map(_._2.hex).mkString(",")}),sha256(${secretHash}))))"
 
   def serializeForSignature(
     txTo:        Transaction,
@@ -186,7 +272,7 @@ object BitcoinUtils {
       outpoint,
       inputAmountSatoshis,
       P2WSHWitnessV0.apply(EmptyScriptPubKey),
-      ConditionalPath.NoCondition // bridges multisig Path
+      ConditionalPath.NoCondition
     )
     val finalizer = SubtractFeeFromOutputsFinalizer(
       Vector(inputInfo),

@@ -151,7 +151,7 @@ object WaitingForRedemptionOps {
       remainingIds:    Set[Int],
       validSignatures: List[SignatureMessage],
       attempt:         Int,
-      maxAttempts:     Int = 5 // TODO add to config
+      maxAttempts:     Int = 5 // TODO: add to config
     ): F[List[SignatureMessage]] =
       // Threshold needs to be 4 for 5 out of 7 multisig, 1 signature comes from the primary
       if (validSignatures.length >= 4) {
