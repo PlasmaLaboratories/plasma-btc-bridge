@@ -17,7 +17,6 @@ import org.plasmalabs.bridge.shared.ReplicaId
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
 import scodec.bits.ByteVector
-import org.plasmalabs.bridge.consensus.core.pbft.{ViewManager}
 
 import scala.concurrent.duration._
 
@@ -51,8 +50,8 @@ trait WaitingForRedemption {
     inputTxId:        String,
     vout:             Long,
     scriptAsm:        String,
-    amountInSatoshis: CurrencyUnit, 
-    currentPrimary: Int
+    amountInSatoshis: CurrencyUnit,
+    currentPrimary:   Int
   )(implicit
     bitcoindInstance:   BitcoindRpcClient,
     pegInWalletManager: PeginWalletManager[F],
@@ -72,8 +71,8 @@ object WaitingForRedemptionOps {
     inputTxId:        String,
     vout:             Long,
     scriptAsm:        String,
-    amountInSatoshis: CurrencyUnit, 
-    currentPrimary: Int
+    amountInSatoshis: CurrencyUnit,
+    currentPrimary:   Int
   )(implicit
     bitcoindInstance:   BitcoindRpcClient,
     pegInWalletManager: PeginWalletManager[F],
@@ -102,7 +101,7 @@ object WaitingForRedemptionOps {
         case `currentPrimary` =>
           for {
             otherSignatures <- primaryCollectSignatures(currentPrimary, inputTxId)
-            _               <- primaryBroadcastBitcoinTx(secret, signature, tx, srp, otherSignatures)
+            _               <- primaryBroadcastBitcoinTx(secret, signature, tx, srp, otherSignatures, currentPrimary)
           } yield ()
         case _ => Async[F].unit
       }
@@ -128,6 +127,7 @@ object WaitingForRedemptionOps {
       claimAddress
     )
     val srp = RawScriptPubKey.fromAsmHex(scriptAsm)
+
     val serializedTxForSignature =
       BitcoinUtils.serializeForSignature(
         tx,
@@ -157,14 +157,14 @@ object WaitingForRedemptionOps {
       if (validSignatures.length >= 4) {
         for {
           _ <- info"Signature Threshold achieved with ${validSignatures.length} valid signatures"
-        } yield validSignatures.sortBy(_.replicaId)
+        } yield validSignatures
       } else {
         for {
           _             <- info"Start to collect signatures for txId: ${inputTxId}"
           newSignatures <- remainingIds.toList.traverse(collectSignatureForReplica)
           newValidSignatures = newSignatures.filter(_.replicaId != -1)
 
-          _          <- Async[F].sleep(1.second)
+          _ <- Async[F].sleep(1.second)
           result <- collectSignaturesRecursive(
             remainingIds -- newValidSignatures.map(_.replicaId),
             validSignatures ++ newValidSignatures,
@@ -186,17 +186,19 @@ object WaitingForRedemptionOps {
     primarySignature: ECDigitalSignature,
     tx:               Transaction,
     srp:              RawScriptPubKey,
-    otherSignatures:  List[SignatureMessage]
+    otherSignatures:  List[SignatureMessage],
+    primaryReplicaId: Int
   )(implicit
     bitcoindInstance: BitcoindRpcClient
   ): F[Unit] = {
-    val otherSignaturesEC =
-      otherSignatures.map(signature => ECDigitalSignature.fromBytes(ByteVector(signature.signatureData.toByteArray)))
+    val allSignatures = (List((primaryReplicaId, primarySignature)) ++
+      otherSignatures.map(signature =>
+        (signature.replicaId, ECDigitalSignature.fromBytes(ByteVector(signature.signatureData.toByteArray)))
+      )).sortBy(_._1).map(_._2)
 
     val bridgeSigAsm =
       Seq(ScriptConstant.fromBytes(ByteVector(secret.getBytes().padTo(32, 0.toByte)))) ++ Seq(OP_0) ++
-      Seq(ScriptConstant(primarySignature.hex)) ++
-      otherSignaturesEC.take(4).map(sig => ScriptConstant(sig.hex)) ++
+      allSignatures.take(5).map(sig => ScriptConstant(sig.hex)) ++
       Seq(OP_0) // dummy Signature needed
 
     val bridgeSig = NonStandardScriptSignature.fromAsm(bridgeSigAsm)

@@ -438,8 +438,7 @@ object BridgeStateMachineExecutionManagerImpl {
                     .fromLong(
                       BigInt(value.amount.toByteArray()).toLong
                     ),
-                                    currentPrimary,
-
+                  currentPrimary
                 )).getOrElse(Sync[F].unit)
               } yield Result.Empty
             case PostClaimTx(value) =>
