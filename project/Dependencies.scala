@@ -10,7 +10,7 @@ object Dependencies {
     val mUnitTeVersion = "0.7.29"
     val bitcoinsVersion = "1.9.9"
     val btcVersionZmq = "1.9.8"
-    val monocleVersion = "3.1.0"
+    val monocleVersion = "3.3.0"
     val plasmaVersion = "0.2.1"
     val ioGrpcVersion = "1.68.1"
   }
@@ -20,7 +20,7 @@ object Dependencies {
   )
 
   val logback: Seq[ModuleID] = Seq(
-    "ch.qos.logback" % "logback-classic" % "1.4.14"
+    "ch.qos.logback" % "logback-classic" % "1.5.12"
   )
 
   val slf4j: Seq[ModuleID] = Seq(
@@ -51,7 +51,7 @@ object Dependencies {
   )
 
   val sqlite: Seq[ModuleID] = Seq(
-    "org.xerial" % "sqlite-jdbc" % "3.45.3.0"
+    "org.xerial" % "sqlite-jdbc" % "3.47.0.0"
   )
 
   val ip4score: Seq[ModuleID] = Seq(
@@ -60,7 +60,7 @@ object Dependencies {
 
   val cats: Seq[ModuleID] = Seq(
     "org.typelevel" %% "cats-core"   % catsCoreVersion,
-    "org.typelevel" %% "cats-effect" % "3.5.1"
+    "org.typelevel" %% "cats-effect" % "3.5.6"
   )
 
   val grpcNetty: Seq[ModuleID] =

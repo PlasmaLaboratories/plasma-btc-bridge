@@ -80,5 +80,4 @@ class BridgeIntegrationSpec
   ) { _ =>
     info"Bridge should correctly go back to minting if there is a reorg" >> failedMintingReorgModule()
   }
-
 }

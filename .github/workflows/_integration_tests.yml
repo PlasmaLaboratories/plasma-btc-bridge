@@ -46,7 +46,7 @@ jobs:
           export BRIDGE=`docker network ls | head -3 | tail -1 | awk -e '{print $2}'`
           echo "BRIDGE=$BRIDGE" >> $GITHUB_ENV
           echo "BRIDGE NETWORK: $BRIDGE"
-          export NODE_01=`docker run --rm -d --network=$BRIDGE --name node01 -p 9085:9085 -p 9084:9084 -p 9091:9091 -v ${{ github.workspace }}/node01:/staking:rw stratalab/plasma-node-tooling:0.1.3 --  --config  /staking/config.yaml --block-regtest-permission true`
+          export NODE_01=`docker run --rm -d --network=$BRIDGE --name node01 -p 9085:9085 -p 9084:9084 -p 9091:9091 -v ${{ github.workspace }}/node01:/staking:rw stratalab/plasma-node-tooling:0.1.4 --  --config  /staking/config.yaml --block-regtest-permission true`
           echo "NODE_01=$NODE_01" >> $GITHUB_ENV
           echo "Node01 container id: $NODE_01"
           curl -fL "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz" | gzip -d > cs
@@ -54,7 +54,7 @@ jobs:
           ./cs setup --yes
           shopt -s expand_aliases
           mkdir ${{ github.workspace }}/data
-          alias plasma-cli="./cs launch -r https://s01.oss.sonatype.org/content/repositories/releases org.plasmalabs:plasma-cli_2.13:0.1.2 -- "
+          alias plasma-cli="./cs launch -r https://s01.oss.sonatype.org/content/repositories/releases org.plasmalabs:plasma-cli_2.13:0.1.3 -- "
           plasma-cli node-query mint-block --nb-blocks 1 -h localhost  --port 9084 -s false
           export PLASMA_WALLET_DB=${{ github.workspace }}/data/plasma-wallet.db
           export PLASMA_WALLET_JSON=${{ github.workspace }}/data/plasma-wallet.json
@@ -62,28 +62,25 @@ jobs:
           export PLASMA_WALLET_PASSWORD=password
           plasma-cli wallet init --network private --password password --newwalletdb $PLASMA_WALLET_DB --mnemonicfile $PLASMA_WALLET_MNEMONIC --output $PLASMA_WALLET_JSON
           export ADDRESS=$(plasma-cli wallet current-address --walletdb $PLASMA_WALLET_DB)
-          plasma-cli simple-transaction create --from-fellowship nofellowship --from-template genesis --from-interaction 1 --change-fellowship nofellowship --change-template genesis --change-interaction 1  -t $ADDRESS -w $PLASMA_WALLET_PASSWORD -o genesisTx.pbuf -n private -a 1000 -h  127.0.0.1 --port 9084 --keyfile $PLASMA_WALLET_JSON --walletdb $PLASMA_WALLET_DB --fee 10 --transfer-token lvl
-          plasma-cli tx prove -i genesisTx.pbuf --walletdb $PLASMA_WALLET_DB --keyfile $PLASMA_WALLET_JSON -w $PLASMA_WALLET_PASSWORD -o genesisTxProved.pbuf
-          export GROUP_UTXO=$(plasma-cli tx broadcast -i genesisTxProved.pbuf -h 127.0.0.1 --port 9084)
+          plasma-cli simple-transaction create --from-fellowship nofellowship --from-template genesis --from-interaction 1 --change-fellowship nofellowship --change-template genesis --change-interaction 1  -t $ADDRESS -w $PLASMA_WALLET_PASSWORD -o lvlsTransferTx.pbuf -n private -a 1000 -h  127.0.0.1 --port 9084 --keyfile $PLASMA_WALLET_JSON --walletdb $PLASMA_WALLET_DB --fee 10 --transfer-token lvl
+          plasma-cli tx prove -i lvlsTransferTx.pbuf --walletdb $PLASMA_WALLET_DB --keyfile $PLASMA_WALLET_JSON -w $PLASMA_WALLET_PASSWORD -o lvlsTransferTxProved.pbuf
+          export LVLS_UTXO=$(plasma-cli tx broadcast -i lvlsTransferTxProved.pbuf -h 127.0.0.1 --port 9084)
+          plasma-cli node-query mint-block --nb-blocks 1 -h localhost  --port 9084 -s false
+          echo "LVLS_UTXO: $LVLS_UTXO"
+          until plasma-cli indexer-query utxo-by-address --host localhost --port 9084 --secure false --walletdb $PLASMA_WALLET_DB; do sleep 5; done
+          export GROUP_ID=0631c11b499425e93611d85d52e4c71c2ad1cf4d58fb379d6164f486ac6b50d2
+          plasma-cli simple-transaction create --from-fellowship nofellowship --from-template genesis --from-interaction 1 --change-fellowship nofellowship --change-template genesis --change-interaction 1  -t $ADDRESS -w $PLASMA_WALLET_PASSWORD -o groupTransferTx.pbuf -n private -a 1 -h  127.0.0.1 --port 9084 --keyfile $PLASMA_WALLET_JSON --walletdb $PLASMA_WALLET_DB --fee 10 --transfer-token group --group-id $GROUP_ID
+          plasma-cli tx prove -i groupTransferTx.pbuf --walletdb $PLASMA_WALLET_DB --keyfile $PLASMA_WALLET_JSON -w $PLASMA_WALLET_PASSWORD -o groupTransferTxProved.pbuf
+          export GROUP_UTXO=$(plasma-cli tx broadcast -i groupTransferTxProved.pbuf -h 127.0.0.1 --port 9084)
           plasma-cli node-query mint-block --nb-blocks 1 -h localhost  --port 9084 -s false
           echo "GROUP_UTXO: $GROUP_UTXO"
           until plasma-cli indexer-query utxo-by-address --host localhost --port 9084 --secure false --walletdb $PLASMA_WALLET_DB; do sleep 5; done
-          echo "label: PlasmaBTCGroup" > groupPolicy.yaml
-          echo "registrationUtxo: $GROUP_UTXO#0" >> groupPolicy.yaml
-          plasma-cli simple-minting create --from-fellowship self --from-template default  -h 127.0.0.1 --port 9084 -n private --keyfile $PLASMA_WALLET_JSON -w $PLASMA_WALLET_PASSWORD -o groupMintingtx.pbuf -i groupPolicy.yaml  --mint-amount 1 --fee 10 --walletdb $PLASMA_WALLET_DB --mint-token group
-          plasma-cli tx prove -i groupMintingtx.pbuf --walletdb $PLASMA_WALLET_DB --keyfile $PLASMA_WALLET_JSON -w $PLASMA_WALLET_PASSWORD -o groupMintingtxProved.pbuf
-          export SERIES_UTXO=$(plasma-cli tx broadcast -i groupMintingtxProved.pbuf -h 127.0.0.1 --port 9084)
+          export SERIES_ID=a8ef2a52d574520de658a43ceda12465ee7f17e9db68dbf07f1e6614a23efa64
+          plasma-cli simple-transaction create --from-fellowship nofellowship --from-template genesis --from-interaction 1 --change-fellowship nofellowship --change-template genesis --change-interaction 1  -t $ADDRESS -w $PLASMA_WALLET_PASSWORD -o seriesTransferTx.pbuf -n private -a 1 -h  127.0.0.1 --port 9084 --keyfile $PLASMA_WALLET_JSON --walletdb $PLASMA_WALLET_DB --fee 10 --transfer-token series --series-id $SERIES_ID
+          plasma-cli tx prove -i seriesTransferTx.pbuf --walletdb $PLASMA_WALLET_DB --keyfile $PLASMA_WALLET_JSON -w $PLASMA_WALLET_PASSWORD -o seriesTransferTxProved.pbuf
+          export SERIES_UTXO=$(plasma-cli tx broadcast -i seriesTransferTxProved.pbuf -h 127.0.0.1 --port 9084)
+          plasma-cli node-query mint-block --nb-blocks 1 -h 127.0.0.1  --port 9084 -s false
           echo "SERIES_UTXO: $SERIES_UTXO"
-          plasma-cli node-query mint-block --nb-blocks 1 -h localhost  --port 9084 -s false
-          until plasma-cli indexer-query utxo-by-address --host localhost --port 9084 --secure false --walletdb $PLASMA_WALLET_DB; do sleep 5; done
-          echo "label: PlasmaBTCSeries" > seriesPolicy.yaml
-          echo "registrationUtxo: $SERIES_UTXO#0" >> seriesPolicy.yaml
-          echo "fungibility: group-and-series" >> seriesPolicy.yaml
-          echo "quantityDescriptor: liquid" >> seriesPolicy.yaml
-          plasma-cli simple-minting create --from-fellowship self --from-template default  -h localhost --port 9084 -n private --keyfile $PLASMA_WALLET_JSON -w $PLASMA_WALLET_PASSWORD -o seriesMintingTx.pbuf -i seriesPolicy.yaml  --mint-amount 1 --fee 10 --walletdb $PLASMA_WALLET_DB --mint-token series
-          plasma-cli tx prove -i seriesMintingTx.pbuf --walletdb $PLASMA_WALLET_DB --keyfile $PLASMA_WALLET_JSON -w $PLASMA_WALLET_PASSWORD -o seriesMintingTxProved.pbuf
-          export ASSET_UTXO=$(plasma-cli tx broadcast -i seriesMintingTxProved.pbuf -h 127.0.0.1 --port 9084)
-          echo "ASSET_UTXO: $ASSET_UTXO"
           plasma-cli node-query mint-block --nb-blocks 1 -h localhost  --port 9084 -s false
           until plasma-cli indexer-query utxo-by-address --host localhost --port 9084 --secure false --walletdb $PLASMA_WALLET_DB; do sleep 5; done
           for i in {0..6}; do
@@ -108,7 +105,7 @@ jobs:
           echo "    stakes: [10000, 10000]" >> node02/config.yaml
           export IP_CONTAINER=`docker network inspect $BRIDGE | jq  ".[0].Containers.\"$NODE_01\".IPv4Address" | sed  's:"::g' | sed -n 's:\(.*\)/.*:\1:p'`
           echo "IP_CONTAINER: $IP_CONTAINER"
-          export NODE_02=`docker run --rm -d  --network=$BRIDGE --name node02 -e NODE_P2P_KNOWN_PEERS=$IP_CONTAINER:9085 -p 9087:9085 -p 9086:9084 -p 9092:9091 -v $(pwd)/node02:/staking:rw stratalab/plasma-node-tooling:0.1.3 --  --config  /staking/config.yaml --block-regtest-permission true`
+          export NODE_02=`docker run --rm -d  --network=$BRIDGE --name node02 -e NODE_P2P_KNOWN_PEERS=$IP_CONTAINER:9085 -p 9087:9085 -p 9086:9084 -p 9092:9091 -v $(pwd)/node02:/staking:rw stratalab/plasma-node-tooling:0.1.4 --  --config  /staking/config.yaml --block-regtest-permission true`
           sbt coverage integration/test coverageReport
           docker stop $NODE_01
           docker stop $NODE_02

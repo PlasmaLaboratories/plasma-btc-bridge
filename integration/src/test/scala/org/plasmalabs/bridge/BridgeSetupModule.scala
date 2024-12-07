@@ -121,9 +121,9 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
           "--plasma-blocks-to-recover",
           "100",
           "--abtc-group-id",
-          groupId,
+          "0631c11b499425e93611d85d52e4c71c2ad1cf4d58fb379d6164f486ac6b50d2",
           "--abtc-series-id",
-          seriesId
+          "a8ef2a52d574520de658a43ceda12465ee7f17e9db68dbf07f1e6614a23efa64"
         )
       )
     )
@@ -171,7 +171,7 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
           (groupId, seriesId) = extractIds(utxo)
           _ <- IO(Try(Files.delete(Paths.get("bridge.db"))))
           _ <- IO.asyncForIO.both(
-            (0 until replicaCount).map(launchConsensus(_, groupId, seriesId)).toList.sequence.map { f2 =>
+            (0 until replicaCount).map(launchConsensus(_)).toList.sequence.map { f2 =>
               fiber02 = f2.zipWithIndex
             },
             IO.sleep(10.seconds)
@@ -264,19 +264,15 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
     _ <-
       if (missingReplicas.nonEmpty) {
         for {
-          currentAddress <- currentAddress(plasmaWalletDb(0))
-          utxo           <- getCurrentUtxosFromAddress(plasmaWalletDb(0), currentAddress)
-          (groupId, seriesId) = extractIds(utxo)
-
           _ <- IO.asyncForIO.both(
-            missingReplicas.map(launchConsensus(_, groupId, seriesId)).sequence.map { newFibers =>
+            missingReplicas.map(launchConsensus).sequence.map { newFibers =>
               fiber02 = fiber02 ++ newFibers.zip(missingReplicas)
             },
             IO.sleep(10.seconds)
           )
 
           _ <- IO.asyncForIO.both(
-            missingReplicas.map(launchPublicApi(_)).sequence.map { newFibers =>
+            missingReplicas.map(launchPublicApi).sequence.map { newFibers =>
               fiber01 = fiber01 ++ newFibers.zip(missingReplicas)
             },
             IO.sleep(10.seconds)
