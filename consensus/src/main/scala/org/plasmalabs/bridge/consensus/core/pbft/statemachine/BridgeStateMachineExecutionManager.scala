@@ -14,7 +14,7 @@ import org.plasmalabs.bridge.consensus.core.managers.{
   WalletManagementUtils
 }
 import org.plasmalabs.bridge.consensus.core.pbft.ViewManager
-import org.plasmalabs.bridge.consensus.core.pbft.statemachine.{PBFTEvent, SignatureServiceClient}
+import org.plasmalabs.bridge.consensus.core.pbft.statemachine.{PBFTEvent, InternalCommunicationServiceClient}
 import org.plasmalabs.bridge.consensus.core.{
   BitcoinNetworkIdentifiers,
   BridgeWalletManager,
@@ -102,12 +102,15 @@ trait BridgeStateMachineExecutionManager[F[_]] {
 
   /**
    * Expected Outcome: Starts the stream for the elegibility manager that appends, updates or executes the requests.
-   * @param signatureClient
+   * @param internalCommunicationClient
    * Primary uses this to get signatures from other replicas.
    * @param storageApi
-   * Used for storing the new signatures in the DB. 
+   * Used for storing the new signatures in the DB.
    */
-  def runStream(signatureClient: SignatureServiceClient[F], storageApi: StorageApi[F]): fs2.Stream[F, Unit]
+  def runStream(
+    internalCommunicationClient: InternalCommunicationServiceClient[F],
+    storageApi:                  StorageApi[F]
+  ): fs2.Stream[F, Unit]
 
   /**
    * Expected Outcome: Creates the minting stream on the existing mintingManager
@@ -175,10 +178,10 @@ object BridgeStateMachineExecutionManagerImpl {
       new BridgeStateMachineExecutionManager[F] {
 
         def runStream(
-          signatureClient: SignatureServiceClient[F],
-          storageApi:      StorageApi[F]
+          internalCommunicationClient: InternalCommunicationServiceClient[F],
+          storageApi:                  StorageApi[F]
         ): fs2.Stream[F, Unit] = {
-          implicit val iSignatureClient = signatureClient
+          implicit val iInternalCommunicationClient = internalCommunicationClient
           implicit val iStorageApi = storageApi
           fs2.Stream
             .fromQueueUnterminated[F, (Long, StateMachineRequest)](queue)
@@ -358,8 +361,8 @@ object BridgeStateMachineExecutionManagerImpl {
         private def executeRequestAux(
           request: org.plasmalabs.bridge.shared.StateMachineRequest
         )(implicit
-          signatureClient: SignatureServiceClient[F],
-          storageApi:      StorageApi[F]
+          internalCommunicationClient: InternalCommunicationServiceClient[F],
+          storageApi:                  StorageApi[F]
         ): F[StateMachineReply.Result] =
           (request.operation match {
             case StateMachineRequest.Operation.Empty =>
@@ -464,8 +467,8 @@ object BridgeStateMachineExecutionManagerImpl {
           sequenceNumber: Long,
           request:        org.plasmalabs.bridge.shared.StateMachineRequest
         )(implicit
-          signatureClient: SignatureServiceClient[F],
-          storageApi:      StorageApi[F]
+          internalCommunicationClient: InternalCommunicationServiceClient[F],
+          storageApi:                  StorageApi[F]
         ) = {
           import org.plasmalabs.bridge.shared.implicits._
           import cats.implicits._

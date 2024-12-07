@@ -5,19 +5,24 @@ import cats.effect.std.Mutex
 import cats.implicits._
 import fs2.grpc.syntax.all._
 import io.grpc.{ManagedChannelBuilder, Metadata}
-import org.plasmalabs.bridge.consensus.service.{GetSignatureRequest, SignatureMessage, SignatureServiceFs2Grpc}
+import org.plasmalabs.bridge.consensus.service.{
+  GetSignatureRequest,
+  SignatureMessage,
+  InternalCommunicationServiceFs2Grpc
+}
 import org.plasmalabs.bridge.shared.ReplicaNode
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
 
-trait SignatureServiceClient[F[_]] {
+trait InternalCommunicationServiceClient[F[_]] {
+
   /**
-   * Expected Outcome: Request a signature from another replica and return it. 
+   * Expected Outcome: Request a signature from another replica and return it.
    * @param replicaId
    * For the current request.
    *
    * @param txId
-   * Currently this is the txId used for creating the redeem Tx. 
+   * Currently this is the txId used for creating the redeem Tx.
    */
   def getSignature(
     replicaId: Int,
@@ -25,7 +30,7 @@ trait SignatureServiceClient[F[_]] {
   ): F[SignatureMessage]
 }
 
-object SignatureServiceClientImpl {
+object InternalCommunicationServiceClientImpl {
 
   def make[F[_]: Async: Logger](
     replicaNodes: List[ReplicaNode[F]],
@@ -44,10 +49,10 @@ object SignatureServiceClientImpl {
              ManagedChannelBuilder
                .forAddress(replicaNode.internalBackendHost, replicaNode.internalBackendPort)
                .usePlaintext()).resource[F]
-        signatureClient <- SignatureServiceFs2Grpc.stubResource(channel)
-      } yield (replicaNode.id -> signatureClient)).sequence
+        internalCommunicationClient <- InternalCommunicationServiceFs2Grpc.stubResource(channel)
+      } yield (replicaNode.id -> internalCommunicationClient)).sequence
       replicaMap = idClientList.toMap
-    } yield new SignatureServiceClient[F] {
+    } yield new InternalCommunicationServiceClient[F] {
 
       def getSignature(
         replicaId: Int,

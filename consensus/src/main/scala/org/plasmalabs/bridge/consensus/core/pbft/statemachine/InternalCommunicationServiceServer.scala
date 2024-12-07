@@ -4,7 +4,11 @@ import cats.effect.kernel.{Async, Resource}
 import cats.implicits._
 import com.google.protobuf.ByteString
 import io.grpc.{Metadata, ServerServiceDefinition}
-import org.plasmalabs.bridge.consensus.service.{GetSignatureRequest, SignatureMessage, SignatureServiceFs2Grpc}
+import org.plasmalabs.bridge.consensus.service.{
+  GetSignatureRequest,
+  SignatureMessage,
+  InternalCommunicationServiceFs2Grpc
+}
 import org.plasmalabs.bridge.consensus.shared.persistence.StorageApi
 
 case class InternalSignature(
@@ -13,27 +17,29 @@ case class InternalSignature(
   timestamp: Long
 )
 
-trait SignatureServiceServer[F[_]] {
-  /** Retrieves a signature for a given transaction ID.
-    *
-    * @param txId The unique identifier of the transaction
-    * @param replicaId The ID of the replica requesting the signature
-    * @return The signature message if found and the requesting replica is authorized,
-    *         otherwise returns a default empty signature
-    */
+trait InternalCommunicationServiceServer[F[_]] {
+
+  /**
+   * Retrieves a signature for a given transaction ID.
+   *
+   * @param txId The unique identifier of the transaction
+   * @param replicaId The ID of the replica requesting the signature
+   * @return The signature message if found and the requesting replica is authorized,
+   *         otherwise returns a default empty signature
+   */
   def getSignature(txId: String, replicaId: Int): F[SignatureMessage]
 }
 
-object SignatureServiceServer {
+object InternalCommunicationServiceServer {
 
-  def signatureGrpcServiceServer[F[_]: Async](
-    allowedPeers: Set[Int], // TODO: Secure method to authorize other replicas 
+  def internalCommunicationServiceServer[F[_]: Async](
+    allowedPeers: Set[Int], // TODO: Secure method to authorize other replicas
     replicaId:    Int
   )(implicit
     storageApi: StorageApi[F]
   ): Resource[F, ServerServiceDefinition] =
-    SignatureServiceFs2Grpc.bindServiceResource(
-      serviceImpl = new SignatureServiceFs2Grpc[F, Metadata] {
+    InternalCommunicationServiceFs2Grpc.bindServiceResource(
+      serviceImpl = new InternalCommunicationServiceFs2Grpc[F, Metadata] {
 
         val defaultSignature = SignatureMessage(
           replicaId = -1,

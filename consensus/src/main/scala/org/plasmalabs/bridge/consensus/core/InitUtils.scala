@@ -64,16 +64,16 @@ trait InitUtils {
     conf.getInt("bridge.replica.responses.port")
 
   def internalReqHost(implicit conf: Config) =
-    conf.getString("bridge.replica.signatureRequests.host")
+    conf.getString("bridge.replica.internalCommunicationRequests.host")
 
   def internalReqPort(implicit conf: Config) =
-    conf.getInt("bridge.replica.signatureRequests.port")
+    conf.getInt("bridge.replica.internalCommunicationRequests.port")
 
   def internalResHost(implicit conf: Config) =
-    conf.getString("bridge.replica.signatureResponses.host")
+    conf.getString("bridge.replica.internalCommunicationResponses.host")
 
   def internalResPort(implicit conf: Config) =
-    conf.getInt("bridge.replica.signatureResponses.port")
+    conf.getInt("bridge.replica.internalCommunicationResponses.port")
 
   def printConfig[F[_]: Sync: Logger](implicit
     conf:      Config,
@@ -88,6 +88,8 @@ trait InitUtils {
       _ <- info"bridge.replica.requests.host           : ${replicaHost}"
       _ <- info"bridge.replica.requests.port           : ${replicaPort}"
       _ <- info"bridge.replica.replicaId               : ${replicaId.id}"
+      _ <- info"bridge.replica.internalCommunicationRequests.host               : ${internalReqHost}"
+      _ <- info"bridge.replica.internalCommunicationRequests.port               : ${internalReqPort}"
     } yield ()
   }
 

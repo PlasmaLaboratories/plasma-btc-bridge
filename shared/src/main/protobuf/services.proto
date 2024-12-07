@@ -72,6 +72,6 @@ message GetSignatureRequest {
   string txId = 2;
 }
 
-service SignatureService {
+service InternalCommunicationService {
   rpc GetSignature (GetSignatureRequest) returns (SignatureMessage) {}
 }

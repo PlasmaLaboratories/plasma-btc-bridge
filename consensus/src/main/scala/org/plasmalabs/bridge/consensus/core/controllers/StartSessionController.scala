@@ -38,7 +38,6 @@ import scodec.bits.ByteVector
 
 import java.util.UUID
 
-
 object StartSessionController {
 
   private def createPeginSessionInfo[F[_]: Sync](
@@ -172,7 +171,9 @@ object StartSessionController {
         someRedeemAdress.isDefined,
         "Redeem address was not generated correctly"
       )
-      bridgeNodeKey = someRedeemAdressAndKey.map(_._2).get // TODO: can this be deleted? I think Fernando changed something in another PR here
+      bridgeNodeKey = someRedeemAdressAndKey
+        .map(_._2)
+        .get // TODO: can this be deleted? I think Fernando changed something in another PR here
 
       addressAndsessionInfo <- createPeginSessionInfo(
         btcPeginCurrentWalletIdx,

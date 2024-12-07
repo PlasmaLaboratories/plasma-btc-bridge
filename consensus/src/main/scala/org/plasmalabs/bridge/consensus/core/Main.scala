@@ -14,7 +14,7 @@ import org.bitcoins.rpc.config.BitcoindAuthCredentials
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.plasmalabs.bridge.consensus.core.managers.{BTCWalletAlgebra, BTCWalletAlgebraImpl}
 import org.plasmalabs.bridge.consensus.core.modules.AppModule
-import org.plasmalabs.bridge.consensus.core.pbft.statemachine.SignatureServiceClientImpl
+import org.plasmalabs.bridge.consensus.core.pbft.statemachine.InternalCommunicationServiceClientImpl
 import org.plasmalabs.bridge.consensus.core.utils.KeyGenerationUtils
 import org.plasmalabs.bridge.consensus.core.{
   ConsensusParamsDescriptor,
@@ -158,11 +158,11 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
       secure <- Sync[F].delay(
         conf.getBoolean(s"bridge.replica.consensus.replicas.$i.secure")
       )
-      signatureHost <- Sync[F].delay(
-        conf.getString(s"bridge.replica.consensus.replicas.$i.signatureHost")
+      internalCommuncationHost <- Sync[F].delay(
+        conf.getString(s"bridge.replica.consensus.replicas.$i.internalCommuncationHost")
       )
-      signaturePort <- Sync[F].delay(
-        conf.getInt(s"bridge.replica.consensus.replicas.$i.signaturePort")
+      internalCommuncationPort <- Sync[F].delay(
+        conf.getInt(s"bridge.replica.consensus.replicas.$i.internalCommuncationPort")
       )
 
       _ <-
@@ -172,10 +172,10 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
       _ <-
         info"bridge.replica.consensus.replicas.$i.secure: ${secure}"
       _ <-
-        info"bridge.replica.consensus.replicas.$i.signatureHost: ${signatureHost}"
+        info"bridge.replica.consensus.replicas.$i.internalCommuncationHost: ${internalCommuncationHost}"
       _ <-
-        info"bridge.replica.consensus.replicas.$i.signaturePort: ${signaturePort}"
-    } yield ReplicaNode[F](i, host, port, secure, signatureHost, signaturePort)).toList.sequence
+        info"bridge.replica.consensus.replicas.$i.internalCommuncationPort: ${internalCommuncationPort}"
+    } yield ReplicaNode[F](i, host, port, secure, internalCommuncationHost, internalCommuncationPort)).toList.sequence
   }
 
   private def createReplicaClienMap[F[_]: Async](
@@ -332,8 +332,8 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         replicaKeyPair,
         replicaNodes
       )
-      signaturesMutex         <- Mutex[IO].toResource
-      internalSignatureClient <- SignatureServiceClientImpl.make[IO](replicaNodes, signaturesMutex)
+      signaturesMutex             <- Mutex[IO].toResource
+      internalCommunicationClient <- InternalCommunicationServiceClientImpl.make[IO](replicaNodes, signaturesMutex)
 
       viewReference <- Ref[IO].of(0L).toResource
       replicaClients <- StateMachineServiceGrpcClientImpl
@@ -377,7 +377,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
       ) = res
       _ <- requestStateManager.startProcessingEvents()
       _ <- IO.asyncForIO.background(
-        bridgeStateMachineExecutionManager.runStream(internalSignatureClient, storageApi).compile.drain
+        bridgeStateMachineExecutionManager.runStream(internalCommunicationClient, storageApi).compile.drain
       )
       _ <- IO.asyncForIO.background(
         bridgeStateMachineExecutionManager.mintingStream(mintingManagerPolicy).compile.drain

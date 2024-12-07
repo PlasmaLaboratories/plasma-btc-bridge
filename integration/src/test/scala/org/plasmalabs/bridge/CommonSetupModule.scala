@@ -19,8 +19,8 @@ trait CommonSetupModule {
 |          port = ${requestPort + replicaId}
 |          secure = "false"
 |          publicKeyFile = "consensusPublicKey${replicaId}.pem"
-|          signatureHost = "localhost"
-|          signaturePort = ${internalRequestPort + replicaId}
+|          internalCommuncationHost = "localhost"
+|          internalCommuncationPort = ${internalRequestPort + replicaId}
 |        }""").mkString("\n")
 
 }

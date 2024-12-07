@@ -38,88 +38,94 @@ import java.security.MessageDigest
 
 trait BitcoinUtils[F[_]] {
 
-  /** Builds a Bitcoin script ASM sequence for bridge operations using a 5 out of 7 multisig.
-    *
-    * @param userPKey The user's public key
-    * @param bridgePKeys Collection of bridge node IDs and their public keys
-    * @param secretHash Hash of the secret used in the script
-    * @param relativeLockTime Relative timelock value
-    * @return Sequence of script tokens forming the complete Bitcoin script
-    */
+  /**
+   * Builds a Bitcoin script ASM sequence for bridge operations using a 5 out of 7 multisig.
+   *
+   * @param userPKey The user's public key
+   * @param bridgePKeys Collection of bridge node IDs and their public keys
+   * @param secretHash Hash of the secret used in the script
+   * @param relativeLockTime Relative timelock value
+   * @return Sequence of script tokens forming the complete Bitcoin script
+   */
   def buildScriptAsm(
-    userPKey: ECPublicKey,
-    bridgePKeys: Iterable[(Int, ECPublicKey)],
-    secretHash: ByteVector,
+    userPKey:         ECPublicKey,
+    bridgePKeys:      Iterable[(Int, ECPublicKey)],
+    secretHash:       ByteVector,
     relativeLockTime: Long
   ): Seq[ScriptToken]
 
-  /** Creates a descriptor string for the Bitcoin script. (Bitcoin Miniscript)
-    * For generating bitcoin script: https://bitcoin.sipa.be/miniscript/
-    * 
-    * @param bridgesPkey Collection of bridge node IDs and their public keys
-    * @param userPKey User's public key as a hex string
-    * @param secretHash Hash of the secret as a hex string
-    * @return Descriptor string for the Bitcoin script
-    */
+  /**
+   * Creates a descriptor string for the Bitcoin script. (Bitcoin Miniscript)
+   * For generating bitcoin script: https://bitcoin.sipa.be/miniscript/
+   *
+   * @param bridgesPkey Collection of bridge node IDs and their public keys
+   * @param userPKey User's public key as a hex string
+   * @param secretHash Hash of the secret as a hex string
+   * @return Descriptor string for the Bitcoin script
+   */
   def createDescriptor(
     bridgesPkey: Iterable[(Int, ECPublicKey)],
-    userPKey: String,
-    secretHash: String
+    userPKey:    String,
+    secretHash:  String
   ): String
 
-  /** Creates a serialized representation of a transaction for signing.
-    *
-    * @param txTo Transaction to be signed
-    * @param inputAmount Amount in the output being spent
-    * @param inputScript Script tokens for the input
-    * @return Serialized bytes for signing
-    */
+  /**
+   * Creates a serialized representation of a transaction for signing.
+   *
+   * @param txTo Transaction to be signed
+   * @param inputAmount Amount in the output being spent
+   * @param inputScript Script tokens for the input
+   * @return Serialized bytes for signing
+   */
   def serializeForSignature(
-    txTo: Transaction,
+    txTo:        Transaction,
     inputAmount: CurrencyUnit,
     inputScript: Seq[ScriptToken]
   ): ByteVector
 
-  /** Creates a redeeming transaction from the escrow address to the claim address. 
-    *
-    * @param inputTxId ID of the input transaction
-    * @param inputTxVout Output index in the input transaction
-    * @param inputAmount Amount to redeem
-    * @param feePerByte Fee rate per byte
-    * @param claimAddress Address to send the redeemed funds
-    * @return The constructed transaction
-    */
+  /**
+   * Creates a redeeming transaction from the escrow address to the claim address.
+   *
+   * @param inputTxId ID of the input transaction
+   * @param inputTxVout Output index in the input transaction
+   * @param inputAmount Amount to redeem
+   * @param feePerByte Fee rate per byte
+   * @param claimAddress Address to send the redeemed funds
+   * @return The constructed transaction
+   */
   def createRedeemingTx(
-    inputTxId: String,
-    inputTxVout: Long,
-    inputAmount: CurrencyUnit,
-    feePerByte: CurrencyUnit,
+    inputTxId:    String,
+    inputTxVout:  Long,
+    inputAmount:  CurrencyUnit,
+    feePerByte:   CurrencyUnit,
     claimAddress: String
   ): Transaction
 
-  /** Calculates the reclaim fee for a transaction.
-    *
-    * @param tx Transaction to calculate fee for
-    * @param feePerByte Fee rate per byte
-    * @return Calculated fee as a currency unit
-    */
+  /**
+   * Calculates the reclaim fee for a transaction.
+   *
+   * @param tx Transaction to calculate fee for
+   * @param feePerByte Fee rate per byte
+   * @return Calculated fee as a currency unit
+   */
   def calculateBtcReclaimFee(
-    tx: Transaction,
+    tx:         Transaction,
     feePerByte: FeeUnit
   ): CurrencyUnit
 
-  /** Estimates the reclaim fee for a future transaction.
-    *
-    * @param inputAmount Amount to be reclaimed
-    * @param feePerByte Fee rate per byte
-    * @param network Network parameters
-    * @param btcWaitExpirationTime Expiration time for BTC wait
-    * @return Estimated fee as a currency unit
-    */
+  /**
+   * Estimates the reclaim fee for a future transaction.
+   *
+   * @param inputAmount Amount to be reclaimed
+   * @param feePerByte Fee rate per byte
+   * @param network Network parameters
+   * @param btcWaitExpirationTime Expiration time for BTC wait
+   * @return Estimated fee as a currency unit
+   */
   def estimateBtcReclaimFee(
     inputAmount: CurrencyUnit,
-    feePerByte: FeeUnit,
-    network: NetworkParameters
+    feePerByte:  FeeUnit,
+    network:     NetworkParameters
   )(implicit btcWaitExpirationTime: BTCWaitExpirationTime): CurrencyUnit
 }
 
@@ -127,7 +133,7 @@ object BitcoinUtils {
 
   def buildScriptAsm(
     userPKey:         ECPublicKey,
-    bridgePKeys:       Iterable[(Int, ECPublicKey)],
+    bridgePKeys:      Iterable[(Int, ECPublicKey)],
     secretHash:       ByteVector,
     relativeLockTime: Long
   ): Seq[ScriptToken] = {

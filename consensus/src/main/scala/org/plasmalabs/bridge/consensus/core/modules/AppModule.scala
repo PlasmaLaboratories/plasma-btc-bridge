@@ -11,7 +11,7 @@ import org.http4s.{HttpRoutes, _}
 import org.plasmalabs.bridge.consensus.core.managers.{BTCWalletAlgebra, WalletManagementUtils}
 import org.plasmalabs.bridge.consensus.core.pbft.statemachine.{
   BridgeStateMachineExecutionManagerImpl,
-  SignatureServiceServer
+  InternalCommunicationServiceServer
 }
 import org.plasmalabs.bridge.consensus.core.pbft.{
   CheckpointManagerImpl,
@@ -237,7 +237,7 @@ trait AppModule extends WalletStateResource {
             replicaKeysMap
           ),
         requestStateManager,
-        SignatureServiceServer.signatureGrpcServiceServer[IO](
+        InternalCommunicationServiceServer.internalCommunicationServiceServer[IO](
           Set(0, 1, 2, 3, 4, 5, 6), // TODO: Secure method to verify allowed hosts
           replicaId.id
         )

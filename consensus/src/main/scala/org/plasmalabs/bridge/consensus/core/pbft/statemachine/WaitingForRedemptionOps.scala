@@ -9,7 +9,7 @@ import org.bitcoins.core.script.constant.{OP_0, ScriptConstant}
 import org.bitcoins.crypto.{ECDigitalSignature, _}
 import org.bitcoins.rpc.client.common.BitcoindRpcClient
 import org.plasmalabs.bridge.consensus.core.PeginWalletManager
-import org.plasmalabs.bridge.consensus.core.pbft.statemachine.SignatureServiceClient
+import org.plasmalabs.bridge.consensus.core.pbft.statemachine.InternalCommunicationServiceClient
 import org.plasmalabs.bridge.consensus.core.utils.BitcoinUtils
 import org.plasmalabs.bridge.consensus.service.SignatureMessage
 import org.plasmalabs.bridge.consensus.shared.persistence.StorageApi
@@ -53,12 +53,12 @@ trait WaitingForRedemption {
     amountInSatoshis: CurrencyUnit,
     currentPrimary:   Int
   )(implicit
-    bitcoindInstance:   BitcoindRpcClient,
-    pegInWalletManager: PeginWalletManager[F],
-    feePerByte:         CurrencyUnit,
-    replica:            ReplicaId,
-    signatureClient:    SignatureServiceClient[F],
-    storageApi:         StorageApi[F]
+    bitcoindInstance:            BitcoindRpcClient,
+    pegInWalletManager:          PeginWalletManager[F],
+    feePerByte:                  CurrencyUnit,
+    replica:                     ReplicaId,
+    internalCommunicationClient: InternalCommunicationServiceClient[F],
+    storageApi:                  StorageApi[F]
   ): F[Unit]
 }
 
@@ -74,12 +74,12 @@ object WaitingForRedemptionOps {
     amountInSatoshis: CurrencyUnit,
     currentPrimary:   Int
   )(implicit
-    bitcoindInstance:   BitcoindRpcClient,
-    pegInWalletManager: PeginWalletManager[F],
-    feePerByte:         CurrencyUnit,
-    replica:            ReplicaId,
-    signatureClient:    SignatureServiceClient[F],
-    storageApi:         StorageApi[F]
+    bitcoindInstance:            BitcoindRpcClient,
+    pegInWalletManager:          PeginWalletManager[F],
+    feePerByte:                  CurrencyUnit,
+    replica:                     ReplicaId,
+    internalCommunicationClient: InternalCommunicationServiceClient[F],
+    storageApi:                  StorageApi[F]
   ): F[Unit] = {
 
     val (signableBytes, tx, srp) = createInputs(
@@ -140,11 +140,11 @@ object WaitingForRedemptionOps {
   }
 
   private def primaryCollectSignatures[F[_]: Async: Logger](primaryId: Int, inputTxId: String)(implicit
-    signatureClient: SignatureServiceClient[F]
+    internalCommunicationClient: InternalCommunicationServiceClient[F]
   ): F[List[SignatureMessage]] = {
     def collectSignatureForReplica(id: Int): F[SignatureMessage] =
       for {
-        signature <- signatureClient.getSignature(id, inputTxId)
+        signature <- internalCommunicationClient.getSignature(id, inputTxId)
       } yield signature
 
     def collectSignaturesRecursive(
