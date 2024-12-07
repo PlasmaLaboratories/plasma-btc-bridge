@@ -179,11 +179,11 @@ object Main extends IOApp with PublicApiParamsDescriptor {
       secure <- Sync[F].delay(
         conf.getBoolean(s"bridge.client.consensus.replicas.$i.secure")
       )
-      internalCommuncationHost <- Sync[F].delay(
-        conf.getString(s"bridge.client.consensus.replicas.$i.internalCommuncationHost")
+      outOfBandRequestHost <- Sync[F].delay(
+        conf.getString(s"bridge.client.consensus.replicas.$i.outOfBandRequestHost")
       )
-      internalCommuncationPort <- Sync[F].delay(
-        conf.getInt(s"bridge.client.consensus.replicas.$i.internalCommuncationPort")
+      outOfBandRequestPort <- Sync[F].delay(
+        conf.getInt(s"bridge.client.consensus.replicas.$i.outOfBandRequestPort")
       )
       _ <-
         info"bridge.client.consensus.replicas.$i.host: ${host}"
@@ -192,10 +192,10 @@ object Main extends IOApp with PublicApiParamsDescriptor {
       _ <-
         info"bridge.client.consensus.replicas.$i.secure: ${secure}"
       _ <-
-        info"bridge.client.consensus.replicas.$i.internalCommuncationHost: ${internalCommuncationHost}"
+        info"bridge.client.consensus.replicas.$i.outOfBandRequestHost: ${outOfBandRequestHost}"
       _ <-
-        info"bridge.client.consensus.replicas.$i.internalCommuncationPort: ${internalCommuncationPort}"
-    } yield ReplicaNode[F](i, host, port, secure, internalCommuncationHost, internalCommuncationPort)).toList.sequence
+        info"bridge.client.consensus.replicas.$i.outOfBandRequestPort: ${outOfBandRequestPort}"
+    } yield ReplicaNode[F](i, host, port, secure, outOfBandRequestHost, outOfBandRequestPort)).toList.sequence
   }
 
   override def run(args: List[String]): IO[ExitCode] =

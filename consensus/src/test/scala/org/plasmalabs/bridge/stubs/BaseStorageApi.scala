@@ -1,7 +1,7 @@
 package org.plasmalabs.bridge.stubs
 
 import cats.effect.IO
-import org.plasmalabs.bridge.consensus.core.pbft.statemachine.InternalSignature
+import org.plasmalabs.bridge.consensus.core.pbft.statemachine.OutOfBandSignature
 import org.plasmalabs.bridge.consensus.pbft.{CheckpointRequest, CommitRequest, PrePrepareRequest, PrepareRequest}
 import org.plasmalabs.bridge.consensus.shared.SessionInfo
 import org.plasmalabs.bridge.consensus.shared.persistence.StorageApi
@@ -74,7 +74,7 @@ class BaseStorageApi extends StorageApi[IO] {
 
   def getSignature(
     txId: String
-  ): IO[Option[InternalSignature]] = ???
+  ): IO[Option[OutOfBandSignature]] = ???
 
   override def insertBlockchainEvent(event: BlockchainEvent): IO[Unit] = ???
 

@@ -63,17 +63,11 @@ trait InitUtils {
   def responsePort(implicit conf: Config) =
     conf.getInt("bridge.replica.responses.port")
 
-  def internalReqHost(implicit conf: Config) =
-    conf.getString("bridge.replica.internalCommunicationRequests.host")
+  def outOfBandRequestsHost(implicit conf: Config) =
+    conf.getString("bridge.replica.outOfBandRequests.host")
 
-  def internalReqPort(implicit conf: Config) =
-    conf.getInt("bridge.replica.internalCommunicationRequests.port")
-
-  def internalResHost(implicit conf: Config) =
-    conf.getString("bridge.replica.internalCommunicationResponses.host")
-
-  def internalResPort(implicit conf: Config) =
-    conf.getInt("bridge.replica.internalCommunicationResponses.port")
+  def outOfBandRequestsPort(implicit conf: Config) =
+    conf.getInt("bridge.replica.outOfBandRequests.port")
 
   def printConfig[F[_]: Sync: Logger](implicit
     conf:      Config,
@@ -88,8 +82,8 @@ trait InitUtils {
       _ <- info"bridge.replica.requests.host           : ${replicaHost}"
       _ <- info"bridge.replica.requests.port           : ${replicaPort}"
       _ <- info"bridge.replica.replicaId               : ${replicaId.id}"
-      _ <- info"bridge.replica.internalCommunicationRequests.host               : ${internalReqHost}"
-      _ <- info"bridge.replica.internalCommunicationRequests.port               : ${internalReqPort}"
+      _ <- info"bridge.replica.outOfBandRequests.host               : ${outOfBandRequestsHost}"
+      _ <- info"bridge.replica.outOfBandRequests.port               : ${outOfBandRequestsPort}"
     } yield ()
   }
 

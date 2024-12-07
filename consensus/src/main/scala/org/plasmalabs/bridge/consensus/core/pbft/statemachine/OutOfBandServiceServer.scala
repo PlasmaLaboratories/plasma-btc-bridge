@@ -7,17 +7,17 @@ import io.grpc.{Metadata, ServerServiceDefinition}
 import org.plasmalabs.bridge.consensus.service.{
   GetSignatureRequest,
   SignatureMessage,
-  InternalCommunicationServiceFs2Grpc
+  OutOfBandServiceFs2Grpc
 }
 import org.plasmalabs.bridge.consensus.shared.persistence.StorageApi
 
-case class InternalSignature(
+case class OutOfBandSignature(
   txId:      String,
   signature: String,
   timestamp: Long
 )
 
-trait InternalCommunicationServiceServer[F[_]] {
+trait OutOfBandServiceServer[F[_]] {
 
   /**
    * Retrieves a signature for a given transaction ID.
@@ -30,20 +30,20 @@ trait InternalCommunicationServiceServer[F[_]] {
   def getSignature(txId: String, replicaId: Int): F[SignatureMessage]
 }
 
-object InternalCommunicationServiceServer {
+object OutOfBandServiceServer {
 
-  def internalCommunicationServiceServer[F[_]: Async](
+  def make[F[_]: Async](
     allowedPeers: Set[Int], // TODO: Secure method to authorize other replicas
     replicaId:    Int
   )(implicit
     storageApi: StorageApi[F]
   ): Resource[F, ServerServiceDefinition] =
-    InternalCommunicationServiceFs2Grpc.bindServiceResource(
-      serviceImpl = new InternalCommunicationServiceFs2Grpc[F, Metadata] {
+    OutOfBandServiceFs2Grpc.bindServiceResource(
+      serviceImpl = new OutOfBandServiceFs2Grpc[F, Metadata] {
 
         val defaultSignature = SignatureMessage(
           replicaId = -1,
-          signatureData = ByteString.empty,
+          signature = ByteString.empty,
           timestamp = 1L
         )
 
@@ -56,11 +56,11 @@ object InternalCommunicationServiceServer {
                 for {
                   result <- storageApi.getSignature(request.txId)
                 } yield result match {
-                  case Some(internalSignature) =>
+                  case Some(signature) =>
                     SignatureMessage(
-                      replicaId, // TODO: rename to replicaId
-                      signatureData = ByteString.fromHex(internalSignature.signature),
-                      timestamp = internalSignature.timestamp
+                      replicaId,
+                      signature = ByteString.fromHex(signature.signature),
+                      timestamp = signature.timestamp
                     )
                   case None => defaultSignature
                 }

@@ -8,13 +8,13 @@ import io.grpc.{ManagedChannelBuilder, Metadata}
 import org.plasmalabs.bridge.consensus.service.{
   GetSignatureRequest,
   SignatureMessage,
-  InternalCommunicationServiceFs2Grpc
+  OutOfBandServiceFs2Grpc
 }
 import org.plasmalabs.bridge.shared.ReplicaNode
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
 
-trait InternalCommunicationServiceClient[F[_]] {
+trait OutOfBandServiceClient[F[_]] {
 
   /**
    * Expected Outcome: Request a signature from another replica and return it.
@@ -30,7 +30,7 @@ trait InternalCommunicationServiceClient[F[_]] {
   ): F[SignatureMessage]
 }
 
-object InternalCommunicationServiceClientImpl {
+object OutOfBandServiceClientImpl {
 
   def make[F[_]: Async: Logger](
     replicaNodes: List[ReplicaNode[F]],
@@ -49,10 +49,10 @@ object InternalCommunicationServiceClientImpl {
              ManagedChannelBuilder
                .forAddress(replicaNode.internalBackendHost, replicaNode.internalBackendPort)
                .usePlaintext()).resource[F]
-        internalCommunicationClient <- InternalCommunicationServiceFs2Grpc.stubResource(channel)
-      } yield (replicaNode.id -> internalCommunicationClient)).sequence
+        outOfBandServiceClient <- OutOfBandServiceFs2Grpc.stubResource(channel)
+      } yield (replicaNode.id -> outOfBandServiceClient)).sequence
       replicaMap = idClientList.toMap
-    } yield new InternalCommunicationServiceClient[F] {
+    } yield new OutOfBandServiceClient[F] {
 
       def getSignature(
         replicaId: Int,
@@ -68,7 +68,7 @@ object InternalCommunicationServiceClientImpl {
                 error"Error getting signature from replica $replicaId: ${error.getMessage}" >>
                 SignatureMessage(
                   replicaId = -1, // TODO: maybe return an option/either here
-                  signatureData = com.google.protobuf.ByteString.EMPTY,
+                  signature = com.google.protobuf.ByteString.EMPTY,
                   timestamp = 0L
                 ).pure[F]
               }

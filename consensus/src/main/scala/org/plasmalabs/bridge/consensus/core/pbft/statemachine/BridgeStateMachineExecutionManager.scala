@@ -14,7 +14,7 @@ import org.plasmalabs.bridge.consensus.core.managers.{
   WalletManagementUtils
 }
 import org.plasmalabs.bridge.consensus.core.pbft.ViewManager
-import org.plasmalabs.bridge.consensus.core.pbft.statemachine.{PBFTEvent, InternalCommunicationServiceClient}
+import org.plasmalabs.bridge.consensus.core.pbft.statemachine.{PBFTEvent, OutOfBandServiceClient}
 import org.plasmalabs.bridge.consensus.core.{
   BitcoinNetworkIdentifiers,
   BridgeWalletManager,
@@ -102,13 +102,13 @@ trait BridgeStateMachineExecutionManager[F[_]] {
 
   /**
    * Expected Outcome: Starts the stream for the elegibility manager that appends, updates or executes the requests.
-   * @param internalCommunicationClient
+   * @param outOfBandServiceClient
    * Primary uses this to get signatures from other replicas.
    * @param storageApi
    * Used for storing the new signatures in the DB.
    */
   def runStream(
-    internalCommunicationClient: InternalCommunicationServiceClient[F],
+    outOfBandServiceClient: OutOfBandServiceClient[F],
     storageApi:                  StorageApi[F]
   ): fs2.Stream[F, Unit]
 
@@ -178,10 +178,10 @@ object BridgeStateMachineExecutionManagerImpl {
       new BridgeStateMachineExecutionManager[F] {
 
         def runStream(
-          internalCommunicationClient: InternalCommunicationServiceClient[F],
+          outOfBandServiceClient: OutOfBandServiceClient[F],
           storageApi:                  StorageApi[F]
         ): fs2.Stream[F, Unit] = {
-          implicit val iInternalCommunicationClient = internalCommunicationClient
+          implicit val iOutOfBandServiceClient = outOfBandServiceClient
           implicit val iStorageApi = storageApi
           fs2.Stream
             .fromQueueUnterminated[F, (Long, StateMachineRequest)](queue)
@@ -361,7 +361,7 @@ object BridgeStateMachineExecutionManagerImpl {
         private def executeRequestAux(
           request: org.plasmalabs.bridge.shared.StateMachineRequest
         )(implicit
-          internalCommunicationClient: InternalCommunicationServiceClient[F],
+          outOfBandServiceClient: OutOfBandServiceClient[F],
           storageApi:                  StorageApi[F]
         ): F[StateMachineReply.Result] =
           (request.operation match {
@@ -467,7 +467,7 @@ object BridgeStateMachineExecutionManagerImpl {
           sequenceNumber: Long,
           request:        org.plasmalabs.bridge.shared.StateMachineRequest
         )(implicit
-          internalCommunicationClient: InternalCommunicationServiceClient[F],
+          outOfBandServiceClient: OutOfBandServiceClient[F],
           storageApi:                  StorageApi[F]
         ) = {
           import org.plasmalabs.bridge.shared.implicits._

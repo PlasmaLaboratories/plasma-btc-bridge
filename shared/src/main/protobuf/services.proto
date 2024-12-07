@@ -63,7 +63,7 @@ message MintingStatusRes {
 
 message SignatureMessage {
   int32 replicaId = 1;
-  bytes signature_data = 2;
+  bytes signature = 2;
   int64 timestamp = 3;
 }
 
@@ -72,6 +72,6 @@ message GetSignatureRequest {
   string txId = 2;
 }
 
-service InternalCommunicationService {
+service OutOfBandService {
   rpc GetSignature (GetSignatureRequest) returns (SignatureMessage) {}
 }

@@ -2,24 +2,15 @@ package org.plasmalabs.bridge
 
 import cats.effect.IO
 import org.plasmalabs.bridge.shared.StartPeginSessionResponse
-import org.plasmalabs.bridge.mintPlasmaBlock
-import fs2.Stream
 
 import scala.concurrent.duration._
+import org.typelevel.log4cats.syntax._
 
 trait MultipleEscrowAddressGenerationModule {
 
   self: BridgeIntegrationSpec =>
 
-  private def mockPlasmaMintingStream: Stream[IO, Unit] =
-    Stream
-      .eval(
-        mintPlasmaBlock(node = 1, nbBlocks = 1)
-      )
-      .flatMap(_ => Stream.sleep[IO](3.second))
-      .repeat
-
-  private def getSessionById(userId: Int): IO[(String, String)] = {
+  private def getSessionEscrowAddressById(userId: Int): IO[String] = {
     def retry(userSecret: String): IO[StartPeginSessionResponse] =
       (for {
         startSessionResponse <- startSession(userSecret, port = 5000 + (userId % 7) * 2)
@@ -39,27 +30,25 @@ trait MultipleEscrowAddressGenerationModule {
         startSessionResponse.maxHeight
       )
 
-    } yield (startSessionResponse.escrowAddress, startSessionResponse.sessionID)
+    } yield startSessionResponse.escrowAddress
   }
 
   def multipleCorrectEscrowAddressGeneration(numberOfSessions: Int): IO[Unit] = {
     import cats.implicits._
 
-    // TODO: Once normal pegin passes with multi sig 5 out of 7 
-    // peginWallet Manager should increase everytime we start a new session
     assertIO(
       for {
         _ <- deleteOutputFiles(numberOfSessions)
         _ <- pwd
-        _ <- IO.asyncForIO.start(mockPlasmaMintingStream.compile.drain)
 
-        successfulSessions <- (1 to numberOfSessions).toList
-          .traverse { userId =>
+        escrowAddresses <- (1 to numberOfSessions).toList
+          .parTraverse { userId =>
             for {
-              _ <- getSessionById(userId)
-            } yield 1
+              escrowAddress <- getSessionEscrowAddressById(userId)
+            } yield escrowAddress
           }
-      } yield successfulSessions.sum,
+        _ <- info"Should have received ${numberOfSessions} different escrow addresses: ${escrowAddresses}"
+      } yield escrowAddresses.toSet.size,
       numberOfSessions
     )
   }

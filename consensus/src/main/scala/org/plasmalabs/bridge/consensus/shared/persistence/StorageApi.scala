@@ -4,7 +4,7 @@ import cats.effect.kernel.{Resource, Sync}
 import cats.implicits._
 import com.google.common.io.BaseEncoding
 import com.google.protobuf.ByteString
-import org.plasmalabs.bridge.consensus.core.pbft.statemachine.InternalSignature
+import org.plasmalabs.bridge.consensus.core.pbft.statemachine.OutOfBandSignature
 import org.plasmalabs.bridge.consensus.pbft.{CheckpointRequest, CommitRequest, PrePrepareRequest, PrepareRequest}
 import org.plasmalabs.bridge.consensus.shared.{MiscUtils, PeginSessionInfo, PeginSessionState, SessionInfo}
 import org.plasmalabs.bridge.consensus.subsystems.monitor.BlockchainEvent
@@ -92,7 +92,7 @@ trait StorageApi[F[_]] {
 
   def getSignature(
     txId: String
-  ): F[Option[InternalSignature]]
+  ): F[Option[OutOfBandSignature]]
 
   def insertBlockchainEvent(event: BlockchainEvent): F[Unit]
 
@@ -803,7 +803,7 @@ object StorageApiImpl {
 
       override def getSignature(
         txId: String
-      ): F[Option[InternalSignature]] = {
+      ): F[Option[OutOfBandSignature]] = {
         val selectSignatureStmnt =
           "SELECT * FROM signatures WHERE tx_id = ?"
 
@@ -818,7 +818,7 @@ object StorageApiImpl {
               result <- Sync[F].blocking {
                 if (rs.next()) {
                   Some(
-                    InternalSignature(
+                    OutOfBandSignature(
                       txId = rs.getString("tx_id"),
                       signature = rs.getString("signature"),
                       timestamp = rs.getLong("timestamp")

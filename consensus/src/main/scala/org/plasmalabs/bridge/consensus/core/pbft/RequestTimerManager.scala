@@ -67,7 +67,7 @@ object RequestTimerManagerImpl {
           setExpired <- expiredTimers.get
           _ <- OptionT
             .whenF(setExpired.size > 0)(
-              error"Timer expired: ${setExpired.take(3)}${if (setExpired.size > 3) "..." else ""}"
+              error"Timer expired: ${setExpired.take(3)}${if (setExpired.size > 3) s"& ${setExpired.size - 3} others" else ""}"
             )
             .getOrElse(Async[F].unit)
         } yield setExpired.nonEmpty

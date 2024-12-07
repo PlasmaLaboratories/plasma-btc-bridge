@@ -40,13 +40,9 @@ trait ReplicaConfModule extends CommonSetupModule {
 |      # the port where we are listening for responses
 |      port = ${clientPort + 2 * replicaId + 1}
 |    }
-|    internalCommunicationRequests = {
+|    outOfBandRequests = {
 |      host = "[::]"
-|      port = ${internalRequestPort + replicaId}
-|    }
-|    internalCommunicationResponses = {
-|      host = "[::]"
-|      port = ${internalClientPort + 2 * replicaId + 1}
+|      port = ${outOfBandRequestPort + replicaId}
 |    }
 |    # security configuration
 |    security {

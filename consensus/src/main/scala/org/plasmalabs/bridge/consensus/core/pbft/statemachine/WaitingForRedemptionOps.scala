@@ -9,7 +9,7 @@ import org.bitcoins.core.script.constant.{OP_0, ScriptConstant}
 import org.bitcoins.crypto.{ECDigitalSignature, _}
 import org.bitcoins.rpc.client.common.BitcoindRpcClient
 import org.plasmalabs.bridge.consensus.core.PeginWalletManager
-import org.plasmalabs.bridge.consensus.core.pbft.statemachine.InternalCommunicationServiceClient
+import org.plasmalabs.bridge.consensus.core.pbft.statemachine.OutOfBandServiceClient
 import org.plasmalabs.bridge.consensus.core.utils.BitcoinUtils
 import org.plasmalabs.bridge.consensus.service.SignatureMessage
 import org.plasmalabs.bridge.consensus.shared.persistence.StorageApi
@@ -57,7 +57,7 @@ trait WaitingForRedemption {
     pegInWalletManager:          PeginWalletManager[F],
     feePerByte:                  CurrencyUnit,
     replica:                     ReplicaId,
-    internalCommunicationClient: InternalCommunicationServiceClient[F],
+    outOfBandServiceClient: OutOfBandServiceClient[F],
     storageApi:                  StorageApi[F]
   ): F[Unit]
 }
@@ -78,7 +78,7 @@ object WaitingForRedemptionOps {
     pegInWalletManager:          PeginWalletManager[F],
     feePerByte:                  CurrencyUnit,
     replica:                     ReplicaId,
-    internalCommunicationClient: InternalCommunicationServiceClient[F],
+    outOfBandServiceClient: OutOfBandServiceClient[F],
     storageApi:                  StorageApi[F]
   ): F[Unit] = {
 
@@ -140,11 +140,11 @@ object WaitingForRedemptionOps {
   }
 
   private def primaryCollectSignatures[F[_]: Async: Logger](primaryId: Int, inputTxId: String)(implicit
-    internalCommunicationClient: InternalCommunicationServiceClient[F]
+    outOfBandServiceClient: OutOfBandServiceClient[F]
   ): F[List[SignatureMessage]] = {
     def collectSignatureForReplica(id: Int): F[SignatureMessage] =
       for {
-        signature <- internalCommunicationClient.getSignature(id, inputTxId)
+        signature <- outOfBandServiceClient.getSignature(id, inputTxId)
       } yield signature
 
     def collectSignaturesRecursive(
@@ -193,7 +193,7 @@ object WaitingForRedemptionOps {
   ): F[Unit] = {
     val allSignatures = (List((primaryReplicaId, primarySignature)) ++
       otherSignatures.map(signature =>
-        (signature.replicaId, ECDigitalSignature.fromBytes(ByteVector(signature.signatureData.toByteArray)))
+        (signature.replicaId, ECDigitalSignature.fromBytes(ByteVector(signature.signature.toByteArray)))
       )).sortBy(_._1).map(_._2)
 
     val bridgeSigAsm =
