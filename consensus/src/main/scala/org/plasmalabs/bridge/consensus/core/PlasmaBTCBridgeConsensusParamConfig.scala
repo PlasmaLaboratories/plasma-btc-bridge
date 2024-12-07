@@ -32,7 +32,7 @@ case class PlasmaBTCBridgeConsensusParamConfig(
   plasmaPort:                  Int = 9084,
   btcRetryThreshold:           Int = 6,
   mintingFee:                  Long = 10,
-  feePerByte:                  CurrencyUnit = 2.satoshis,
+  feePerByte:                  CurrencyUnit = 4.satoshis, // needed to be increased to reach min relay fee
   groupId:                     GroupId,
   seriesId:                    SeriesId,
   configurationFile:           File = new File("application.conf"),

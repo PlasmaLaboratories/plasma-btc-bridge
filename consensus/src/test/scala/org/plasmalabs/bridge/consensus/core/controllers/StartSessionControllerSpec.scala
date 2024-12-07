@@ -89,6 +89,10 @@ class StartSessionControllerSpec
         implicit val currentPlasmaHeightRef =
           new CurrentPlasmaHeightRef[IO](currentPlasmaHeight)
         implicit val btcNetwork = RegTest
+        import org.bitcoins.core.crypto.ExtPublicKey
+
+        implicit val allReplicasPublicKeys: List[(Int, ExtPublicKey)] = List.empty
+
         (for {
           res <- StartSessionController.startPeginSession[IO](
             "pegin",
@@ -143,6 +147,9 @@ class StartSessionControllerSpec
       implicit val currentPlasmaHeightRef =
         new CurrentPlasmaHeightRef[IO](currentPlasmaHeight)
       implicit val btcNetwork = RegTest
+      import org.bitcoins.core.crypto.ExtPublicKey
+
+      implicit val allReplicasPublicKeys: List[(Int, ExtPublicKey)] = List.empty
       (for {
         res <- StartSessionController.startPeginSession[IO](
           "pegin",
@@ -196,6 +203,9 @@ class StartSessionControllerSpec
         implicit val bridgeWallet =
           new BridgeWalletManager(BTCWalletAlgebraImpl.make[IO](km0).unsafeRunSync())
         implicit val plasmaKeypair = new PlasmaKeypair(keypair)
+        import org.bitcoins.core.crypto.ExtPublicKey
+
+        implicit val allReplicasPublicKeys: List[(Int, ExtPublicKey)] = List.empty
         implicit val currentPlasmaHeightRef =
           new CurrentPlasmaHeightRef[IO](currentPlasmaHeight)
         implicit val btcNetwork = RegTest

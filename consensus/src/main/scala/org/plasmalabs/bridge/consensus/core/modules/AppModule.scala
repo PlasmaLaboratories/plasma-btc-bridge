@@ -4,14 +4,19 @@ import cats.effect.IO
 import cats.effect.kernel.Ref
 import cats.effect.std.Queue
 import io.grpc.Metadata
+import org.bitcoins.core.crypto.ExtPublicKey
 import org.bitcoins.rpc.client.common.BitcoindRpcClient
 import org.http4s.dsl.io._
 import org.http4s.{HttpRoutes, _}
 import org.plasmalabs.bridge.consensus.core.managers.{BTCWalletAlgebra, WalletManagementUtils}
-import org.plasmalabs.bridge.consensus.core.pbft.statemachine.BridgeStateMachineExecutionManagerImpl
+import org.plasmalabs.bridge.consensus.core.pbft.statemachine.{
+  BridgeStateMachineExecutionManagerImpl,
+  OutOfBandServiceServer
+}
 import org.plasmalabs.bridge.consensus.core.pbft.{
   CheckpointManagerImpl,
   PBFTInternalEvent,
+  PBFTInternalGrpcServiceServer,
   PBFTRequestPreProcessorImpl,
   RequestStateManagerImpl,
   RequestTimerManagerImpl,
@@ -30,6 +35,7 @@ import org.plasmalabs.bridge.consensus.core.{
   PlasmaBTCBridgeConsensusParamConfig,
   PublicApiClientGrpcMap,
   SequenceNumberManager,
+  StateMachineGrpcServiceServer,
   SystemGlobalState,
   Template,
   WatermarkRef,
@@ -85,7 +91,8 @@ trait AppModule extends WalletStateResource {
     currentBitcoinNetworkHeight: Ref[IO, Int],
     seqNumberManager:            SequenceNumberManager[IO],
     currentPlasmaHeight:         Ref[IO, Long],
-    currentState:                Ref[IO, SystemGlobalState]
+    currentState:                Ref[IO, SystemGlobalState],
+    allReplicasPublicKeys:       List[(Int, ExtPublicKey)]
   )(implicit
     pbftProtocolClient:     PBFTInternalGrpcServiceClient[IO],
     publicApiClientGrpcMap: PublicApiClientGrpcMap[IO],
@@ -151,6 +158,7 @@ trait AppModule extends WalletStateResource {
     implicit val iPeginWalletManager = new PeginWalletManager(
       pegInWalletManager
     )
+    implicit val iAllReplicasPublicKeys = allReplicasPublicKeys
     implicit val iBridgeWalletManager = new BridgeWalletManager(walletManager)
     implicit val btcNetwork = params.btcNetwork
     implicit val plasmaChannelResource = channelResource(
@@ -214,7 +222,7 @@ trait AppModule extends WalletStateResource {
       )
       (
         bridgeStateMachineExecutionManager,
-        org.plasmalabs.bridge.consensus.core.StateMachineGrpcServiceServer
+        StateMachineGrpcServiceServer
           .stateMachineGrpcServiceServer(
             replicaKeyPair,
             pbftProtocolClient,
@@ -224,11 +232,15 @@ trait AppModule extends WalletStateResource {
         InitializationModule
           .make[IO](currentBitcoinNetworkHeight, currentState),
         peginStateMachine,
-        org.plasmalabs.bridge.consensus.core.pbft.PBFTInternalGrpcServiceServer
+        PBFTInternalGrpcServiceServer
           .pbftInternalGrpcServiceServer(
             replicaKeysMap
           ),
-        requestStateManager
+        requestStateManager,
+        OutOfBandServiceServer.make[IO](
+          Set(0, 1, 2, 3, 4, 5, 6), // TODO: Secure method to verify allowed hosts
+          replicaId.id
+        )
       )
     }
   }

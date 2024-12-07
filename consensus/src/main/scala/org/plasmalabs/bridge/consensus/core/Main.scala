@@ -7,12 +7,14 @@ import com.google.protobuf.ByteString
 import com.typesafe.config.{Config, ConfigFactory}
 import io.grpc.netty.NettyServerBuilder
 import io.grpc.{ManagedChannelBuilder, Metadata}
+import org.bitcoins.core.crypto.ExtPublicKey
 import org.bitcoins.keymanager.bip39.BIP39KeyManager
 import org.bitcoins.rpc.client.common.BitcoindRpcClient
 import org.bitcoins.rpc.config.BitcoindAuthCredentials
 import org.bouncycastle.jce.provider.BouncyCastleProvider
 import org.plasmalabs.bridge.consensus.core.managers.{BTCWalletAlgebra, BTCWalletAlgebraImpl}
 import org.plasmalabs.bridge.consensus.core.modules.AppModule
+import org.plasmalabs.bridge.consensus.core.pbft.statemachine.OutOfBandServiceClientImpl
 import org.plasmalabs.bridge.consensus.core.utils.KeyGenerationUtils
 import org.plasmalabs.bridge.consensus.core.{
   ConsensusParamsDescriptor,
@@ -97,13 +99,41 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
     }
 
   private def loadKeyPegin(
-    params: PlasmaBTCBridgeConsensusParamConfig
+    params: PlasmaBTCBridgeConsensusParamConfig,
+    conf:   Config
   ): IO[BIP39KeyManager] =
-    KeyGenerationUtils.loadKeyManager[IO](
-      params.btcNetwork,
-      params.btcPegInSeedFile,
-      params.btcPegInPassword
-    )
+    for {
+      km <- KeyGenerationUtils.loadKeyManager[IO](
+        params.btcNetwork,
+        conf.getString("bridge.replica.security.peginWalletFile"),
+        params.btcPegInPassword
+      )
+    } yield km
+
+  def loadExtPublicKey(
+    filePath: String
+  ): IO[ExtPublicKey] = {
+    import java.nio.file.{Files, Paths}
+    for {
+      content <- IO.delay(
+        new String(Files.readAllBytes(Paths.get(filePath)), "UTF-8")
+      )
+    } yield ExtPublicKey.fromString(content.trim)
+  }
+
+  private def loadReplicasPublicKeys(
+    conf:         Config,
+    replicaCount: Int
+  ): IO[List[(Int, ExtPublicKey)]] = {
+    import cats.implicits._
+    for {
+      replicasPublicKeys <- (0 until replicaCount).toList.traverse { replicaId =>
+        for {
+          key <- loadExtPublicKey(conf.getString(s"bridge.replica.security.sharedPubKeyFiles.${replicaId}"))
+        } yield (replicaId, key)
+      }
+    } yield replicasPublicKeys
+  }
 
   private def loadKeyWallet(
     params: PlasmaBTCBridgeConsensusParamConfig
@@ -128,13 +158,24 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
       secure <- Sync[F].delay(
         conf.getBoolean(s"bridge.replica.consensus.replicas.$i.secure")
       )
+      outOfBandRequestHost <- Sync[F].delay(
+        conf.getString(s"bridge.replica.consensus.replicas.$i.outOfBandRequestHost")
+      )
+      outOfBandRequestPort <- Sync[F].delay(
+        conf.getInt(s"bridge.replica.consensus.replicas.$i.outOfBandRequestPort")
+      )
+
       _ <-
         info"bridge.replica.consensus.replicas.$i.host: ${host}"
       _ <-
         info"bridge.replica.consensus.replicas.$i.port: ${port}"
       _ <-
         info"bridge.replica.consensus.replicas.$i.secure: ${secure}"
-    } yield ReplicaNode[F](i, host, port, secure)).toList.sequence
+      _ <-
+        info"bridge.replica.consensus.replicas.$i.outOfBandRequestHost: ${outOfBandRequestHost}"
+      _ <-
+        info"bridge.replica.consensus.replicas.$i.outOfBandRequestPort: ${outOfBandRequestPort}"
+    } yield ReplicaNode[F](i, host, port, secure, outOfBandRequestHost, outOfBandRequestPort)).toList.sequence
   }
 
   private def createReplicaClienMap[F[_]: Async](
@@ -180,7 +221,8 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
     currentBitcoinNetworkHeight: Ref[IO, Int],
     seqNumberManager:            SequenceNumberManager[IO],
     currentPlasmaHeight:         Ref[IO, Long],
-    currentState:                Ref[IO, SystemGlobalState]
+    currentState:                Ref[IO, SystemGlobalState],
+    allReplicasPublicKeys:       List[(Int, ExtPublicKey)]
   )(implicit
     clientId:           ClientId,
     replicaId:          ReplicaId,
@@ -198,6 +240,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
     implicit val iPbftProtocolClient = pbftProtocolClient
     implicit val pbftProtocolClientImpl =
       new PublicApiClientGrpcMap[IO](publicApiClientGrpcMap)
+
     for {
       currentPlasmaHeightVal         <- currentPlasmaHeight.get
       currentBitcoinNetworkHeightVal <- currentBitcoinNetworkHeight.get
@@ -213,7 +256,8 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         currentBitcoinNetworkHeight,
         seqNumberManager,
         currentPlasmaHeight,
-        currentState
+        currentState,
+        allReplicasPublicKeys
       )
     } yield (
       currentPlasmaHeightVal,
@@ -223,7 +267,8 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
       res._3,
       res._4,
       res._5,
-      res._6
+      res._6,
+      res._7
     )
   }
 
@@ -236,7 +281,8 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
     currentBitcoinNetworkHeight: Ref[IO, Int],
     seqNumberManager:            SequenceNumberManager[IO],
     currentPlasmaHeight:         Ref[IO, Long],
-    currentState:                Ref[IO, SystemGlobalState]
+    currentState:                Ref[IO, SystemGlobalState],
+    allReplicasPublicKeys:       List[(Int, ExtPublicKey)]
   )(implicit
     conf:               Config,
     fromFellowship:     Fellowship,
@@ -286,6 +332,9 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         replicaKeyPair,
         replicaNodes
       )
+      signaturesMutex        <- Mutex[IO].toResource
+      outOfBandServiceClient <- OutOfBandServiceClientImpl.make[IO](replicaNodes, signaturesMutex)
+
       viewReference <- Ref[IO].of(0L).toResource
       replicaClients <- StateMachineServiceGrpcClientImpl
         .makeContainer[IO](
@@ -312,7 +361,8 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         currentBitcoinNetworkHeight,
         seqNumberManager,
         currentPlasmaHeight,
-        currentState
+        currentState,
+        allReplicasPublicKeys
       ).toResource
       (
         currentPlasmaHeightVal,
@@ -322,10 +372,13 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         init,
         peginStateMachine,
         pbftServiceResource,
-        requestStateManager
+        requestStateManager,
+        signatureServiceResource
       ) = res
       _ <- requestStateManager.startProcessingEvents()
-      _ <- IO.asyncForIO.background(bridgeStateMachineExecutionManager.runStream().compile.drain)
+      _ <- IO.asyncForIO.background(
+        bridgeStateMachineExecutionManager.runStream(outOfBandServiceClient, storageApi).compile.drain
+      )
       _ <- IO.asyncForIO.background(
         bridgeStateMachineExecutionManager.mintingStream(mintingManagerPolicy).compile.drain
       )
@@ -381,6 +434,14 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         .forAddress(new InetSocketAddress(responseHost, responsePort))
         .addService(responsesService)
         .resource[IO]
+
+      signatureService <- signatureServiceResource
+
+      outOfBandListener <- NettyServerBuilder
+        .forAddress(new InetSocketAddress(outOfBandRequestsHost, outOfBandRequestsPort))
+        .addService(signatureService)
+        .resource[IO]
+
       _ <- IO.asyncForIO
         .background(
           fs2.Stream
@@ -402,6 +463,15 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
           IO(
             responsesGrpcListener.start
           ) >> info"Netty-Server (response grpc) service bound to address ${responseHost}:${responsePort}" (
+            logger
+          )
+        )
+
+      _ <- IO.asyncForIO
+        .background(
+          IO(
+            outOfBandListener.start
+          ) >> info"Netty-Server (out of band grpc) service bound to address ${outOfBandRequestsHost}:${outOfBandRequestsPort}" (
             logger
           )
         )
@@ -529,13 +599,15 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
     )
 
     (for {
-      _                  <- IO(Security.addProvider(new BouncyCastleProvider()))
-      pegInKm            <- loadKeyPegin(params)
-      walletKm           <- loadKeyWallet(params)
-      pegInWalletManager <- BTCWalletAlgebraImpl.make[IO](pegInKm)
-      walletManager      <- BTCWalletAlgebraImpl.make[IO](walletKm)
-      _                  <- printParams[IO](params)
-      _                  <- printConfig[IO]
+      _ <- IO(Security.addProvider(new BouncyCastleProvider()))
+
+      pegInKm               <- loadKeyPegin(params, conf)
+      allReplicasPublicKeys <- loadReplicasPublicKeys(conf, replicaCount.value)
+      walletKm              <- loadKeyWallet(params)
+      pegInWalletManager    <- BTCWalletAlgebraImpl.make[IO](pegInKm)
+      walletManager         <- BTCWalletAlgebraImpl.make[IO](walletKm)
+      _                     <- printParams[IO](params)
+      _                     <- printConfig[IO]
       globalState <- Ref[IO].of(
         SystemGlobalState(Some("Setting up wallet..."), None)
       )
@@ -552,7 +624,8 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         currentBitcoinNetworkHeight,
         seqNumberManager,
         currentPlasmaHeight,
-        globalState
+        globalState,
+        allReplicasPublicKeys
       ).useForever
     } yield Right(
       s"Server started on ${ServerConfig.host}:${ServerConfig.port}"

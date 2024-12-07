@@ -4,6 +4,7 @@ import cats.effect.kernel.{Async, Ref, Resource, Sync}
 import cats.effect.std.Queue
 import com.google.protobuf.ByteString
 import io.grpc.ManagedChannel
+import org.bitcoins.core.crypto.ExtPublicKey
 import org.bitcoins.core.currency.{CurrencyUnit, Satoshis}
 import org.bitcoins.rpc.client.common.BitcoindRpcClient
 import org.plasmalabs.bridge.consensus.core.controllers.StartSessionController
@@ -13,7 +14,7 @@ import org.plasmalabs.bridge.consensus.core.managers.{
   WalletManagementUtils
 }
 import org.plasmalabs.bridge.consensus.core.pbft.ViewManager
-import org.plasmalabs.bridge.consensus.core.pbft.statemachine.PBFTEvent
+import org.plasmalabs.bridge.consensus.core.pbft.statemachine.{OutOfBandServiceClient, PBFTEvent}
 import org.plasmalabs.bridge.consensus.core.{
   BitcoinNetworkIdentifiers,
   BridgeWalletManager,
@@ -39,6 +40,7 @@ import org.plasmalabs.bridge.consensus.shared.PeginSessionState.{
   PeginSessionStateWaitingForBTC,
   PeginSessionWaitingForClaim
 }
+import org.plasmalabs.bridge.consensus.shared.persistence.StorageApi
 import org.plasmalabs.bridge.consensus.shared.{
   AssetToken,
   BTCWaitExpirationTime,
@@ -100,8 +102,15 @@ trait BridgeStateMachineExecutionManager[F[_]] {
 
   /**
    * Expected Outcome: Starts the stream for the elegibility manager that appends, updates or executes the requests.
+   * @param outOfBandServiceClient
+   * Primary uses this to get signatures from other replicas.
+   * @param storageApi
+   * Used for storing the new signatures in the DB.
    */
-  def runStream(): fs2.Stream[F, Unit]
+  def runStream(
+    outOfBandServiceClient: OutOfBandServiceClient[F],
+    storageApi:             StorageApi[F]
+  ): fs2.Stream[F, Unit]
 
   /**
    * Expected Outcome: Creates the minting stream on the existing mintingManager
@@ -149,7 +158,8 @@ object BridgeStateMachineExecutionManagerImpl {
     defaultFromTemplate:      Template,
     bitcoindInstance:         BitcoindRpcClient,
     replicaCount:             ReplicaCount,
-    defaultFeePerByte:        CurrencyUnit
+    defaultFeePerByte:        CurrencyUnit,
+    allReplicasPublicKeys:    List[(Int, ExtPublicKey)]
   ) = {
     for {
       tKeyPair <- walletManagementUtils.loadKeys(
@@ -160,14 +170,19 @@ object BridgeStateMachineExecutionManagerImpl {
       queue                    <- Queue.unbounded[F, (Long, StateMachineRequest)]
       elegibilityManager       <- ExecutionElegibilityManagerImpl.make[F]()
       startMintingRequestQueue <- Queue.unbounded[F, StartMintingRequest]
-
       mintingManagerAlgebra = MintingManagerAlgebraImpl
         .make[F](startMintingRequestQueue)
     } yield {
       implicit val plasmaKeypair = new PlasmaKeypair(tKeyPair)
+
       new BridgeStateMachineExecutionManager[F] {
 
-        def runStream(): fs2.Stream[F, Unit] =
+        def runStream(
+          outOfBandServiceClient: OutOfBandServiceClient[F],
+          storageApi:             StorageApi[F]
+        ): fs2.Stream[F, Unit] = {
+          implicit val iOutOfBandServiceClient = outOfBandServiceClient
+          implicit val iStorageApi = storageApi
           fs2.Stream
             .fromQueueUnterminated[F, (Long, StateMachineRequest)](queue)
             .evalMap(x =>
@@ -184,6 +199,7 @@ object BridgeStateMachineExecutionManagerImpl {
                 )
             )
             .evalMap(x => trace"Executing the request: ${x._2}" >> executeRequestF(x._1, x._2))
+        }
 
         def mintingStream(mintingManagerPolicy: ValidationPolicy): fs2.Stream[F, Unit] =
           mintingManagerAlgebra.mintingStream(mintingManagerPolicy)
@@ -344,6 +360,9 @@ object BridgeStateMachineExecutionManagerImpl {
 
         private def executeRequestAux(
           request: org.plasmalabs.bridge.shared.StateMachineRequest
+        )(implicit
+          outOfBandServiceClient: OutOfBandServiceClient[F],
+          storageApi:             StorageApi[F]
         ): F[StateMachineReply.Result] =
           (request.operation match {
             case StateMachineRequest.Operation.Empty =>
@@ -410,6 +429,7 @@ object BridgeStateMachineExecutionManagerImpl {
                   value.sessionId,
                   request.operation
                 )
+                currentPrimary <- viewManager.currentPrimary
                 _ <- (for {
                   sessionInfo <- someSessionInfo
                   peginSessionInfo <- MiscUtils.sessionInfoPeginPrism
@@ -420,11 +440,12 @@ object BridgeStateMachineExecutionManagerImpl {
                   peginSessionInfo.btcBridgeCurrentWalletIdx,
                   value.txId,
                   value.vout,
-                  peginSessionInfo.scriptAsm, // scriptAsm,
+                  peginSessionInfo.scriptAsm,
                   Satoshis
                     .fromLong(
                       BigInt(value.amount.toByteArray()).toLong
-                    )
+                    ),
+                  currentPrimary
                 )).getOrElse(Sync[F].unit)
               } yield Result.Empty
             case PostClaimTx(value) =>
@@ -445,6 +466,9 @@ object BridgeStateMachineExecutionManagerImpl {
         private def executeRequestF(
           sequenceNumber: Long,
           request:        org.plasmalabs.bridge.shared.StateMachineRequest
+        )(implicit
+          outOfBandServiceClient: OutOfBandServiceClient[F],
+          storageApi:             StorageApi[F]
         ) = {
           import org.plasmalabs.bridge.shared.implicits._
           import cats.implicits._

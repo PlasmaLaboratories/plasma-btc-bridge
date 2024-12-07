@@ -16,6 +16,7 @@ class BridgeIntegrationSpec
     with FailedPeginNonPrimaryFailureModule
     with SuccessfulPeginWithConcurrentSessionsModule
     with SuccessfulMintingLowLoadModule
+    with MultipleEscrowAddressGenerationModule
     with BridgeSetupModule {
 
   import org.typelevel.log4cats.syntax._
@@ -24,6 +25,10 @@ class BridgeIntegrationSpec
 
   cleanupDir.test("Bridge should correctly peg-in BTC") { _ =>
     info"Bridge should correctly peg-in BTC" >> successfulPegin()
+  }
+
+  cleanupDir.test("Bridges should correctly generate different new escrow addresses") { _ =>
+    info"Bridges should correctly generate different new escrow addresses" >> multipleCorrectEscrowAddressGeneration(3)
   }
 
   cleanupDir.test("Bridge should correctly peg-in BTC if non-primaries replica fails") { _ =>

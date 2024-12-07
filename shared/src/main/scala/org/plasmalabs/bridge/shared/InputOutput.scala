@@ -62,6 +62,9 @@ case class TimeoutError(error: String) extends BridgeError
 case class SessionNotFoundError(error: String) extends BridgeError
 case class InvalidKey(error: String) extends BridgeError
 case class InvalidHash(error: String) extends BridgeError
+
+case class InvalidPublicKey(error: String) extends BridgeError
+
 case class InvalidBase58(error: String) extends BridgeError
 case class InvalidInput(error: String) extends BridgeError
 case class WalletSetupError(error: String) extends BridgeError
