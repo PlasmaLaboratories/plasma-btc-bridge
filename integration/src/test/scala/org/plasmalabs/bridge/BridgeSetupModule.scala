@@ -96,7 +96,7 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
       }
     } yield ()
 
-  def launchConsensus(replicaId: Int, groupId: String, seriesId: String) = IO.asyncForIO
+  def launchConsensus(replicaId: Int) = IO.asyncForIO
     .start(
       consensus.core.Main.run(
         List(

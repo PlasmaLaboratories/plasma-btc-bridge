@@ -332,7 +332,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         replicaKeyPair,
         replicaNodes
       )
-      signaturesMutex             <- Mutex[IO].toResource
+      signaturesMutex        <- Mutex[IO].toResource
       outOfBandServiceClient <- OutOfBandServiceClientImpl.make[IO](replicaNodes, signaturesMutex)
 
       viewReference <- Ref[IO].of(0L).toResource
@@ -471,7 +471,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         .background(
           IO(
             outOfBandListener.start
-          ) >> info"Netty-Server (internal signature requests grpc) service bound to address ${outOfBandRequestsHost}:${outOfBandRequestsPort}" (
+          ) >> info"Netty-Server (out of band grpc) service bound to address ${outOfBandRequestsHost}:${outOfBandRequestsPort}" (
             logger
           )
         )

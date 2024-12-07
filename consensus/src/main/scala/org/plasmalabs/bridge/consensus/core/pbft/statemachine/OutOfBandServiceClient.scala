@@ -5,11 +5,7 @@ import cats.effect.std.Mutex
 import cats.implicits._
 import fs2.grpc.syntax.all._
 import io.grpc.{ManagedChannelBuilder, Metadata}
-import org.plasmalabs.bridge.consensus.service.{
-  GetSignatureRequest,
-  SignatureMessage,
-  OutOfBandServiceFs2Grpc
-}
+import org.plasmalabs.bridge.consensus.service.{GetSignatureRequest, OutOfBandServiceFs2Grpc, SignatureMessage}
 import org.plasmalabs.bridge.shared.ReplicaNode
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._

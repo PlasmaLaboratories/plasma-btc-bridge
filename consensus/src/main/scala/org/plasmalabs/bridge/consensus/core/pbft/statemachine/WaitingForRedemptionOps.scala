@@ -53,12 +53,12 @@ trait WaitingForRedemption {
     amountInSatoshis: CurrencyUnit,
     currentPrimary:   Int
   )(implicit
-    bitcoindInstance:            BitcoindRpcClient,
-    pegInWalletManager:          PeginWalletManager[F],
-    feePerByte:                  CurrencyUnit,
-    replica:                     ReplicaId,
+    bitcoindInstance:       BitcoindRpcClient,
+    pegInWalletManager:     PeginWalletManager[F],
+    feePerByte:             CurrencyUnit,
+    replica:                ReplicaId,
     outOfBandServiceClient: OutOfBandServiceClient[F],
-    storageApi:                  StorageApi[F]
+    storageApi:             StorageApi[F]
   ): F[Unit]
 }
 
@@ -74,12 +74,12 @@ object WaitingForRedemptionOps {
     amountInSatoshis: CurrencyUnit,
     currentPrimary:   Int
   )(implicit
-    bitcoindInstance:            BitcoindRpcClient,
-    pegInWalletManager:          PeginWalletManager[F],
-    feePerByte:                  CurrencyUnit,
-    replica:                     ReplicaId,
+    bitcoindInstance:       BitcoindRpcClient,
+    pegInWalletManager:     PeginWalletManager[F],
+    feePerByte:             CurrencyUnit,
+    replica:                ReplicaId,
     outOfBandServiceClient: OutOfBandServiceClient[F],
-    storageApi:                  StorageApi[F]
+    storageApi:             StorageApi[F]
   ): F[Unit] = {
 
     val (signableBytes, tx, srp) = createInputs(

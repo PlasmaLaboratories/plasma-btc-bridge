@@ -4,11 +4,7 @@ import cats.effect.kernel.{Async, Resource}
 import cats.implicits._
 import com.google.protobuf.ByteString
 import io.grpc.{Metadata, ServerServiceDefinition}
-import org.plasmalabs.bridge.consensus.service.{
-  GetSignatureRequest,
-  SignatureMessage,
-  OutOfBandServiceFs2Grpc
-}
+import org.plasmalabs.bridge.consensus.service.{GetSignatureRequest, OutOfBandServiceFs2Grpc, SignatureMessage}
 import org.plasmalabs.bridge.consensus.shared.persistence.StorageApi
 
 case class OutOfBandSignature(

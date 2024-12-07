@@ -14,7 +14,7 @@ import org.plasmalabs.bridge.consensus.core.managers.{
   WalletManagementUtils
 }
 import org.plasmalabs.bridge.consensus.core.pbft.ViewManager
-import org.plasmalabs.bridge.consensus.core.pbft.statemachine.{PBFTEvent, OutOfBandServiceClient}
+import org.plasmalabs.bridge.consensus.core.pbft.statemachine.{OutOfBandServiceClient, PBFTEvent}
 import org.plasmalabs.bridge.consensus.core.{
   BitcoinNetworkIdentifiers,
   BridgeWalletManager,
@@ -109,7 +109,7 @@ trait BridgeStateMachineExecutionManager[F[_]] {
    */
   def runStream(
     outOfBandServiceClient: OutOfBandServiceClient[F],
-    storageApi:                  StorageApi[F]
+    storageApi:             StorageApi[F]
   ): fs2.Stream[F, Unit]
 
   /**
@@ -179,7 +179,7 @@ object BridgeStateMachineExecutionManagerImpl {
 
         def runStream(
           outOfBandServiceClient: OutOfBandServiceClient[F],
-          storageApi:                  StorageApi[F]
+          storageApi:             StorageApi[F]
         ): fs2.Stream[F, Unit] = {
           implicit val iOutOfBandServiceClient = outOfBandServiceClient
           implicit val iStorageApi = storageApi
@@ -362,7 +362,7 @@ object BridgeStateMachineExecutionManagerImpl {
           request: org.plasmalabs.bridge.shared.StateMachineRequest
         )(implicit
           outOfBandServiceClient: OutOfBandServiceClient[F],
-          storageApi:                  StorageApi[F]
+          storageApi:             StorageApi[F]
         ): F[StateMachineReply.Result] =
           (request.operation match {
             case StateMachineRequest.Operation.Empty =>
@@ -468,7 +468,7 @@ object BridgeStateMachineExecutionManagerImpl {
           request:        org.plasmalabs.bridge.shared.StateMachineRequest
         )(implicit
           outOfBandServiceClient: OutOfBandServiceClient[F],
-          storageApi:                  StorageApi[F]
+          storageApi:             StorageApi[F]
         ) = {
           import org.plasmalabs.bridge.shared.implicits._
           import cats.implicits._

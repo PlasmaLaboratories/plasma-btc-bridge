@@ -12,7 +12,6 @@ trait SuccessfulPeginWithClaimReorgModule {
 
   def successfulPeginWithClaimError(): IO[Unit] = {
     import org.typelevel.log4cats.syntax._
-    import cats.implicits._
 
     assertIO(
       for {

@@ -111,8 +111,12 @@ object MintingManagerAlgebraImpl {
           UnknownError("ChangeLock is None, unable to get address."): BridgeError
         )
 
+        _ <- EitherT.right(Async[F].delay(debug"changeLock Created ${changeLock}"))
+
         changeAddress <- EitherT(tba.lockAddress(changeLock).attempt)
           .leftMap(th => UnknownError(th.getMessage): BridgeError)
+
+        _ <- EitherT.right(Async[F].delay(debug"changeAddress Created ${changeAddress}"))
 
         txos <- EitherT(
           startMintingProcess(
@@ -122,6 +126,8 @@ object MintingManagerAlgebraImpl {
             request.amount
           ).map(_._2).attempt
         ).leftMap(th => UnknownError(th.getMessage): BridgeError)
+
+        _ <- EitherT.right[BridgeError](Async[F].delay(debug"txos found ${txos}"))
 
         groupValueToArrive = txos
           .filter(_.transactionOutput.value.value.isGroup)
