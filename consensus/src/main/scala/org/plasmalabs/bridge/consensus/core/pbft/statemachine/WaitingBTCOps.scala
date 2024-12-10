@@ -13,6 +13,7 @@ import org.plasmalabs.sdk.dataApi.{IndexerQueryAlgebra, WalletStateAlgebra}
 import org.plasmalabs.sdk.models.{AssetMintingStatement, LockAddress}
 import org.plasmalabs.sdk.wallet.WalletApi
 import org.typelevel.log4cats.Logger
+import org.plasmalabs.bridge.shared.{BridgeError, UnknownError}
 
 object WaitingBTCOps {
 
@@ -35,48 +36,45 @@ object WaitingBTCOps {
   private def computeAssetMintingStatement[F[_]: Async: Logger](
     amount:         Int128,
     currentAddress: LockAddress,
-    utxoAlgebra:    IndexerQueryAlgebra[F],
-    txoState:       TxoState = TxoState.UNSPENT
-  ) = for {
-    txos <- getUtxos(currentAddress, utxoAlgebra, txoState)
-  } yield (
-    AssetMintingStatement(
-      getGroupTokeUtxo(txos),
-      getSeriesTokenUtxo(txos),
-      amount
-    ),
-    txos
-  )
+    utxoAlgebra:    IndexerQueryAlgebra[F]
+  ): F[Either[BridgeError, (AssetMintingStatement, Seq[Txo])]] =
+    getUtxos(currentAddress, utxoAlgebra, TxoState.UNSPENT).map(_.map { txos =>
+      (
+        AssetMintingStatement(
+          getGroupTokeUtxo(txos),
+          getSeriesTokenUtxo(txos),
+          amount
+        ),
+        txos
+      )
+    })
 
   def getUtxos[F[_]: Async: Logger](
     currentAddress: LockAddress,
     utxoAlgebra:    IndexerQueryAlgebra[F],
     txoState:       TxoState = TxoState.UNSPENT
-  ) = for {
-    txos <- (utxoAlgebra
-      .queryUtxo(
-        currentAddress,
-        txoState
-      )
-      .attempt >>= {
-      case Left(e) =>
-        import scala.concurrent.duration._
-        Async[F].sleep(5.second) >> Async[F].pure(e.asLeft[Seq[Txo]])
-      case Right(txos) =>
-        if (txos.isEmpty) {
-          import scala.concurrent.duration._
-          import org.typelevel.log4cats.syntax._
-          Async[F].sleep(
-            5.second
-          ) >> warn"No UTXO found while minting" >> Async[F].pure(
-            new Throwable("No UTXOs found").asLeft[Seq[Txo]]
-          )
-        } else
-          Async[F].pure(txos.asRight[Throwable])
-    })
-      .iterateUntil(_.isRight)
-      .map(_.toOption.get)
-  } yield txos
+  ): F[Either[BridgeError, Seq[Txo]]] = {
+    import scala.concurrent.duration._
+    import org.typelevel.log4cats.syntax._
+
+    def attemptQuery: F[Either[BridgeError, Seq[Txo]]] =
+      utxoAlgebra
+        .queryUtxo(currentAddress, txoState)
+        .attempt
+        .flatMap {
+          case Left(e) =>
+            Async[F].sleep(5.second) >>
+            Async[F].pure(Left(UnknownError(s"Something went wrong: ${e}")))
+          case Right(txos) if txos.isEmpty =>
+            Async[F].sleep(5.second) >>
+            warn"No UTXO found while minting" >>
+            Async[F].pure(Left(UnknownError("No UTXOs found")))
+          case Right(txos) =>
+            Async[F].pure(Right(txos))
+        }
+
+    attemptQuery.iterateUntil(_.isRight)
+  }
 
   private def mintTBTC[F[_]: Async](
     redeemAddress:         String,
@@ -91,7 +89,7 @@ object WaitingBTCOps {
     wsa:             WalletStateAlgebra[F],
     utxoAlgebra:     IndexerQueryAlgebra[F],
     channelResource: Resource[F, ManagedChannel]
-  ) = for {
+  ): F[Either[BridgeError, String]] = for {
     ioTransaction <- createSimpleAssetMintingTransactionFromParams(
       keyPair,
       fromFellowship,
@@ -109,8 +107,11 @@ object WaitingBTCOps {
     )
       .flatMap(Async[F].fromEither(_))
     txId <- broadcastSimpleTransactionFromParams(provedIoTx)
-      .flatMap(Async[F].fromEither(_))
-  } yield txId
+
+  } yield txId match {
+    case Left(e)     => Left(UnknownError(s"Simple Transaction Error: ${e.getMessage}"))
+    case Right(txId) => Right(txId)
+  }
 
   def startMintingProcess[F[_]: Async: Logger](
     fromFellowship: Fellowship,
@@ -125,31 +126,41 @@ object WaitingBTCOps {
     utxoAlgebra:           IndexerQueryAlgebra[F],
     channelResource:       Resource[F, ManagedChannel],
     defaultMintingFee:     Lvl
-  ): F[(LockAddress, Seq[Txo])] = {
-    import cats.implicits._
+  ): F[Either[BridgeError, (LockAddress, Seq[Txo])]] = {
+    import cats.data.EitherT
 
-    for {
-      currentAddress <- getCurrentAddress[F](
-        fromFellowship,
-        fromTemplate,
-        None
+    val result: EitherT[F, BridgeError, (LockAddress, Seq[Txo])] = for {
+      currentAddress <- EitherT[F, BridgeError, LockAddress](
+        getCurrentAddress[F](
+          fromFellowship,
+          fromTemplate,
+          None
+        )
       )
 
-      assetMintingStatement <- computeAssetMintingStatement(
-        amount,
-        currentAddress,
-        utxoAlgebra
+      mintingStatementOuter <- EitherT(
+        computeAssetMintingStatement(
+          amount,
+          currentAddress,
+          utxoAlgebra
+        )
       )
 
-      _ <- mintTBTC(
-        redeemAddress,
-        fromFellowship,
-        fromTemplate,
-        assetMintingStatement._1,
-        plasmaKeypair.underlying,
-        defaultMintingFee
+      (mintStatement, txos) = mintingStatementOuter
+
+      _ <- EitherT(
+        mintTBTC(
+          redeemAddress,
+          fromFellowship,
+          fromTemplate,
+          mintStatement,
+          plasmaKeypair.underlying,
+          defaultMintingFee
+        )
       )
-    } yield (currentAddress, assetMintingStatement._2)
+    } yield (currentAddress, txos)
+
+    result.value
   }
 
 }

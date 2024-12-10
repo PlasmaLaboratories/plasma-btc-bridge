@@ -12,7 +12,7 @@ import org.plasmalabs.sdk.models.{GroupId, SeriesId}
 import org.plasmalabs.sdk.syntax._
 import org.plasmalabs.sdk.utils.Encoding
 import org.typelevel.log4cats.Logger
-
+import org.plasmalabs.bridge.shared.{BridgeError}
 import scala.concurrent.duration._
 
 trait InitializationModuleAlgebra[F[_]] {
@@ -45,18 +45,24 @@ object InitializationModule {
     import cats.implicits._
 
     private def getTxos(
-      fromFellowship: Fellowship,
-      fromTemplate:   Template
-    ): F[Seq[Txo]] = for {
-      currentAddress <- getCurrentAddress[F](
+    fromFellowship: Fellowship,
+    fromTemplate:   Template
+): F[Seq[Txo]] = {
+  import cats.data.EitherT
+  
+  (for {
+    currentAddress <- EitherT(
+      getCurrentAddress[F](
         fromFellowship,
         fromTemplate,
         None
-      )
-      txos <- genusQueryAlgebra.queryUtxo(
-        currentAddress
-      )
-    } yield txos
+      ) 
+    )
+    txos <- EitherT.right[BridgeError](
+      genusQueryAlgebra.queryUtxo(currentAddress)
+    )
+  } yield txos).valueOr(_ => Seq.empty)
+}
 
     private def sumLvls(txos: Seq[Txo]): Int128 =
       txos
