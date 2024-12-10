@@ -7,30 +7,33 @@ import org.plasmalabs.bridge.consensus.core.pbft.statemachine.OutOfBandSignature
 import java.util.concurrent.ConcurrentHashMap
 
 trait OutOfBandAlgebra[F[_]] {
-  /** Stores a claim signature for a given transaction.
-    *
-    * This method attempts to insert a new signature entry into the storage. If an entry
-    * for the given transaction ID already exists, it will be overwritten.
-    *
-    * @param txId The unique identifier of the transaction
-    * @param signature The cryptographic signature to be stored
-    * @param timestamp The timestamp when the signature was created
-    * @return F[Boolean] Returns true if the insertion was successful, false otherwise
-    */
+
+  /**
+   * Stores a claim signature for a given transaction.
+   *
+   * This method attempts to insert a new signature entry into the storage. If an entry
+   * for the given transaction ID already exists, it will be overwritten.
+   *
+   * @param txId The unique identifier of the transaction
+   * @param signature The cryptographic signature to be stored
+   * @param timestamp The timestamp when the signature was created
+   * @return F[Boolean] Returns true if the insertion was successful, false otherwise
+   */
   def insertClaimSignature(
     txId:      String,
     signature: String,
     timestamp: Long
   ): F[Boolean]
 
-  /** Retrieves a previously stored claim signature for a given transaction.
-    *
-    * This method looks up the signature entry associated with the provided
-    * transaction ID. If no entry exists, None is returned.
-    *
-    * @param txId The unique identifier of the transaction
-    * @return F[Option[OutOfBandSignature]] Returns the signature entry if found, None otherwise
-    */
+  /**
+   * Retrieves a previously stored claim signature for a given transaction.
+   *
+   * This method looks up the signature entry associated with the provided
+   * transaction ID. If no entry exists, None is returned.
+   *
+   * @param txId The unique identifier of the transaction
+   * @return F[Option[OutOfBandSignature]] Returns the signature entry if found, None otherwise
+   */
   def getClaimSignature(
     txId: String
   ): F[Option[OutOfBandSignature]]

@@ -30,7 +30,12 @@ import org.plasmalabs.bridge.consensus.core.{
 }
 import org.plasmalabs.bridge.consensus.service.StateMachineServiceFs2Grpc
 import org.plasmalabs.bridge.consensus.shared.BTCRetryThreshold
-import org.plasmalabs.bridge.consensus.shared.persistence.{OutOfBandAlgebra, OutOfBandAlgebraImpl, StorageApi, StorageApiImpl}
+import org.plasmalabs.bridge.consensus.shared.persistence.{
+  OutOfBandAlgebra,
+  OutOfBandAlgebraImpl,
+  StorageApi,
+  StorageApiImpl
+}
 import org.plasmalabs.bridge.consensus.shared.utils.ConfUtils._
 import org.plasmalabs.bridge.consensus.subsystems.monitor.{
   BitcoinMonitor,
