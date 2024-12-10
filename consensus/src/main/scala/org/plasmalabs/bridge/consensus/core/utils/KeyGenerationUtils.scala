@@ -7,7 +7,7 @@ import org.bitcoins.core.hd.{BIP32Path, HDAccount, HDPath, HDPurposes}
 import org.bitcoins.core.wallet.keymanagement.KeyManagerParams
 import org.bitcoins.crypto.{AesPassword, ECDigitalSignature, ECPublicKey, HashType}
 import org.bitcoins.keymanager.bip39.BIP39KeyManager
-import org.plasmalabs.bridge.consensus.core.BitcoinNetworkIdentifiers
+import org.plasmalabs.bridge.consensus.core.{BitcoinNetworkIdentifiers, FellowshipPublicKeys}
 import scodec.bits.ByteVector
 
 trait KeyGenerationUtils[F[_]] {
@@ -207,11 +207,11 @@ object KeyGenerationUtils {
     } yield childKey
 
   def deriveChildrenFromSharedPublicKeys[F[_]: Sync](
-    extendedPubKeys: List[(Int, ExtPublicKey)],
+    extendedPubKeys: FellowshipPublicKeys,
     currentIdx:      Int
   ): F[List[(Int, ECPublicKey)]] =
     for {
-      childKeys <- extendedPubKeys.traverse { case (id, key) =>
+      childKeys <- extendedPubKeys.keys.traverse { case (id, key) =>
         deriveChildFromSharedPublicKey(key, currentIdx).map { ecKey =>
           (id, ECPublicKey.fromHex(ecKey.hex))
         }

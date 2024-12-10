@@ -9,6 +9,7 @@ import org.plasmalabs.bridge.consensus.core.utils.KeyGenerationUtils
 import org.plasmalabs.bridge.consensus.core.{
   BridgeWalletManager,
   CurrentPlasmaHeightRef,
+  FellowshipPublicKeys,
   PeginWalletManager,
   PlasmaKeypair,
   PlasmaPrivatenet,
@@ -89,9 +90,6 @@ class StartSessionControllerSpec
         implicit val currentPlasmaHeightRef =
           new CurrentPlasmaHeightRef[IO](currentPlasmaHeight)
         implicit val btcNetwork = RegTest
-        import org.bitcoins.core.crypto.ExtPublicKey
-
-        implicit val allReplicasPublicKeys: List[(Int, ExtPublicKey)] = List.empty
 
         (for {
           res <- StartSessionController.startPeginSession[IO](
@@ -100,7 +98,8 @@ class StartSessionControllerSpec
               None,
               testKey,
               testHash
-            )
+            ),
+            FellowshipPublicKeys(List.empty)
           )
         } yield (res.toOption.get._1.btcPeginCurrentWalletIdx == 0))
       }).flatten
@@ -147,9 +146,7 @@ class StartSessionControllerSpec
       implicit val currentPlasmaHeightRef =
         new CurrentPlasmaHeightRef[IO](currentPlasmaHeight)
       implicit val btcNetwork = RegTest
-      import org.bitcoins.core.crypto.ExtPublicKey
 
-      implicit val allReplicasPublicKeys: List[(Int, ExtPublicKey)] = List.empty
       (for {
         res <- StartSessionController.startPeginSession[IO](
           "pegin",
@@ -157,7 +154,8 @@ class StartSessionControllerSpec
             None,
             "invalidKey",
             testHash
-          )
+          ),
+          FellowshipPublicKeys(List.empty)
         )
       } yield res.isLeft && res.swap.toOption.get == InvalidKey(
         "Invalid key invalidKey"
@@ -203,9 +201,7 @@ class StartSessionControllerSpec
         implicit val bridgeWallet =
           new BridgeWalletManager(BTCWalletAlgebraImpl.make[IO](km0).unsafeRunSync())
         implicit val plasmaKeypair = new PlasmaKeypair(keypair)
-        import org.bitcoins.core.crypto.ExtPublicKey
 
-        implicit val allReplicasPublicKeys: List[(Int, ExtPublicKey)] = List.empty
         implicit val currentPlasmaHeightRef =
           new CurrentPlasmaHeightRef[IO](currentPlasmaHeight)
         implicit val btcNetwork = RegTest
@@ -216,7 +212,8 @@ class StartSessionControllerSpec
               None,
               testKey,
               "invalidHash"
-            )
+            ),
+            FellowshipPublicKeys(List.empty)
           )
         } yield res.isLeft && res.swap.toOption.get == InvalidHash(
           "Invalid hash invalidHash"

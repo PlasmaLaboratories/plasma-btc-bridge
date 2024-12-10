@@ -37,5 +37,7 @@ case class PlasmaBTCBridgeConsensusParamConfig(
   seriesId:                    SeriesId,
   configurationFile:           File = new File("application.conf"),
   dbFile:                      File = new File("bridge.db"),
-  plasmaSecureConnection:      Boolean = false
+  plasmaSecureConnection:      Boolean = false,
+  multiSigM:                   Int = 5, // M = min threshold for multisig
+  multiSigN:                   Int = 7 // N = total number of public keys used for multisig
 )

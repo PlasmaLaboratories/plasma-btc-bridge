@@ -14,12 +14,14 @@ A successful pegin is the process of securely transferring Bitcoin (BTC) into th
 2. User sends Bitcoin to the provided escrow address (multisig protected)
 - This locks the funds in preparation for the cross-chain transfer
 
+3. The minted tokens are sent to the user's plasma redeem address 
+- user redeems funds 
+
 3. Bridges collectively claim funds from the escrow address to a claim address
 - This step ensures secure locking of the Bitcoin on the Bitcoin network
 
 4. Bridges mint equivalent Plasma BTC on the Plasma side
-- The minted tokens are sent to the user's plasma address 
-- User now has access to their funds in the Plasma ecosystem
+
 
 ## Successful Pegin (from Integration tests)
 ### Requirements

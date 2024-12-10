@@ -49,7 +49,7 @@ trait BitcoinUtils[F[_]] {
    */
   def buildScriptAsm(
     userPKey:         ECPublicKey,
-    bridgePKeys:      Iterable[(Int, ECPublicKey)],
+    bridgePKeys:      List[(Int, ECPublicKey)],
     secretHash:       ByteVector,
     relativeLockTime: Long
   ): Seq[ScriptToken]
@@ -64,7 +64,7 @@ trait BitcoinUtils[F[_]] {
    * @return Descriptor string for the Bitcoin script
    */
   def createDescriptor(
-    bridgesPkey: Iterable[(Int, ECPublicKey)],
+    bridgesPkey: List[(Int, ECPublicKey)],
     userPKey:    String,
     secretHash:  String
   ): String
@@ -133,7 +133,7 @@ object BitcoinUtils {
 
   def buildScriptAsm(
     userPKey:         ECPublicKey,
-    bridgePKeys:      Iterable[(Int, ECPublicKey)],
+    bridgePKeys:      List[(Int, ECPublicKey)],
     secretHash:       ByteVector,
     relativeLockTime: Long
   ): Seq[ScriptToken] = {
@@ -202,7 +202,7 @@ object BitcoinUtils {
 
   // or(and(pk(A),older(1000)),and(thresh(5, pk(B1), pk(B2),pk(B3), pk(B4),pk(B5),pk(B6),pk(B7)),sha256(H)))
   def createDescriptor(
-    bridgesPkey: Iterable[(Int, ECPublicKey)],
+    bridgesPkey: List[(Int, ECPublicKey)],
     userPKey:    String,
     secretHash:  String
   ) =

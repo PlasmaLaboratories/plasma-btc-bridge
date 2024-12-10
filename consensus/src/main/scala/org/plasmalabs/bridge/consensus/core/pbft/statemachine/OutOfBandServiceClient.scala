@@ -1,6 +1,6 @@
 package org.plasmalabs.bridge.consensus.core.pbft.statemachine
 
-import cats.effect.kernel.Async
+import cats.effect.kernel.{Async, Resource}
 import cats.effect.std.Mutex
 import cats.implicits._
 import fs2.grpc.syntax.all._
@@ -23,16 +23,16 @@ trait OutOfBandServiceClient[F[_]] {
   def getSignature(
     replicaId: Int,
     txId:      String
-  ): F[SignatureMessage]
+  ): F[Option[SignatureMessage]]
 }
 
 object OutOfBandServiceClientImpl {
 
   def make[F[_]: Async: Logger](
-    replicaNodes: List[ReplicaNode[F]],
-    mutex:        Mutex[F]
-  ) =
+    replicaNodes: List[ReplicaNode[F]]
+  ): Resource[F, OutOfBandServiceClient[F]] =
     for {
+      mutex <- Resource.eval(Mutex[F])
       idClientList <- (for {
         replicaNode <- replicaNodes
       } yield for {
@@ -53,22 +53,19 @@ object OutOfBandServiceClientImpl {
       def getSignature(
         replicaId: Int,
         txId:      String
-      ): F[SignatureMessage] =
+      ): F[Option[SignatureMessage]] =
         mutex.lock.surround(
-          for {
+          (for {
             _ <- info"Requesting signature from replica ${replicaId} for tx ${txId}"
             request = GetSignatureRequest(replicaId, txId)
             response <- replicaMap(replicaId)
               .getSignature(request, new Metadata())
+              .map[Option[SignatureMessage]](Some(_))
               .handleErrorWith { error =>
                 error"Error getting signature from replica $replicaId: ${error.getMessage}" >>
-                SignatureMessage(
-                  replicaId = -1, // TODO: maybe return an option/either here
-                  signature = com.google.protobuf.ByteString.EMPTY,
-                  timestamp = 0L
-                ).pure[F]
+                Async[F].pure(Option.empty[SignatureMessage])
               }
-          } yield response
+          } yield response)
         )
     }
 }

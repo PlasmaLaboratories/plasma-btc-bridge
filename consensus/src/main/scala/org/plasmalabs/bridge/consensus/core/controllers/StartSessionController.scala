@@ -1,7 +1,6 @@
 package org.plasmalabs.bridge.consensus.core.controllers
 
 import cats.effect.kernel.{Async, Sync}
-import org.bitcoins.core.crypto.ExtPublicKey
 import org.bitcoins.core.protocol.Bech32Address
 import org.bitcoins.core.protocol.script.{P2WPKHWitnessSPKV0, WitnessScriptPubKey}
 import org.bitcoins.core.script.constant.{OP_0, ScriptConstant}
@@ -13,6 +12,7 @@ import org.plasmalabs.bridge.consensus.core.{
   BitcoinNetworkIdentifiers,
   BridgeWalletManager,
   CurrentPlasmaHeightRef,
+  FellowshipPublicKeys,
   PeginWalletManager,
   PlasmaKeypair
 }
@@ -52,7 +52,7 @@ object StartSessionController {
     redeemAddress:             String,
     minHeight:                 Long,
     maxHeight:                 Long,
-    allReplicasPublicKeys:     List[(Int, ExtPublicKey)]
+    allReplicasPublicKeys:     FellowshipPublicKeys
   ): F[(String, PeginSessionInfo, List[(Int, ECPublicKey)])] = {
     import cats.implicits._
 
@@ -122,8 +122,9 @@ object StartSessionController {
   }
 
   def startPeginSession[F[_]: Async: Logger](
-    sessionId: String,
-    req:       StartSessionOperation
+    sessionId:             String,
+    req:                   StartSessionOperation,
+    allReplicasPublicKeys: FellowshipPublicKeys
   )(implicit
     plasmaKeypair:            PlasmaKeypair,
     btcNetwork:               BitcoinNetworkIdentifiers,
@@ -136,8 +137,7 @@ object StartSessionController {
     btcWaitExpirationTime:    BTCWaitExpirationTime,
     tba:                      TransactionBuilderApi[F],
     walletApi:                WalletApi[F],
-    wsa:                      WalletStateAlgebra[F],
-    allReplicasPublicKeys:    List[(Int, ExtPublicKey)]
+    wsa:                      WalletStateAlgebra[F]
   ): F[Either[BridgeError, (PeginSessionInfo, StartPeginSessionResponse)]] = {
     import cats.implicits._
     import PlasmaWalletAlgebra._

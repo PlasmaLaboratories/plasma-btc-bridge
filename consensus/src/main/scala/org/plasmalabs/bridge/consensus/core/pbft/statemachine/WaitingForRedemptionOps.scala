@@ -17,6 +17,7 @@ import org.plasmalabs.bridge.shared.ReplicaId
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
 import scodec.bits.ByteVector
+import org.plasmalabs.bridge.consensus.shared.persistence.OutOfBandAlgebra
 
 import scala.concurrent.duration._
 
@@ -51,7 +52,8 @@ trait WaitingForRedemption {
     vout:             Long,
     scriptAsm:        String,
     amountInSatoshis: CurrencyUnit,
-    currentPrimary:   Int
+    currentPrimary:   Int,
+    threshold:        Int = 4
   )(implicit
     bitcoindInstance:       BitcoindRpcClient,
     pegInWalletManager:     PeginWalletManager[F],
@@ -72,14 +74,16 @@ object WaitingForRedemptionOps {
     vout:             Long,
     scriptAsm:        String,
     amountInSatoshis: CurrencyUnit,
-    currentPrimary:   Int
+    currentPrimary:   Int,
+    multiSigM:        Int,
+    multiSigN:        Int
   )(implicit
     bitcoindInstance:       BitcoindRpcClient,
     pegInWalletManager:     PeginWalletManager[F],
     feePerByte:             CurrencyUnit,
     replica:                ReplicaId,
     outOfBandServiceClient: OutOfBandServiceClient[F],
-    storageApi:             StorageApi[F]
+    outOfBandAlgebra:       OutOfBandAlgebra[F]
   ): F[Unit] = {
 
     val (signableBytes, tx, srp) = createInputs(
@@ -96,11 +100,11 @@ object WaitingForRedemptionOps {
         signableBytes.bytes
       )
 
-      _ <- storageApi.insertSignature(inputTxId, signature.hex, 1L)
+      _ <- outOfBandAlgebra.insertClaimSignature(inputTxId, signature.hex, 1L)
       _ <- replica.id match {
         case `currentPrimary` =>
           for {
-            otherSignatures <- primaryCollectSignatures(currentPrimary, inputTxId)
+            otherSignatures <- primaryCollectSignatures(currentPrimary, inputTxId, multiSigM - 1, multiSigN)
             _               <- primaryBroadcastBitcoinTx(secret, signature, tx, srp, otherSignatures, currentPrimary)
           } yield ()
         case _ => Async[F].unit
@@ -139,13 +143,14 @@ object WaitingForRedemptionOps {
     (signableBytes, tx, srp)
   }
 
-  private def primaryCollectSignatures[F[_]: Async: Logger](primaryId: Int, inputTxId: String)(implicit
+  private def primaryCollectSignatures[F[_]: Async: Logger](
+    primaryId: Int,
+    inputTxId: String,
+    threshold: Int,
+    multiSigN: Int
+  )(implicit
     outOfBandServiceClient: OutOfBandServiceClient[F]
   ): F[List[SignatureMessage]] = {
-    def collectSignatureForReplica(id: Int): F[SignatureMessage] =
-      for {
-        signature <- outOfBandServiceClient.getSignature(id, inputTxId)
-      } yield signature
 
     def collectSignaturesRecursive(
       remainingIds:    Set[Int],
@@ -153,16 +158,20 @@ object WaitingForRedemptionOps {
       attempt:         Int,
       maxAttempts:     Int = 5 // TODO: add to config
     ): F[List[SignatureMessage]] =
-      // Threshold needs to be 4 for 5 out of 7 multisig, 1 signature comes from the primary
-      if (validSignatures.length >= 4) {
+      // Threshold needs to be m - 1 for m out of n multisig, 1 signature comes from the primary
+      if (validSignatures.length >= threshold) {
         for {
           _ <- info"Signature Threshold achieved with ${validSignatures.length} valid signatures"
         } yield validSignatures
       } else {
         for {
-          _             <- info"Start to collect signatures for txId: ${inputTxId}"
-          newSignatures <- remainingIds.toList.traverse(collectSignatureForReplica)
-          newValidSignatures = newSignatures.filter(_.replicaId != -1)
+          _ <- info"Start to collect signatures for txId: ${inputTxId}"
+          newSignatures <- remainingIds.toList.traverse { id =>
+            outOfBandServiceClient.getSignature(id, inputTxId)
+          }
+          newValidSignatures = newSignatures
+            .filter(signatureOption => signatureOption.nonEmpty && signatureOption.get.replicaId != -1)
+            .map(_.get)
 
           _ <- Async[F].sleep(1.second)
           result <- collectSignaturesRecursive(
@@ -174,7 +183,7 @@ object WaitingForRedemptionOps {
         } yield result
       }
 
-    val initialIds: Set[Int] = (0 until 7).toSet.filter(_ != primaryId)
+    val initialIds: Set[Int] = (0 until multiSigN).toSet.filter(_ != primaryId)
     for {
       _          <- Async[F].sleep(1.second) // wait for other replicas to save their signature
       signatures <- collectSignaturesRecursive(initialIds, List.empty, 0)

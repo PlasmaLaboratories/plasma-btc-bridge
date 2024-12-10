@@ -5,7 +5,7 @@ import cats.implicits._
 import com.google.protobuf.ByteString
 import io.grpc.{Metadata, ServerServiceDefinition}
 import org.plasmalabs.bridge.consensus.service.{GetSignatureRequest, OutOfBandServiceFs2Grpc, SignatureMessage}
-import org.plasmalabs.bridge.consensus.shared.persistence.StorageApi
+import org.plasmalabs.bridge.consensus.shared.persistence.OutOfBandAlgebra
 
 case class OutOfBandSignature(
   txId:      String,
@@ -28,11 +28,18 @@ trait OutOfBandServiceServer[F[_]] {
 
 object OutOfBandServiceServer {
 
+  /**
+   * Retrieves a signature for a given transaction ID.
+   *
+   * @param allowerPeers The unique identifiers of the replicas, has to be set to 0,1,2,3,4,5,6
+   * @param replicaId The ID of the replica creating this service
+   * if the set of the allowed peers differs, requests from replicas not in the set will not execute correctly.
+   */
   def make[F[_]: Async](
     allowedPeers: Set[Int], // TODO: Secure method to authorize other replicas
     replicaId:    Int
   )(implicit
-    storageApi: StorageApi[F]
+    outOfBandAlgebra: OutOfBandAlgebra[F]
   ): Resource[F, ServerServiceDefinition] =
     OutOfBandServiceFs2Grpc.bindServiceResource(
       serviceImpl = new OutOfBandServiceFs2Grpc[F, Metadata] {
@@ -43,14 +50,15 @@ object OutOfBandServiceServer {
           timestamp = 1L
         )
 
-        private def getSignatureAux(
-          request: GetSignatureRequest
-        ) =
+        override def getSignature(
+          request: GetSignatureRequest,
+          ctx:     Metadata
+        ): F[SignatureMessage] =
           for {
             result <-
               if (allowedPeers.contains(request.replicaId)) {
                 for {
-                  result <- storageApi.getSignature(request.txId)
+                  result <- outOfBandAlgebra.getClaimSignature(request.txId)
                 } yield result match {
                   case Some(signature) =>
                     SignatureMessage(
@@ -65,12 +73,6 @@ object OutOfBandServiceServer {
               }
 
           } yield result
-
-        override def getSignature(
-          request: GetSignatureRequest,
-          ctx:     Metadata
-        ): F[SignatureMessage] =
-          getSignatureAux(request)
       }
     )
 }

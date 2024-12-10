@@ -73,4 +73,7 @@ package object core {
 
   class Template(val underlying: String) extends AnyVal
 
+  import org.bitcoins.core.crypto.ExtPublicKey
+  case class FellowshipPublicKeys(keys: List[(Int, ExtPublicKey)])
+
 }

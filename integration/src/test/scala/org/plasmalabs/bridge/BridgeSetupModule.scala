@@ -66,17 +66,6 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
     }.void
   }
 
-  def loadExtPublicKey(
-    filePath: String
-  ): IO[ExtPublicKey] = {
-    import java.nio.file.{Files, Paths}
-    for {
-      content <- IO.delay(
-        new String(Files.readAllBytes(Paths.get(filePath)), "UTF-8")
-      )
-    } yield ExtPublicKey.fromString(content.trim)
-  }
-
   def createPeginWalletFiles =
     for {
       _ <- (0 until replicaCount).toList.traverse { replicaId =>
