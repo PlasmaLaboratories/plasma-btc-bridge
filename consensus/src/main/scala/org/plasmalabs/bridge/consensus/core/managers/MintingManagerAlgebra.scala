@@ -114,14 +114,16 @@ object MintingManagerAlgebraImpl {
         changeAddress <- EitherT(tba.lockAddress(changeLock).attempt)
           .leftMap(th => UnknownError(th.getMessage): BridgeError)
 
-        txos <- EitherT(
+        mintingResult <- EitherT(
           startMintingProcess(
             request.fellowship,
             request.template,
             request.redeemAddress,
             request.amount
-          ).map(_._2).attempt
-        ).leftMap(th => UnknownError(th.getMessage): BridgeError)
+          )
+        )
+
+        (lockAddress, txos) = mintingResult
 
         groupValueToArrive = txos
           .filter(_.transactionOutput.value.value.isGroup)
@@ -142,7 +144,7 @@ object MintingManagerAlgebraImpl {
         seriesValueToArrive: BigInt
       ): F[Boolean] = {
         def verifyUtxosMatch = (for {
-          utxos <- getUtxos(changeAddress, utxoAlgebra)
+          utxos <- EitherT(getUtxos(changeAddress, utxoAlgebra))
 
           groupSumArrived = utxos
             .filter(_.transactionOutput.value.value.isGroup)
@@ -155,14 +157,15 @@ object MintingManagerAlgebraImpl {
             .sum
 
         } yield (seriesSumArrived >= seriesValueToArrive && groupSumArrived >= groupValueToArrive))
-          .handleErrorWith(_ => Async[F].pure(false))
+          .handleErrorWith(e => EitherT.leftT(e))
 
         def retry(retriesLeft: Int): F[Boolean] =
           if (retriesLeft < 0) Async[F].pure(false)
           else {
-            verifyUtxosMatch.flatMap {
-              case true  => Async[F].pure(true)
-              case false => retry(retriesLeft - 1)
+            verifyUtxosMatch.value.flatMap {
+              case Right(true)  => Async[F].pure(true)
+              case Right(false) => retry(retriesLeft - 1)
+              case Left(_)      => retry(retriesLeft - 1) // Retry on BridgeError
             }
           }
 

@@ -2,6 +2,7 @@ package org.plasmalabs.bridge.consensus.core.managers
 
 import cats.Monad
 import org.plasmalabs.bridge.consensus.core.{Fellowship, Template}
+import org.plasmalabs.bridge.shared.{BridgeError, UnknownError}
 import org.plasmalabs.sdk.builders.TransactionBuilderApi
 import org.plasmalabs.sdk.dataApi.WalletStateAlgebra
 import org.plasmalabs.sdk.models.box.Lock
@@ -26,7 +27,7 @@ object WalletApiHelpers {
   )(implicit
     wsa: WalletStateAlgebra[F],
     tba: TransactionBuilderApi[F]
-  ): F[LockAddress] = {
+  ): F[Either[BridgeError, LockAddress]] = {
     import cats.implicits._
     for {
       someCurrentIndices <- getCurrentIndices(
@@ -35,15 +36,18 @@ object WalletApiHelpers {
         someFromInteraction
       )
       predicateFundsToUnlock <- getPredicateFundsToUnlock[F](someCurrentIndices)
-      fromAddress <- tba.lockAddress(
-        predicateFundsToUnlock.get
-      )
+      fromAddress <- predicateFundsToUnlock match {
+        case None =>
+          (Left(UnknownError("Predicate funds not found"))).pure[F]
+        case Some(lock) =>
+          tba.lockAddress(lock).map(Right(_))
+      }
     } yield fromAddress
   }
 
   def getPredicateFundsToUnlock[F[_]: Monad](
     someIndices: Option[Indices]
-  )(implicit wsa: WalletStateAlgebra[F]) = {
+  )(implicit wsa: WalletStateAlgebra[F]): F[Option[Lock]] = {
     import cats.implicits._
     someIndices
       .map(currentIndices => wsa.getLockByIndex(currentIndices))
