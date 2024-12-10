@@ -2,11 +2,11 @@ package org.plasmalabs.bridge.consensus.core.managers
 
 import cats.Monad
 import org.plasmalabs.bridge.consensus.core.{Fellowship, Template}
+import org.plasmalabs.bridge.shared.{BridgeError, UnknownError}
 import org.plasmalabs.sdk.builders.TransactionBuilderApi
 import org.plasmalabs.sdk.dataApi.WalletStateAlgebra
 import org.plasmalabs.sdk.models.box.Lock
 import org.plasmalabs.sdk.models.{Indices, LockAddress}
-import org.plasmalabs.bridge.shared.{BridgeError, UnknownError}
 
 object WalletApiHelpers {
 

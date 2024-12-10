@@ -4,6 +4,7 @@ import cats.effect.kernel.{Async, Ref}
 import org.bitcoins.rpc.client.common.BitcoindRpcClient
 import org.plasmalabs.bridge.consensus.core.managers.WalletApiHelpers
 import org.plasmalabs.bridge.consensus.core.{Fellowship, SystemGlobalState, Template}
+import org.plasmalabs.bridge.shared.BridgeError
 import org.plasmalabs.indexer.services.Txo
 import org.plasmalabs.quivr.models.Int128
 import org.plasmalabs.sdk.builders.TransactionBuilderApi
@@ -12,7 +13,7 @@ import org.plasmalabs.sdk.models.{GroupId, SeriesId}
 import org.plasmalabs.sdk.syntax._
 import org.plasmalabs.sdk.utils.Encoding
 import org.typelevel.log4cats.Logger
-import org.plasmalabs.bridge.shared.{BridgeError}
+
 import scala.concurrent.duration._
 
 trait InitializationModuleAlgebra[F[_]] {
@@ -45,24 +46,24 @@ object InitializationModule {
     import cats.implicits._
 
     private def getTxos(
-    fromFellowship: Fellowship,
-    fromTemplate:   Template
-): F[Seq[Txo]] = {
-  import cats.data.EitherT
-  
-  (for {
-    currentAddress <- EitherT(
-      getCurrentAddress[F](
-        fromFellowship,
-        fromTemplate,
-        None
-      ) 
-    )
-    txos <- EitherT.right[BridgeError](
-      genusQueryAlgebra.queryUtxo(currentAddress)
-    )
-  } yield txos).valueOr(_ => Seq.empty)
-}
+      fromFellowship: Fellowship,
+      fromTemplate:   Template
+    ): F[Seq[Txo]] = {
+      import cats.data.EitherT
+
+      (for {
+        currentAddress <- EitherT(
+          getCurrentAddress[F](
+            fromFellowship,
+            fromTemplate,
+            None
+          )
+        )
+        txos <- EitherT.right[BridgeError](
+          genusQueryAlgebra.queryUtxo(currentAddress)
+        )
+      } yield txos).valueOr(_ => Seq.empty)
+    }
 
     private def sumLvls(txos: Seq[Txo]): Int128 =
       txos

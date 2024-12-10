@@ -6,6 +6,7 @@ import io.grpc.ManagedChannel
 import org.plasmalabs.bridge.consensus.core.managers.{PlasmaWalletAlgebra, TransactionAlgebra, WalletApiHelpers}
 import org.plasmalabs.bridge.consensus.core.{Fellowship, PlasmaKeypair, Template}
 import org.plasmalabs.bridge.consensus.shared.Lvl
+import org.plasmalabs.bridge.shared.{BridgeError, UnknownError}
 import org.plasmalabs.indexer.services.{Txo, TxoState}
 import org.plasmalabs.quivr.models.{Int128, KeyPair}
 import org.plasmalabs.sdk.builders.TransactionBuilderApi
@@ -13,7 +14,6 @@ import org.plasmalabs.sdk.dataApi.{IndexerQueryAlgebra, WalletStateAlgebra}
 import org.plasmalabs.sdk.models.{AssetMintingStatement, LockAddress}
 import org.plasmalabs.sdk.wallet.WalletApi
 import org.typelevel.log4cats.Logger
-import org.plasmalabs.bridge.shared.{BridgeError, UnknownError}
 
 object WaitingBTCOps {
 
