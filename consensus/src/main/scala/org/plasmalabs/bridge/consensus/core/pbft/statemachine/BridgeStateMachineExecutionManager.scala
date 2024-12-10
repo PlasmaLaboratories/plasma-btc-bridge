@@ -40,6 +40,7 @@ import org.plasmalabs.bridge.consensus.shared.PeginSessionState.{
   PeginSessionStateWaitingForBTC,
   PeginSessionWaitingForClaim
 }
+import org.plasmalabs.bridge.consensus.shared.persistence.OutOfBandAlgebra
 import org.plasmalabs.bridge.consensus.shared.{
   AssetToken,
   BTCWaitExpirationTime,
@@ -83,8 +84,6 @@ import scodec.bits.ByteVector
 
 import java.security.{KeyPair => JKeyPair}
 import java.util.UUID
-import org.plasmalabs.bridge.consensus.shared.persistence.OutOfBandAlgebra
-
 
 trait BridgeStateMachineExecutionManager[F[_]] {
 
@@ -159,7 +158,7 @@ object BridgeStateMachineExecutionManagerImpl {
     defaultFromTemplate:      Template,
     bitcoindInstance:         BitcoindRpcClient,
     replicaCount:             ReplicaCount,
-    defaultFeePerByte:        CurrencyUnit, 
+    defaultFeePerByte:        CurrencyUnit,
     outOfBandAlgebra:         OutOfBandAlgebra[F]
   ) = {
     for {

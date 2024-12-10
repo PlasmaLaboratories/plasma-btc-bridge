@@ -6,10 +6,10 @@ sidebar_position: 15
 
 ## Why should we use Multi Signatures for our bridge? 
 
-In the case of one bridge being hacked these funds are not lost. For our case of a 5 out of 7 Multisignature Script, five of the seven bridges need to agree on claiming funds so one bridge alone won't be able to steal the funds. 
+In the case of one bridge being hacked these funds are not lost. For our case of a m out of n Multisignature Script, five of the seven bridges need to agree on claiming funds so one bridge alone won't be able to steal the funds. 
 
 ### Escrow Addresses
-This is valid for our escrow addresses: The bitcoin addresses users get from the Start-Session-Request when trying to bridge funds into the Plasma ecosystem are created with a multisig. After the user deposits the funds, only 5 out of 7 bridges together can claim the funds from the escrow address and send to the bridge wallet (which is also a multisig wallet). The user can claim the funds after a certain amount of time if the bridges take too long. 
+This is valid for our escrow addresses: The bitcoin addresses users get from the Start-Session-Request when trying to bridge funds into the Plasma ecosystem are created with a multisig. After the user deposits the funds, only m out of n bridges together can claim the funds from the escrow address and send to the bridge wallet (which is also a multisig wallet). The user can claim the funds after a certain amount of time if the bridges take too long. 
 
 ### How this is done is practice? 
 Each bridge generates one master key and also a master public key that is shares with the other bridges. During different processes new child public keys are generated e.g. for providing new escrow addresses. During the signing process each replica signs the transaction and stores this signature in its local database. The primary then contacts the other replicas and collects the signatures.
@@ -45,4 +45,4 @@ OP_ENDIF`
         - This is the policy or(and(pk(A),older(1000)),and(thresh(5, pk(B1), pk(B2),pk(B3), pk(B4),pk(B5),pk(B6),pk(B7)),sha256(H)))
         - Old version: andor(pk(A),older(1000),and_v(v:pk(B),sha256(H)))
 ##### 3. StartClaimingProcess: 
-    - Each bridge creates a psbt and signes it, these are combined, finalized and broadcasted by the primary bridge. 
+    - each replica creates its signature, the primary then collects all the signature and broadcasts the tx

@@ -765,8 +765,6 @@ object StorageApiImpl {
             }
         }
 
-      
-
       override def initializeStorage(): F[Unit] = statementResource.use { stmnt =>
         Sync[F].blocking(
           stmnt.execute(createEvtTableStmnt)
@@ -780,7 +778,7 @@ object StorageApiImpl {
           stmnt.execute(createCommitTableStmt)
         ) >> Sync[F].blocking(
           stmnt.execute(createCheckpointTableStmnt)
-        ) 
+        )
       }
 
     }

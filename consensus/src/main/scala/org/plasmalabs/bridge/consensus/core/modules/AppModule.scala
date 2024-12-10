@@ -14,8 +14,6 @@ import org.plasmalabs.bridge.consensus.core.pbft.statemachine.{
   BridgeStateMachineExecutionManagerImpl,
   OutOfBandServiceServer
 }
-import org.plasmalabs.bridge.consensus.shared.persistence.OutOfBandAlgebra
-
 import org.plasmalabs.bridge.consensus.core.pbft.{
   CheckpointManagerImpl,
   PBFTInternalEvent,
@@ -48,7 +46,7 @@ import org.plasmalabs.bridge.consensus.core.{
 }
 import org.plasmalabs.bridge.consensus.service.StateMachineReply.Result
 import org.plasmalabs.bridge.consensus.service.StateMachineServiceFs2Grpc
-import org.plasmalabs.bridge.consensus.shared.persistence.StorageApi
+import org.plasmalabs.bridge.consensus.shared.persistence.{OutOfBandAlgebra, StorageApi}
 import org.plasmalabs.bridge.consensus.shared.{
   BTCConfirmationThreshold,
   BTCRetryThreshold,
@@ -126,7 +124,7 @@ trait AppModule extends WalletStateResource {
     bitcoindInstance:       BitcoindRpcClient,
     btcRetryThreshold:      BTCRetryThreshold,
     groupIdIdentifier:      GroupId,
-    seriesIdIdentifier:     SeriesId, 
+    seriesIdIdentifier:     SeriesId,
     outOfBandAlgebra:       OutOfBandAlgebra[IO]
   ): IO[CreateAppResponse[IO]] = {
     val walletKeyApi = WalletKeyApi.make[IO]()

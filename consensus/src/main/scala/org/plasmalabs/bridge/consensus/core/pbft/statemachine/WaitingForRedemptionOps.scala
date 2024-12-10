@@ -12,12 +12,11 @@ import org.plasmalabs.bridge.consensus.core.PeginWalletManager
 import org.plasmalabs.bridge.consensus.core.pbft.statemachine.OutOfBandServiceClient
 import org.plasmalabs.bridge.consensus.core.utils.BitcoinUtils
 import org.plasmalabs.bridge.consensus.service.SignatureMessage
-import org.plasmalabs.bridge.consensus.shared.persistence.StorageApi
+import org.plasmalabs.bridge.consensus.shared.persistence.{OutOfBandAlgebra, StorageApi}
 import org.plasmalabs.bridge.shared.ReplicaId
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
 import scodec.bits.ByteVector
-import org.plasmalabs.bridge.consensus.shared.persistence.OutOfBandAlgebra
 
 import scala.concurrent.duration._
 

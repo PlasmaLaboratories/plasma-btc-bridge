@@ -30,7 +30,7 @@ import org.plasmalabs.bridge.consensus.core.{
 }
 import org.plasmalabs.bridge.consensus.service.StateMachineServiceFs2Grpc
 import org.plasmalabs.bridge.consensus.shared.BTCRetryThreshold
-import org.plasmalabs.bridge.consensus.shared.persistence.{StorageApi, StorageApiImpl}
+import org.plasmalabs.bridge.consensus.shared.persistence.{OutOfBandAlgebra, OutOfBandAlgebraImpl, StorageApi, StorageApiImpl}
 import org.plasmalabs.bridge.consensus.shared.utils.ConfUtils._
 import org.plasmalabs.bridge.consensus.subsystems.monitor.{
   BitcoinMonitor,
@@ -69,9 +69,6 @@ import java.util.concurrent.atomic.LongAdder
 import java.util.concurrent.{ConcurrentHashMap, Executors, TimeUnit}
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration.FiniteDuration
-import org.plasmalabs.bridge.consensus.shared.persistence.OutOfBandAlgebraImpl
-import org.plasmalabs.bridge.consensus.shared.persistence.OutOfBandAlgebra
-
 
 case class InitializationResponse[F[_]](
   currentPlasmaHeightVal:             Long,
@@ -271,8 +268,8 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
     seqNumberManager:            SequenceNumberManager[IO],
     currentPlasmaHeight:         Ref[IO, Long],
     currentState:                Ref[IO, SystemGlobalState],
-    allReplicasPublicKeys:       FellowshipPublicKeys, 
-    outOfBandAlgebra: OutOfBandAlgebra[IO]
+    allReplicasPublicKeys:       FellowshipPublicKeys,
+    outOfBandAlgebra:            OutOfBandAlgebra[IO]
   )(implicit
     clientId:           ClientId,
     replicaId:          ReplicaId,
@@ -378,7 +375,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
       )(IO.asyncForIO, logger, replicaId, clientCount)
       replicaNodes       <- loadReplicaNodeFromConfig[IO](conf).toResource
       storageApi         <- StorageApiImpl.make[IO](params.dbFile.toPath().toString())
-      outOfBandAlgebra <- OutOfBandAlgebraImpl.make[IO]
+      outOfBandAlgebra   <- OutOfBandAlgebraImpl.make[IO]
       idReplicaClientMap <- createReplicaClienMap[IO](replicaNodes)
       mutex              <- Mutex[IO].toResource
       pbftProtocolClientGrpc <- PBFTInternalGrpcServiceClientImpl.make[IO](
@@ -414,7 +411,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         seqNumberManager,
         currentPlasmaHeight,
         currentState,
-        allReplicasPublicKeys, 
+        allReplicasPublicKeys,
         outOfBandAlgebra
       ).toResource
 

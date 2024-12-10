@@ -39,11 +39,11 @@ object OutOfBandServiceClientImpl {
         channel <-
           (if (replicaNode.backendSecure)
              ManagedChannelBuilder
-               .forAddress(replicaNode.internalBackendHost, replicaNode.internalBackendPort)
+               .forAddress(replicaNode.outOfBandBackendHost, replicaNode.outOfBandBackendPort)
                .useTransportSecurity()
            else
              ManagedChannelBuilder
-               .forAddress(replicaNode.internalBackendHost, replicaNode.internalBackendPort)
+               .forAddress(replicaNode.outOfBandBackendHost, replicaNode.outOfBandBackendPort)
                .usePlaintext()).resource[F]
         outOfBandServiceClient <- OutOfBandServiceFs2Grpc.stubResource(channel)
       } yield (replicaNode.id -> outOfBandServiceClient)).sequence
