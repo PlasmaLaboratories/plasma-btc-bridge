@@ -1,6 +1,8 @@
 package org.plasmalabs.bridge
 
 import cats.effect.kernel.{Async, Fiber}
+import org.bitcoins.core.crypto.ExtPublicKey
+
 import cats.effect.{ExitCode, IO}
 import fs2.io.{file, process}
 import io.circe.parser._
@@ -8,6 +10,8 @@ import munit.{AnyFixture, CatsEffectSuite, FutureFixture}
 import org.plasmalabs.bridge.{userFundRedeemTx, userFundRedeemTxProved, userRedeemTx, userVkFile}
 import org.typelevel.log4cats.Logger
 import org.typelevel.log4cats.syntax._
+import org.plasmalabs.bridge.consensus.core.utils.KeyGenerationUtils
+import org.plasmalabs.bridge.consensus.core.RegTest
 
 import java.nio.file.{Files, Paths}
 import scala.concurrent.duration._
@@ -48,6 +52,38 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
     .through(file.Files[F].writeAll(fs2.io.file.Path(s"clientConfig${replicaId * 2}.conf")))
     .compile
     .drain).toList.sequence
+
+  def saveExtPublicKey(
+    extPubKey: ExtPublicKey,
+    filePath:  String
+  ): IO[Unit] = {
+    import java.nio.file.{Files, Paths}
+    IO.delay {
+      Files.write(
+        Paths.get(filePath),
+        extPubKey.toString.getBytes("UTF-8")
+      )
+    }.void
+  }
+
+  def createPeginWalletFiles =
+    for {
+      _ <- (0 until replicaCount).toList.traverse { replicaId =>
+        val peginFilePath = s"pegin-wallet${replicaId}.json"
+        val sharableFilePath = s"shared-pubkey${replicaId}.txt"
+        val password = "password"
+        for {
+          _ <- KeyGenerationUtils.createKeyManager[IO](RegTest, peginFilePath, password)
+          keyManager <- KeyGenerationUtils.loadKeyManager[IO](
+            RegTest,
+            peginFilePath,
+            password
+          )
+          newKey       =  KeyGenerationUtils.generateSharableKey(keyManager)
+          _            <- saveExtPublicKey(newKey, sharableFilePath)
+        } yield ()
+      }
+    } yield ()
 
   def launchConsensus(replicaId: Int) = IO.asyncForIO
     .start(
@@ -110,9 +146,18 @@ trait BridgeSetupModule extends CatsEffectSuite with ReplicaConfModule with Publ
           _ <- (0 until replicaCount).toList.traverse { replicaId =>
             IO(Try(Files.delete(Paths.get(s"replica${replicaId}.db"))))
           }
-          _ <- createReplicaConfigurationFiles[IO]()
-          _ <- createPublicApiConfigurationFiles[IO]()
-
+          _ <- (0 until replicaCount).toList.traverse { replicaId =>
+            IO(Try(Files.delete(Paths.get(s"pegin-wallet${replicaId}.json"))))
+          }
+          _ <- (0 until replicaCount).toList.traverse { replicaId =>
+            IO(Try(Files.delete(Paths.get(s"shared-pubkey${replicaId}.txt"))))
+          }
+          _               <- createPeginWalletFiles
+          _              <- createReplicaConfigurationFiles[IO]()
+          _              <- createPublicApiConfigurationFiles[IO]()
+          currentAddress <- currentAddress(plasmaWalletDb(0))
+          utxo           <- getCurrentUtxosFromAddress(plasmaWalletDb(0), currentAddress)
+          (groupId, seriesId) = extractIds(utxo)
           _ <- IO(Try(Files.delete(Paths.get("bridge.db"))))
           _ <- IO.asyncForIO.both(
             (0 until replicaCount).map(launchConsensus(_)).toList.sequence.map { f2 =>

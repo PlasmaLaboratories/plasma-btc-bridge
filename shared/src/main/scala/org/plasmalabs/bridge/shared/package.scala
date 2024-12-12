@@ -37,7 +37,9 @@ package object shared {
     id:            Int,
     backendHost:   String,
     backendPort:   Int,
-    backendSecure: Boolean
+    backendSecure: Boolean,
+    outOfBandBackendHost: String = "localhost", 
+    outOfBandBackendPort: Int = 30000
   )
 
   object implicits {

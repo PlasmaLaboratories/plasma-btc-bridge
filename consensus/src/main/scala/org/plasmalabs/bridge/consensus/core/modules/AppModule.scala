@@ -1,18 +1,25 @@
 package org.plasmalabs.bridge.consensus.core.modules
 
 import cats.effect.IO
-import cats.effect.kernel.Ref
+import cats.effect.kernel.{Ref, Resource}
 import cats.effect.std.Queue
-import io.grpc.Metadata
+import io.grpc.{Metadata, ServerServiceDefinition}
 import org.bitcoins.rpc.client.common.BitcoindRpcClient
 import org.http4s.dsl.io._
 import org.http4s.{HttpRoutes, _}
 import org.plasmalabs.bridge.consensus.core.managers.{BTCWalletAlgebra, WalletManagementUtils}
-import org.plasmalabs.bridge.consensus.core.pbft.statemachine.BridgeStateMachineExecutionManagerImpl
+import org.plasmalabs.bridge.consensus.core.modules.InitializationModuleAlgebra
+import org.plasmalabs.bridge.consensus.core.pbft.statemachine.{
+  BridgeStateMachineExecutionManager,
+  BridgeStateMachineExecutionManagerImpl,
+  OutOfBandServiceServer
+}
 import org.plasmalabs.bridge.consensus.core.pbft.{
   CheckpointManagerImpl,
   PBFTInternalEvent,
+  PBFTInternalGrpcServiceServer,
   PBFTRequestPreProcessorImpl,
+  RequestStateManager,
   RequestStateManagerImpl,
   RequestTimerManagerImpl,
   ViewManagerImpl
@@ -23,6 +30,7 @@ import org.plasmalabs.bridge.consensus.core.{
   CurrentBTCHeightRef,
   CurrentPlasmaHeightRef,
   Fellowship,
+  FellowshipPublicKeys,
   KWatermark,
   LastReplyMap,
   PBFTInternalGrpcServiceClient,
@@ -30,6 +38,7 @@ import org.plasmalabs.bridge.consensus.core.{
   PlasmaBTCBridgeConsensusParamConfig,
   PublicApiClientGrpcMap,
   SequenceNumberManager,
+  StateMachineGrpcServiceServer,
   SystemGlobalState,
   Template,
   WatermarkRef,
@@ -37,7 +46,7 @@ import org.plasmalabs.bridge.consensus.core.{
 }
 import org.plasmalabs.bridge.consensus.service.StateMachineReply.Result
 import org.plasmalabs.bridge.consensus.service.StateMachineServiceFs2Grpc
-import org.plasmalabs.bridge.consensus.shared.persistence.StorageApi
+import org.plasmalabs.bridge.consensus.shared.persistence.{OutOfBandAlgebra, StorageApi}
 import org.plasmalabs.bridge.consensus.shared.{
   BTCConfirmationThreshold,
   BTCRetryThreshold,
@@ -46,7 +55,12 @@ import org.plasmalabs.bridge.consensus.shared.{
   PlasmaConfirmationThreshold,
   PlasmaWaitExpirationTime
 }
-import org.plasmalabs.bridge.consensus.subsystems.monitor.{MonitorStateMachine, SessionEvent, SessionManagerImpl}
+import org.plasmalabs.bridge.consensus.subsystems.monitor.{
+  MonitorStateMachine,
+  MonitorStateMachineAlgebra,
+  SessionEvent,
+  SessionManagerImpl
+}
 import org.plasmalabs.bridge.shared.{ClientId, ReplicaCount, ReplicaId, StateMachineServiceGrpcClient}
 import org.plasmalabs.sdk.builders.TransactionBuilderApi
 import org.plasmalabs.sdk.constants.NetworkConstants
@@ -64,6 +78,16 @@ import org.typelevel.log4cats.Logger
 
 import java.security.{KeyPair => JKeyPair, PublicKey}
 import java.util.concurrent.ConcurrentHashMap
+
+case class CreateAppResponse[F[_]](
+  bridgeStateMachineExecutionManager: BridgeStateMachineExecutionManager[F],
+  stateMachineGrpcService:            Resource[F, ServerServiceDefinition],
+  initModule:                         InitializationModuleAlgebra[F],
+  peginStateMachine:                  MonitorStateMachineAlgebra[F],
+  pbftInternalGrpcService:            Resource[F, ServerServiceDefinition],
+  requestStateManager:                RequestStateManager[F],
+  outOfBandService:                   Resource[F, ServerServiceDefinition]
+)
 
 trait AppModule extends WalletStateResource {
 
@@ -85,7 +109,8 @@ trait AppModule extends WalletStateResource {
     currentBitcoinNetworkHeight: Ref[IO, Int],
     seqNumberManager:            SequenceNumberManager[IO],
     currentPlasmaHeight:         Ref[IO, Long],
-    currentState:                Ref[IO, SystemGlobalState]
+    currentState:                Ref[IO, SystemGlobalState],
+    allReplicasPublicKeys:       FellowshipPublicKeys
   )(implicit
     pbftProtocolClient:     PBFTInternalGrpcServiceClient[IO],
     publicApiClientGrpcMap: PublicApiClientGrpcMap[IO],
@@ -99,8 +124,9 @@ trait AppModule extends WalletStateResource {
     bitcoindInstance:       BitcoindRpcClient,
     btcRetryThreshold:      BTCRetryThreshold,
     groupIdIdentifier:      GroupId,
-    seriesIdIdentifier:     SeriesId
-  ) = {
+    seriesIdIdentifier:     SeriesId,
+    outOfBandAlgebra:       OutOfBandAlgebra[IO]
+  ): IO[CreateAppResponse[IO]] = {
     val walletKeyApi = WalletKeyApi.make[IO]()
     implicit val walletApi = WalletApi.make[IO](walletKeyApi)
     val walletRes = WalletStateResource.walletResource[IO](params.plasmaWalletDb)
@@ -188,7 +214,10 @@ trait AppModule extends WalletStateResource {
             viewManager,
             walletManagementUtils,
             params.plasmaWalletSeedFile,
-            params.plasmaWalletPassword
+            params.plasmaWalletPassword,
+            params.multiSigM,
+            params.multiSigN,
+            allReplicasPublicKeys
           )
       requestStateManager <- RequestStateManagerImpl
         .make[IO](
@@ -212,9 +241,9 @@ trait AppModule extends WalletStateResource {
         viewManager,
         replicaKeysMap
       )
-      (
+      CreateAppResponse(
         bridgeStateMachineExecutionManager,
-        org.plasmalabs.bridge.consensus.core.StateMachineGrpcServiceServer
+        StateMachineGrpcServiceServer
           .stateMachineGrpcServiceServer(
             replicaKeyPair,
             pbftProtocolClient,
@@ -224,11 +253,14 @@ trait AppModule extends WalletStateResource {
         InitializationModule
           .make[IO](currentBitcoinNetworkHeight, currentState),
         peginStateMachine,
-        org.plasmalabs.bridge.consensus.core.pbft.PBFTInternalGrpcServiceServer
+        PBFTInternalGrpcServiceServer
           .pbftInternalGrpcServiceServer(
             replicaKeysMap
           ),
-        requestStateManager
+        requestStateManager,
+        OutOfBandServiceServer.make[IO](
+          replicaKeysMap
+        )
       )
     }
   }

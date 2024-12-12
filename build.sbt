@@ -70,7 +70,7 @@ lazy val commonDockerSettings = List(
 )
 
 lazy val dockerPublishSettingsConsensus = List(
-  dockerExposedPorts ++= Seq(4000),
+  dockerExposedPorts ++= Seq(4000, 30000),
   Docker / packageName := "plasma-btc-bridge-consensus"
 ) ++ commonDockerSettings
 

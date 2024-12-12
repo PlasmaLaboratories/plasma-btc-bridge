@@ -60,3 +60,28 @@ message MintingStatusRes {
   string address = 3;
   string redeemScript = 4;
 }
+
+message SignatureMessage {
+  int32 replicaId = 1;
+  bytes signature = 2;
+}
+
+message SignatureMessageReply {
+  int32 walletId = 2;
+  string bytesToSign = 3;
+  oneof result {
+    SignatureMessage signatureMessage = 4;
+    InvalidInputRes invalidInput = 5;
+  }
+}
+
+message GetSignatureRequest {
+  int32 replicaId = 1;
+  int32 walletId = 2;
+  string bytesToSign = 3; // bytes the other replica should sign 
+  bytes signature = 4; // signature of the request
+}
+
+service OutOfBandService {
+  rpc DeliverSignature (GetSignatureRequest) returns (SignatureMessageReply) {}
+}

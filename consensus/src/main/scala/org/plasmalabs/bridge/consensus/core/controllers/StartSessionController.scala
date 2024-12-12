@@ -7,11 +7,12 @@ import org.bitcoins.core.script.constant.{OP_0, ScriptConstant}
 import org.bitcoins.core.util.{BitcoinScriptUtil, BytesUtil}
 import org.bitcoins.crypto.{ECPublicKey, _}
 import org.plasmalabs.bridge.consensus.core.managers.PlasmaWalletAlgebra
-import org.plasmalabs.bridge.consensus.core.utils.BitcoinUtils
+import org.plasmalabs.bridge.consensus.core.utils.{BitcoinUtils, KeyGenerationUtils}
 import org.plasmalabs.bridge.consensus.core.{
   BitcoinNetworkIdentifiers,
   BridgeWalletManager,
   CurrentPlasmaHeightRef,
+  FellowshipPublicKeys,
   PeginWalletManager,
   PlasmaKeypair
 }
@@ -45,20 +46,27 @@ object StartSessionController {
     mintTemplateName:          String,
     sha256:                    String,
     pUserPKey:                 String,
-    btcPeginBridgePKey:        String,
     btcBridgePKey:             ECPublicKey,
     btcWaitExpirationTime:     BTCWaitExpirationTime,
     btcNetwork:                BitcoinNetworkIdentifiers,
     redeemAddress:             String,
     minHeight:                 Long,
-    maxHeight:                 Long
-  ): F[(String, PeginSessionInfo)] = {
+    maxHeight:                 Long,
+    allReplicasPublicKeys:     FellowshipPublicKeys
+  ): F[(String, PeginSessionInfo, List[(Int, ECPublicKey)])] = {
     import cats.implicits._
+
     for {
+      publicKeysForCurrentIndex <- KeyGenerationUtils.deriveChildrenFromSharedPublicKeys(
+        allReplicasPublicKeys,
+        btcPeginCurrentWalletIdx
+      )
+
       hash <- Sync[F].fromOption(
         ByteVector.fromHex(sha256.toLowerCase()),
         InvalidHash(s"Invalid hash $sha256")
       )
+
       _ <- Sync[F].delay(
         if (hash.size != 32)
           throw InvalidHash(s"Sha length is too short, only ${hash.size} bytes")
@@ -69,7 +77,7 @@ object StartSessionController {
       asm =
         BitcoinUtils.buildScriptAsm(
           userPKey,
-          ECPublicKey.fromHex(btcPeginBridgePKey),
+          publicKeysForCurrentIndex,
           hash,
           btcWaitExpirationTime.underlying
         )
@@ -108,13 +116,15 @@ object StartSessionController {
         maxHeight,
         claimAddress,
         PeginSessionState.PeginSessionStateWaitingForBTC
-      )
+      ),
+      publicKeysForCurrentIndex
     )
   }
 
   def startPeginSession[F[_]: Async: Logger](
-    sessionId: String,
-    req:       StartSessionOperation
+    sessionId:             String,
+    req:                   StartSessionOperation,
+    allReplicasPublicKeys: FellowshipPublicKeys
   )(implicit
     plasmaKeypair:            PlasmaKeypair,
     btcNetwork:               BitcoinNetworkIdentifiers,
@@ -167,15 +177,15 @@ object StartSessionController {
         mintTemplateName,
         req.sha256,
         req.pkey,
-        btcPeginBridgePKey.hex,
         btcBridgePKey,
         btcWaitExpirationTime,
         btcNetwork,
         someRedeemAdress.get,
         minPlasmaHeight,
-        maxPlasmaHeight
+        maxPlasmaHeight,
+        allReplicasPublicKeys
       )
-      (address, sessionInfo) = addressAndsessionInfo
+      (address, sessionInfo, publicKeysForCurrentIndex) = addressAndsessionInfo
     } yield (
       sessionInfo,
       StartPeginSessionResponse(
@@ -183,7 +193,7 @@ object StartSessionController {
         sessionInfo.scriptAsm,
         address,
         BitcoinUtils
-          .createDescriptor(btcPeginBridgePKey.hex, req.pkey, req.sha256),
+          .createDescriptor(publicKeysForCurrentIndex, req.pkey, req.sha256),
         minPlasmaHeight,
         maxPlasmaHeight
       )

@@ -39,13 +39,30 @@ trait ReplicaConfModule extends CommonSetupModule {
 |      host = "[::]"
 |      # the port where we are listening for responses
 |      port = ${clientPort + 2 * replicaId + 1}
-|    } 
+|    }
+|    outOfBandRequests = {
+|      host = "[::]"
+|      port = ${outOfBandRequestPort + replicaId}
+|    }
 |    # security configuration
 |    security {
 |      # path to the public key file
 |      publicKeyFile = "consensusPublicKey${replicaId}.pem"
 |      # path to the private key file
 |      privateKeyFile = "consensusPrivateKey${replicaId}.pem"
+|
+|      # path to shared private pegin wallet seed file
+|      peginWalletFile = "pegin-wallet${replicaId}.json"
+|      # path to shared ext pub key files of other replicas, should contain 7 (n of multisig) files
+|      sharedPubKeyFiles = {
+|         0 = "shared-pubkey0.txt"
+|         1 = "shared-pubkey1.txt"
+|         2 = "shared-pubkey2.txt"
+|         3 = "shared-pubkey3.txt"
+|         4 = "shared-pubkey4.txt"
+|         5 = "shared-pubkey5.txt"
+|         6 = "shared-pubkey6.txt"
+|       }
 |    }
 |    consensus {
 |      replicaCount = ${replicaCount}
