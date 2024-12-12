@@ -68,7 +68,8 @@ object BridgeCryptoUtils {
       _ <- Sync[F].delay(sig.update(bytes))
       verified <- Sync[F]
         .delay(sig.verify(signature))
-        .handleErrorWith(_ => Sync[F].pure(false))
+        .handleErrorWith(_ => 
+          Sync[F].pure(false))
     } yield verified
   }
 }

@@ -259,8 +259,7 @@ trait AppModule extends WalletStateResource {
           ),
         requestStateManager,
         OutOfBandServiceServer.make[IO](
-          (0 until params.multiSigN).toSet, // TODO: Secure method to verify allowed hosts
-          replicaId.id
+          replicaKeysMap
         )
       )
     }

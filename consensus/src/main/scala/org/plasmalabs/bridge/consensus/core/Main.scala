@@ -387,7 +387,7 @@ object Main extends IOApp with ConsensusParamsDescriptor with AppModule with Ini
         replicaKeyPair,
         replicaNodes
       )
-      outOfBandServiceClient <- OutOfBandServiceClientImpl.make[IO](replicaNodes)
+      outOfBandServiceClient <- OutOfBandServiceClientImpl.make[IO](replicaNodes, replicaKeyPair)
 
       viewReference <- Ref[IO].of(0L).toResource
       replicaClients <- StateMachineServiceGrpcClientImpl

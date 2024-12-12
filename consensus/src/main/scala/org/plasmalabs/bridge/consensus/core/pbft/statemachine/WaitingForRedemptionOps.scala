@@ -22,6 +22,10 @@ import scala.concurrent.duration._
 
 trait WaitingForRedemption {
 
+  def signTx[F[_]: Async](walletId: Int, bytesToSign: ByteVector)(implicit
+    walletManager: PeginWalletManager[F]
+  ): F[ECDigitalSignature]
+
   /**
    * Initiates the claiming process for deposited funds from the escrow address by signing and collecting signatures from other replicas.
    *
@@ -65,6 +69,12 @@ trait WaitingForRedemption {
 
 object WaitingForRedemptionOps {
 
+  def signTx[F[_]: Async](walletId: Int, bytesToSign: ByteVector)(implicit
+    walletManager: PeginWalletManager[F]
+  ): F[ECDigitalSignature] = for {
+    signature <- walletManager.underlying.signForIdx(walletId, bytesToSign)
+  } yield signature
+
   def startClaimingProcess[F[_]: Async: Logger](
     secret:           String,
     claimAddress:     String,
@@ -94,17 +104,21 @@ object WaitingForRedemptionOps {
     )
 
     for {
-      signature <- pegInWalletManager.underlying.signForIdx(
-        currentWalletIdx,
-        signableBytes.bytes
-      )
+      signature <- signTx(currentWalletIdx, signableBytes.bytes)
 
       _ <- outOfBandAlgebra.insertClaimSignature(inputTxId, signature.hex, 1L)
       _ <- replica.id match {
         case `currentPrimary` =>
           for {
-            otherSignatures <- primaryCollectSignatures(currentPrimary, inputTxId, multiSigM - 1, multiSigN)
-            _               <- primaryBroadcastBitcoinTx(secret, signature, tx, srp, otherSignatures, currentPrimary)
+            otherSignatures <- primaryCollectSignatures(
+              currentPrimary,
+              inputTxId,
+              multiSigM - 1,
+              multiSigN,
+              currentWalletIdx,
+              signableBytes.bytes
+            )
+            _ <- primaryBroadcastBitcoinTx(secret, signature, tx, srp, otherSignatures, currentPrimary)
           } yield ()
         case _ => Async[F].unit
       }
@@ -143,10 +157,12 @@ object WaitingForRedemptionOps {
   }
 
   private def primaryCollectSignatures[F[_]: Async: Logger](
-    primaryId: Int,
-    inputTxId: String,
-    threshold: Int,
-    multiSigN: Int
+    primaryId:   Int,
+    inputTxId:   String,
+    threshold:   Int,
+    multiSigN:   Int,
+    walletId:    Int,
+    bytesToSign: ByteVector
   )(implicit
     outOfBandServiceClient: OutOfBandServiceClient[F]
   ): F[List[SignatureMessage]] = {
@@ -166,11 +182,13 @@ object WaitingForRedemptionOps {
         for {
           _ <- info"Start to collect signatures for txId: ${inputTxId}"
           newSignatures <- remainingIds.toList.traverse { id =>
-            outOfBandServiceClient.getSignature(id, inputTxId)
+            outOfBandServiceClient.getSignature(id, walletId, bytesToSign)
           }
           newValidSignatures = newSignatures
-            .filter(signatureOption => signatureOption.nonEmpty && signatureOption.get.replicaId != -1)
-            .map(_.get)
+            .filter(signatureOption =>
+              signatureOption.nonEmpty && signatureOption.get.result.isSignatureMessage && signatureOption.get.result.signatureMessage.get.replicaId != -1
+            )
+            .map(_.get.result.signatureMessage.get)
 
           _ <- Async[F].sleep(1.second)
           result <- collectSignaturesRecursive(

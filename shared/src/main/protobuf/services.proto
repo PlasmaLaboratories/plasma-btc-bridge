@@ -64,14 +64,24 @@ message MintingStatusRes {
 message SignatureMessage {
   int32 replicaId = 1;
   bytes signature = 2;
-  int64 timestamp = 3;
+}
+
+message SignatureMessageReply {
+  int32 walletId = 2;
+  string bytesToSign = 3;
+  oneof result {
+    SignatureMessage signatureMessage = 4;
+    InvalidInputRes invalidInput = 5;
+  }
 }
 
 message GetSignatureRequest {
   int32 replicaId = 1;
-  string txId = 2;
+  int32 walletId = 2;
+  string bytesToSign = 3; // bytes the other replica should sign 
+  bytes signature = 4; // signature of the request
 }
 
 service OutOfBandService {
-  rpc GetSignature (GetSignatureRequest) returns (SignatureMessage) {}
+  rpc DeliverSignature (GetSignatureRequest) returns (SignatureMessageReply) {}
 }

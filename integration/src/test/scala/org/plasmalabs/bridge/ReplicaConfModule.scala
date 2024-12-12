@@ -53,7 +53,7 @@ trait ReplicaConfModule extends CommonSetupModule {
 |
 |      # path to shared private pegin wallet seed file
 |      peginWalletFile = "pegin-wallet${replicaId}.json"
-|      # path to shared ext pub key files of other replicas 
+|      # path to shared ext pub key files of other replicas, should contain 7 (n of multisig) files
 |      sharedPubKeyFiles = {
 |         0 = "shared-pubkey0.txt"
 |         1 = "shared-pubkey1.txt"
